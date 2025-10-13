@@ -1,0 +1,50 @@
+name = "MicrosimAPIv1"
+uuid = "9dd566b3-1809-4601-ae07-3fe8bab2468b"
+authors = ["Graham Stark"]
+version = "0.1.0"
+
+[deps]
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+Genie = "c43c736e-a2d1-11e8-161f-af95117fbd1e"
+GenieCache = "dec2e30d-c3e4-4386-8d4a-5e4ccb406543"
+GenieSession = "03cc5b98-4f21-4eb6-99f2-22eced81f962"
+GenieSessionFileSession = "5c4fdc26-39e3-47cf-9034-e533e09961c2"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+Jedis = "b89ccfe0-2c5f-46f6-b89b-da3e1c2e286f"
+LoggingExtras = "e6f89c97-d47a-5376-807f-9c37f3926c36"
+Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
+Observables = "510215fc-4207-5dde-b226-833fc4488ee2"
+Parameters = "d96e819e-fc66-5662-9728-84c9c7592b0a"
+Redis = "0cf705f9-a9e2-50d1-a699-2b372a39b750"
+ScottishTaxBenefitModel = "a734f2ee-4b7f-478f-84ca-797081d39f6e"
+StructTypes = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
+UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+
+[sources]
+ScottishTaxBenefitModel = {url = "https://github.com/grahamstark/ScottishTaxBenefitModel.jl"}
+
+[compat]
+DataStructures = "0,1"
+Genie = "5,6"
+GenieCache = "2,3"
+GenieSession = "1,2"
+GenieSessionFileSession = "1,2"
+HTTP = "1"
+JSON3 = "1"
+Jedis = "0.3,0.4"
+LoggingExtras = "1,2"
+Markdown = "1"
+Observables = "0,1"
+Parameters = "0,1"
+Redis = "3.0.0"
+ScottishTaxBenefitModel = "0,1"
+StructTypes = "1,2"
+UUIDs = "1"
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
