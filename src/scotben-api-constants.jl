@@ -14,23 +14,23 @@ const TEXT_DESC = md"""
 """
 
 const OUTPUT_ITEMS = OrderedDict([
-    "headline_figures"=>"Headline Summary (json)",
-    "quantiles"=>"Quantiles (50 rows, 4 cols) (csv)", 
-    "deciles" => "Quantiles (10 rows, 4 cols) (csv)",
-    "income_summary" => "Income Summary (csv)", 
-    "poverty" => "Poverty Measures (json)", 
-    "inequality" => "Inequality Measures (json)", 
-    "metrs" => "Marginal Effective Tax Rates histogram (csv)", 
-    "child_poverty" => "Child Poverty Count (json)",
-    "gain_lose/ten_gl" => "Gain Lose by Tenure (csv)",
-    "gain_lose/dec_gl" => "Gain Lose by Decile (csv)",
-    "gain_lose/children_gl" => "Gain Lose by Number of Children (csv)",
-    "gain_lose/hhtype_gl" => "Gain Lose by Household Size (csv)",
-    "poverty_lines" => "Computed Poverty Lines (json)",
-    "short_income_summary"=>"Short Income Summary (csv)",
-    "income_hists"=>"Histogram of Incomes (csv)",
-    "povtrans_matrix"=>"Poverty Transitions Matrix (csv)",
-    "examples"=>"Simple Examples (json)"
+    "headline_figures"=>"Headline Summary ",
+    "quantiles_df"=>"Quantiles (50 rows serialsed DF) ", 
+    "deciles_df" => "Quantiles (10 rows serialsed DF) ",
+    "income_summary" => "Income Summary ", 
+    "poverty" => "Poverty Measures ", 
+    "inequality" => "Inequality Measures ", 
+    "metrs" => "Marginal Effective Tax Rates histogram ", 
+    "child_poverty" => "Child Poverty Count ",
+    "gain_lose/ten_gl" => "Gain Lose by Tenure ",
+    "gain_lose/dec_gl" => "Gain Lose by Decile ",
+    "gain_lose/children_gl" => "Gain Lose by Number of Children ",
+    "gain_lose/hhtype_gl" => "Gain Lose by Household Size ",
+    "poverty_lines" => "Computed Poverty Lines ",
+    "short_income_summary"=>"Short Income Summary ",
+    "income_hists"=>"Histogram of Incomes ",
+    "povtrans_matrix"=>"Poverty Transitions Matrix ",
+    "examples"=>"Simple Worked Examples "
 ])
 
 const CSV_ITEMS = [

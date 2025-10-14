@@ -207,27 +207,13 @@ end
 #
 # This holds the data in the cacbe
 #
-struct AllOutput
+mutable struct AllOutput
 	summary  :: NamedTuple
-    # short_summary :: NamedTuple
 	examples :: Vector
     progress :: Progress
 end
 
 const NULL_ALL_OUTPUT = AllOutput( (;), [], DEF_PROGRESS )
-
-#
-# User data in a session
-#
-#=
-@with_kw mutable struct SessionEntry
-    session_id = ""
-    last_accessed = now()
-    created_at = now()
-    params_and_settings = ParamsAndSettings()   
-    h = UInt(0)
-end
-=#
 
 #
 # 3 data structures
@@ -280,7 +266,7 @@ function do_run( prs :: ParamsAndSettings; do_dumps = false )
     results = do_one_run( settings, [sys1,sys2], obs )
     summaries = summarise_frames!( results, settings )
     # short_summary = make_short_summary( summaries )
-    exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys, settings )
+    exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys2, settings )
     endprog = Progress( settings.uuid, "completed", -99, -99, -99, -99 )
     aout = AllOutput( summaries, exres, endprog )
     cache_output( prs.hid, aout )
@@ -290,11 +276,11 @@ function do_run( prs :: ParamsAndSettings; do_dumps = false )
 end
 
 function submit_job( prs :: ParamsAndSettings )
-    @info "submit_job entered"
+    @debug "submit_job entered"
     @assert (! haskey( CACHED_RESULTS, prs.hid )) # if so, why are we here?
-    CACHED_RESULTS[h] = NULL_ALL_OUTPUT # initialise blank entry
+    CACHED_RESULTS[prs.hid] = NULL_ALL_OUTPUT # initialise blank entry
     put!( JOB_QUEUE, prs )
-	@info "submit exiting queue is now $JOB_QUEUE"
+	@debug "submit exiting queue is now $JOB_QUEUE"
 end
 
 function calc_one()
@@ -465,14 +451,20 @@ end
 function scotben_run_submit()
     session = GenieSession.session() #  :: GenieSession.Session 
     id = session.id    
-    prs = allfromession(id)
+    prs = allfromsession(id)
     res = get(CACHED_RESULTS, prs.hid, nothing )
+    @show CACHED_RESULTS
+    @show JOB_QUEUE
+    @show prs
+    @show res
     if isnothing( res )
         try
+            println( "submitting job")
             submit_job( prs )
             return json((; error="ok", info=Progress( BASE_UUID, "submitted", 0, 0, 0, 0 ) ))
         catch e
-            return json((; error="error", info=""))
+            println( "exception $e")
+            return json((; error="error", info=e))
         end
     else
         return json((; error="ok", info=res.progress ))
@@ -487,9 +479,10 @@ function scotben_run_status()
     id = session.id
     @show CACHED_RESULTS
     @show JOB_QUEUE
-    id = GenieSession.id(req, resp )
     prs = allfromsession(id)
+    @show prs
     res = Base.get(CACHED_RESULTS, prs.hid, nothing )
+    @show res
     if isnothing( res )
         return json((; error="no_run", info="" ))
     else
@@ -535,27 +528,34 @@ end
 """
 
 """
-function scotben_output_labels( )
+function scotben_output_labels()
     return "Labels, possibly."
 end
 
 """
 
 """
-function scotben_output_fetch_item( item, subitem )
+function scotben_output_fetch_item()
     session = GenieSession.session() #  :: GenieSession.Session 
     id = session.id
     prs = allfromsession( id )
     res = Base.get(CACHED_RESULTS, prs.hid, nothing )
     if ! isnothing( res )
+        item = payload(:item)
         ns = Symbol( item )
         ctype = if item in CSV_ITEMS
             "text/csv"
         else
             "application/json"
         end
-        if item == "gain_lose"
-            sns = Symbol( subitem )            
+        if item == "examples"          
+            return json(res.examples)
+        elseif item == "gain_lose"
+            subitem = payload(:subitem)
+            sns = Symbol( subitem )  
+            return json( res.summary.gain_lose[2][sns])
+        else 
+            return json( res.summary[ns])
         end
     end
 end
