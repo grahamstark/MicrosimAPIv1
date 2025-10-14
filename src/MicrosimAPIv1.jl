@@ -15,6 +15,8 @@ using LoggingExtras
 using Observables
 using Parameters
 using StructTypes
+using SwaggerMarkdown
+using SwagUI
 using UUIDs
 
 using ScottishTaxBenefitModel
