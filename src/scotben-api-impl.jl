@@ -379,7 +379,7 @@ end
 
 """
 function scotben_params_describe()
-    return TEXT_DESC # server objects to md"...  
+    return TEXT_DESC 
 end
 
 """
@@ -415,34 +415,34 @@ end
 
 """
 function scotben_settings_initialise()
-    return "Initialise"
+    return "Settings Initialise"
 end
 
 """
 
 """
 function scotben_settings_validate()
-    return "Validate"
+    return "Settings Validate"
 end
 
 """
 
 """
 function scotben_settings_describe()
-    return "Describe"
+    return "Settings Describe"
 end
 """
 
 """
 function scotben_settings_helppage(  )
-    return "HelpPage"
+    return "Settings HelpPage"
 end
 
 """
 
 """
 function scotben_settings_labels()
-    return "Labels"
+    return "Settings Labels"
 end
 
 """
@@ -543,11 +543,6 @@ function scotben_output_fetch_item()
     if ! isnothing( res )
         item = payload(:item)
         ns = Symbol( item )
-        ctype = if item in CSV_ITEMS
-            "text/csv"
-        else
-            "application/json"
-        end
         if item == "examples"          
             return json(res.examples)
         elseif item == "gain_lose"
@@ -555,7 +550,12 @@ function scotben_output_fetch_item()
             sns = Symbol( subitem )  
             return json( res.summary.gain_lose[2][sns])
         else 
-            return json( res.summary[ns])
+            # this just deals with INFs in the output, which json objects to
+            s = JSON3.write( res.summary[ns]; allow_inf=true)
+            s = replace(s,"Infinity"=>"99999999")
+            return HTTP.Response(
+                200,
+                ["Content-Type" => "application/json"], s )
         end
     end
 end

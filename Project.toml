@@ -4,6 +4,7 @@ authors = ["Graham Stark"]
 version = "0.1.0"
 
 [deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Genie = "c43c736e-a2d1-11e8-161f-af95117fbd1e"
 GenieCache = "dec2e30d-c3e4-4386-8d4a-5e4ccb406543"
@@ -27,6 +28,7 @@ UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 ScottishTaxBenefitModel = {url = "https://github.com/grahamstark/ScottishTaxBenefitModel.jl"}
 
 [compat]
+DataFrames = "1,2"
 DataStructures = "0,1"
 Genie = "5,6"
 GenieCache = "2,3"
@@ -50,11 +52,10 @@ julia = "1"
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-[targets]
-test = ["Test"]
-
 [preferences.ScottishTaxBenefitModel]
+aa_payment_rate = 1.0
 ccode = ""
+civil_payment_rate = 1.0
 default_run_name = "sb-0.1.7"
 do_indirect_tax_calculations = false
 do_legal_aid = false
@@ -62,17 +63,16 @@ do_local_run = false
 do_marginal_rates = true
 do_replacement_rates = false
 dump_frames = false
+include_institutional_population = false
 included_data_years = [2019, 2021, 2022, 2023]
 indirect_method = "matching"
 ineq_income_measure = "eq_bhc_net_income"
 legal_aid_costs_strategy = "la_individual_costs"
 legal_aid_probs_data = "civil-legal-aid-probs-scotland-map_to_slab"
 local-artifact_server_upload_unix = "/mnt/data/ScotBen/local_artifacts/"
-# local-artifact_server_upload_windows = "c:/data/"
+local-artifact_server_upload_windows = "/mnt/data/ScotBen/local_artifacts/"
 local-artifact_server_url_unix = "file:///mnt/data/ScotBen/local_artifacts/"
 local-artifact_server_url_windows = "file:///c:/data/"
-local-artifact_server_upload_windows = "/mnt/data/ScotBen/local_artifacts/"
-
 lower_multiple = 0.62
 means_tested_routing = "uc_full"
 poverty_line_source = "pl_first_sys"
@@ -85,11 +85,9 @@ to_y = 2025
 upper_multiple = 5.8
 use_shs = true
 wealth_method = "matching"
-weighting_strategy = "use_runtime_computed_weights"
-include_institutional_population = false
-weighting_target_year = 2025
 weighting_relative_to_ons_weights = false
-civil_payment_rate = 1.0
-aa_payment_rate = 1.0
+weighting_strategy = "use_runtime_computed_weights"
+weighting_target_year = 2025
 
-
+[targets]
+test = ["Test"]

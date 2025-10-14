@@ -7,6 +7,7 @@ using GenieSessionFileSession
 import Genie.Renderer.Json: json
 using Jedis
 
+using DataFrames
 using DataStructures
 using HTTP
 using JSON3
@@ -36,7 +37,6 @@ using .STBIncomes
 using .STBOutput
 using .STBParameters
 using .Utils
-
 
 include( "examples.jl")
 include( "scotben-api-constants.jl")

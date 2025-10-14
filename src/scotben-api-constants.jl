@@ -1,17 +1,15 @@
-const TEXT_DESC = md"""
-
-    taxrates :: Vector{T} :: min 0 max 100 pct
-    taxbands :: Vector{T} :: min 0 max unlimited
-    nirates :: Vector{T} :: min 0 max 100 pct
-    nibands :: Vector{T} :: min 0 max 100 annual
-    taxallowance :: T min 0 max 100_000 annual
-    child_benefit :: T min 0 max 1000 weekly
-    pension :: T  min 0 max 1000 weekly
-    scottish_child_payment :: T  min 0 max 1000 weekly
-    scp_age :: Int min 0 max 21 
-    uc_single :: T  min 0 max 1000 weekly
-    uc_taper :: T  min 0 max 100 pct
-"""
+const TEXT_DESC = OrderedDict([
+    "taxrates" =>  " Vector :: min 0 max 100 pct",
+    "taxbands" =>  " Vector :: min 0 max unlimited",
+    "nirates" =>  " Vector :: min 0 max 100 pct",
+    "nibands" =>  " Vector :: min 0 max 100 annual",
+    "taxallowance" =>  "min 0 max 100_000 annual",
+    "child_benefit" =>  "min 0 max 1000 weekly",
+    "pension" =>  "min 0 max 1000 weekly",
+    "scottish_child_payment" =>  "Int min 0 max 1000 weekly",
+    "scp_age" =>  " Int min 0 max 21 ",
+    "uc_single" =>  "min 0 max 1000 weekly",
+    "uc_taper" =>  " min 0 max 100 pct"])
 
 const OUTPUT_ITEMS = OrderedDict([
     "headline_figures"=>"Headline Summary ",
@@ -32,17 +30,6 @@ const OUTPUT_ITEMS = OrderedDict([
     "povtrans_matrix"=>"Poverty Transitions Matrix ",
     "examples"=>"Simple Worked Examples "
 ])
-
-const CSV_ITEMS = [
-    "quantiles",
-    "deciles",
-    "income_summary", 
-    "metrs", 
-    "gain_lose",
-    "short_income_summary",
-    "income_hists",
-    "povtrans_matrix"]
-
 
 const LABELS = OrderedDict([
     "taxrates" => "Tax Rates (%)",
