@@ -1,12 +1,13 @@
+<!DOCTYPE html>
 </html>
 <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="UTF-8">
-    <title>API, v0.1.0</title>
-    <link rel="icon" href="images/favicon.png">
-    <link rel="stylesheet" href="css/slab-bootstrap.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css"/>
-    <script type='text/javascript' src='js/jquery.js'></script>
+    <title>A Budget for Scotland/Microsim API V1 Demo</title>
+    <link rel="icon" href="images/favicon.ico?v=2.0.0" type="image/x-icon">
+    <link rel="stylesheet" href="css/stb-bootstrap.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+    </script><script type='text/javascript' src='js/jquery.js'></script>
     <script type='text/javascript' src='js/jquery.periodicalupdater.js'></script>
     <script type='text/javascript' src='js/jquery.validate.js'></script>
      <!-- bootstrap -->
@@ -17,43 +18,690 @@
     <script type="text/javascript" src="js/vega-embed.min.js"></script>
     <!-- templates -->
     <script type='text/javascript' src="js/mustache.min.js"></script>
-
+   
 </head>
 
-<body>
-<h1>API Demo</h1>
-<form>
-    <input onchange="submitForm( 'f2')" id='income_partners_allowance' type='number' name="income_partners_allowance" min='0' max='200000' value='' step='1' size="12" class='form-control w-50'/>
-</form>
+<body class='text-primary p-2'>
+     <nav class="navbar navbar-expand-lg text-primary">
+            <ul class="nav">
+                <li class="nav-item"><a class='nav-link' href='https://stb.virtual-worlds.scot/scotbudg/'>A Scottish Budget</a></li>
+                <li class="nav-item"><a class="nav-link active" aria-current="page" href='https://ubi.virtual-worlds.scot/'>Basic Income</a></li>
+                <li class="nav-item"><a class='nav-link' href='https://stb.virtual-worlds.scot/bcd/'>Budget Constraints</a></li>
+                <li class="nav-item"><a class='nav-link' href='https://stb-blog.virtual-worlds.scot/'>Blog</a></li>
+            </ul>
+        </nav>
+ <header>
+    <h1>A Budget for Scotland</h1>
+    <h2>2025/6 Version</h2>
+    <p>Using:<p>
+    <ul>
+        <li><a href='https://github.com/grahamstark/ScottishTaxBenefitModel.jl'>ScotBen</a></li>
+        <li><a href='https://github.com/grahamstark/MicrosimAPIv1'>MicrosimAPI, V1</a></li>
+    </ul>
+</header>        
+
+
+        <form id='mainform' action="thing" method="POST">       
+            <div class='container-fluid'>                 
+                <div class='row'><!-- input row -->
+                    <fieldset class="col border rounded-2 m-1 p-2">
+                        <legend>Income Tax</legend>
+                                <input type="hidden" id="tax-n" name="tax-n" value=""/>
+                                <table id='it-table' class="table table-sm table-striped">
+                                    <caption>Rates in %, bands in &pound;s pa</caption>
+                                    <thead>                                                    
+                                        <tr>
+                                            <th>Rate (%)</th>
+                                            <th>Band (£pa)</th>
+                                            <th></th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id='tax-rows'>
+                                    </tbody>
+                                </table>
+                                <div class="col ukreserved p-2 rounded-2">
+                                    <label for='taxallowance' class='form-label'>Personal Allowance £pa</label>
+                                    <input id='taxallowance' type='number' name="taxallowance" min='0' max='100000' value='' step='1' size="12" class='form-control w-50'/>
+                                </div>                                
+                    </fieldset>
+                    <fieldset class='col border rounded-2 m-1 p-2 ukreserved'>
+                        <legend>National Insurance</legend>
+                        <input type="hidden" id="ni-n" name="ni-n" value=""/>
+                        <table class="table table-sm table-striped">
+                            <caption>Rates in %, bands in &pound;s pw</caption>
+                            <thead>
+                                <tr>
+                                    <th>Rate (%)</th>
+                                    <th>Band (£pw)</th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id='ni-rows'>
+                            </tbody>
+                        </table>
+                    </fieldset>
+                    <fieldset class='col border  rounded-2 m-1 p-2'>
+                        <legend>Scottish Benefits</legend>
+                        <div class="row">                                        
+                            <div class="col">                                                    
+                                <label for='scottish_child_payment' class='form-label'>Scottish Child Payment £pw</label>
+                                <input id='scottish_child_payment' type='number' name="scottish_child_payment" min='0' max='400' value='' step='0.01' size="10" class='form-control w-50'/>
+                            </div>
+                        </div>
+                        <div class="row">                                        
+                            <div class="col">                                                    
+                                <label for='scp_age' class='form-label'>Scottish Child Payment: maximum age (years)</label>
+                                <input id='scp_age' type='number' name="scp_age" min='0' max='18' value='' step='1' size="4" class='form-control w-50'/>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <fieldset class='col border rounded-2 m-1 p-2 ukreserved'>
+                            <legend>UK (Reserved) Benefits</legend>                                            
+                            <div class="row">                                        
+                                <div class="col">                                                    
+                                    <label for='uc_single' class='form-label'>Universal Credit: Single over 25 (£pm)</label>
+                                    <input id='uc_single' type='number' name="uc_single" min='0' max='2000' value='' step='0.01' size="10" class='form-control w-50'/>
+                                </div>
+                            </div>
+                            <div class="row">                                                                                    
+                                <div class="col">                                                    
+                                    <label for='uc_taper' class='form-label'>Universal Credit Taper (%)</label>
+                                    <input id='uc_taper' type='number' name="uc_taper" min='1' max='100' value='' step='1' size="10" class='form-control w-50'/>
+                                </div>
+                            </div>
+                            <div class="row">                                        
+                                <div class="col">                                                    
+                                    <label for='wtc_basic' class='form-label'>Working Tax Credit (Basic) £pa</label>
+                                    <input id='wtc_basic' type='number' name="wtc_basic" min='0' max='30000' value='' step='1' size="10" class='form-control w-50'/>
+                                </div>
+                            </div>
+                                <div class="row">
+                                <div class="col">                                                    
+                                    <label for='child_benefit' class='form-label'>Child Benefit (1st child) £pw</label>
+                                    <input id='child_benefit' type='number' name="child_benefit" min='0' max='1000' value='' step='0.01' size="10" class='form-control w-50'/>
+                                </div>
+                            </div>
+                            <div class="row">
+                                    <div class="col">                                                    
+                                        <label for='pension' class='form-label'>New State Pension £pw</label>
+                                        <input id='pension' type='number' name="pension" min='0' max='1000' value='' step='0.01' size="10" class='form-control w-50'/>
+                                    </div>                                                
+                            </div>
+                    </fieldset>
+                </div> <!-- input row -->
+                <div class="row"> <!-- progress bar -->
+                    <div class="col"></div>
+                    <div class='col-4' id="progress-indicator"></div>
+                    <div class="col"></div>
+                </div> <!-- output row -->
+                
+                <fieldset class="row">
+                    <div class="col"></div>
+                    <div class="col"></div>
+                    <div class="col"></div>
+                    <div class="col">
+                        <ul class="nav">
+                            <li class="nav-item  p-2">                      
+                                <button  type="button" class='btn btn-warning rounded-2' value='' onclick='submitForm( "reset" )'>Reset</button>
+                            </li>
+                            <li class="nav-item p-2">                      
+                                <button  type="button" class='btn btn-info rounded-2' value='' onclick='submitForm( "save" )'>Save</button>
+                            </li>
+                            <li class="nav-item p-2">                      
+                                <button  type="button" class='btn btn-success rounded-2' value='' onclick='submitForm( "run" )'>Run</button>
+                            </li>
+                        </ul>
+                    </div>
+                </fieldset> <!-- submission row -->
+                <div class="row  border rounded-2 m-1 p-2">
+                    <div class='col'>
+                            <div id='output-fields'>
+                                <div class='row'>
+        
+                                    <div class='col-4'></div>
+                                    <div class='col-4'>
+                                        <h2>Results for some Example Families</h2>
+                                    </div>
+                                    <div class='col-4'></div>
+                                </div>
+                                <div class='row'>
+                                    <div class='col-12' id='examples'>
+                                       
+                                    </div>
+                                </div>
+                                <div class='row'>
+                                    <div class='col-4'></div>
+                                    <div class='col-4'>
+                                        <h2>Results for the Whole of Scotland</h2>
+                                    </div>
+                                    <div class='col-4'></div>
+                                </div>
+                                <div class='row'>
+                                    <div class='col'>
+                                        <h4>Gainers and Losers</h4>
+                                        <div class='row'>
+                                            <div class='col' id="gain-lose-table">,</div>
+                                            <div class='col' id="deciles-graph">,</div>
+                                        </div>
+                                    </div>
+                                    <div class='col'>
+                                        <h4>Revenues and Costs</h4>
+                                        <div
+                                            data-bs-toggle='modal' 
+                                            data-bs-target='#big-costs-popup'>
+                                            <div id="costs-table"></div>
+                                        </div>
+                                        <div id="overall-costs"></div>
+                                    </div>                            
+                                    <div class='col'>
+                                        <h4>Incentives - Marginal Effective Tax Rates</h4>
+                                        <div id="mr-table"></div>
+                                    </div>                            
+                                </div><!-- row -->
+                                <div class='row'>
+                                    <div class='col'>
+                                        <h4>Poverty</h4>
+                                        <div id='pov-table'></div>
+                                    </div>
+                                    <div class='col'>
+                                        <h4>Inequality</h4>
+                                        <div id='ineq-table'></div>
+                                    </div>
+                                    <div class='col'>
+                                        <div id='lorenz'></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+         
+               </div> <!-- output row -->
+               <div class="row">
+                   
+                    <div class='col' id='endnotes'></div>
+                    
+                </div>
+            </div> <!-- main container -->
+        </form>
 </body>
+
 <script type='text/javascript'>
-function submitForm(action, target){
-    var url = "/"+action; // url = "/"+action;
+
+const BIG_A = 9999999999;
+
+function makeTypename( type ){
+    return type=='rate' ? 'r' : 'b';
+}
+
+function makeId( n, name, type ){
+    var typename = makeTypename( type );
+    return name + "-" + typename + '-' + n;
+}
+
+function makeInput( n, name, type ){
+    var typename = makeTypename( type );
+    var min=-BIG_A;
+    var max=BIG_A;
+    var step=1;
+    if( type == 'band' ){
+        min=0.0;
+        max=BIG_A;
+    } else if( type=='rate'){
+        min=0.0;
+        max=100;
+        step=0.01;
+    }
+    var id = makeId( n, name, type );
+    return "<input id='"+id+"' name='"+id+"' type='number' min='"+min+"' max='"+max+"' step='"+step+"' value='' class=' w-75' />";
+}
+
+function makeAddDel( n, name, isdel ){
+    var action = 'add'+name;
+    var icon = "bi-plus-circle text-success";
+    if(isdel===true){
+        action = 'del'+name;
+        icon = "bi-dash-circle text-danger";
+    }
+    return "<span onclick='submitForm(\""+action+"\", "+n+")' ><i class=\""+icon+"\" style=\"font-size: 1rem\"></i></span>";
+}
+
+function makeRow( n, name, addDel ){
+    const id = name+"-"+n;
+    var row = "<tr id='"+id+"'><td>"+makeInput( n, name, 'rate' )+"</td><td>"+makeInput( n, name, 'band' )+"</td><td  class='align-middle'>"+makeAddDel( n, name, false )+"</td>";
+    if( addDel ){
+        row += "<td class='align-middle'>"+makeAddDel( n, name, true )+"</td>";
+    } else {
+        row += "<td></td>";
+    }
+    row += "</tr>";
+    // console.log( "made row as |"+row+"|" );
+    return row;
+}
+
+function insertRow( which, n, name, addRow ){
+    $("#"+which ).append( makeRow( n, name, addRow ));
+}
+
+function setVal( id, val, def ){
+    $( "#"+id ).val( val );
+    console.log( "setVal for #%s val=%s def=%s", id, val, def )
+    if( val != def ){
+        $( "#"+id ).addClass( 'changed');
+    } else {
+        $( "#"+id ).removeClass( 'changed');
+    }
+}
+
+function loadTax( name, rates, bands, defrates, defbands ){
+    var nr = rates.length;
+    var nb = bands.length;
+    // console.log( "nr="+nr + " nb = " + nb );
+    $( "#"+name+"-n").val( nr );
+    for( var i = 1; i <= nr; i++ ){
+        var rp = "#"+name+"-r-"+i;
+        $( rp ).val( rates[i-1]);
+        var rb = "#"+name+"-b-"+i;
+        if( i == nr ){
+            $( rb ).hide();            
+        } else {
+            $( rb ).val( bands[i-1]);
+        }
+    }
+}
+
+function initialiseTable( which, rates, bands, defrates, defbands ){
+    var n = rates.length;
+    var target = which+ "-rows";
+    $( "#"+target ).children().remove();
+    var addDel = n > 1;
+    for( var i = 1; i <= n; i++ ){
+        insertRow( target, i, which, addDel );
+    }
+    loadTax( which, rates, bands, defrates, defbands );
+}
+
+function loadData( data ){
+    loadtax( "tax", data.taxrates, data.taxbands );
+    loadtax( "ni", data.nirates, data.nibands );
+    $( "#taxallowance").val( data.taxallowance );
+}
+
+function scrapetax( name ){
+    var rates = [];
+    var bands = [];
+    var nrt = "#"+name+"-n";
+    // console.log( "count nrt key = " + nrt );
+    var nr = parseInt($( nrt ).val());
+    // console.log( name + " : got nr as " + nr );
+    for( var i = 1; i <= nr; i++ ){
+        var rp = "#"+name+"-r-"+i;
+        var rb = "#"+name+"-b-"+i;
+        rates.push( parseFloat($( rp ).val()));
+         if( i < nr ){ // skip top bands
+            var rr = parseFloat($( rb ).val());
+            if( Number.isNaN(rr)){
+                rr = BIG_A;
+            }
+            bands.push( rr );
+        }
+    }
+    // console.log( "rates=" + rates );
+    return [rates, bands];
+}
+
+function scrapeData(){
+    var tbs = scrapetax("tax");
+    // console.log( "tbs=" + tbs );
+    var nbs = scrapetax( "ni");
+    var data = {
+        taxrates: tbs[0],
+        taxbands: tbs[1],
+        nirates: nbs[0],
+        nibands: nbs[1],
+        taxallowance: parseFloat($( "#taxallowance" ).val()),
+        child_benefit: parseFloat( $( "#child_benefit" ).val()),
+        pension: parseFloat( $( "#pension" ).val()),
+        scottish_child_payment: parseFloat( $( "#scottish_child_payment" ).val()),
+        scp_age: parseInt( $( "#scp_age" ).val()),
+        uc_single: parseFloat( $( "#uc_single" ).val()),
+        uc_taper: parseFloat( $( "#uc_taper" ).val()),
+        wtc_basic: parseFloat( $( "#wtc_basic" ).val()),
+        target: -1
+    }
+    // console.log( "data.taxrates " + data.taxrates );
+    return data;
+}
+
+
+function populateForm( pars, defaults ){
+    initialiseTable( "tax", 
+        pars.taxrates, 
+        pars.taxbands,
+        defaults.taxrates,
+        defaults.taxbands );
+    initialiseTable( "ni", 
+        pars.nirates, 
+        pars.nibands,
+        defaults.nirates, 
+        defaults.nibands
+            );
+    setVal( 'taxallowance', pars.taxallowance, defaults.taxallowance);
+    setVal( 'child_benefit', pars.child_benefit, defaults.child_benefit );
+    setVal( 'pension', pars.pension, defaults.pension );
+    setVal( 'scottish_child_payment', pars.scottish_child_payment, defaults.scottish_child_payment );
+    setVal( 'scp_age', pars.scp_age, defaults.scp_age );
+    setVal( 'uc_single', pars.uc_single, defaults.uc_single );
+    setVal( 'uc_taper', pars.uc_taper, defaults.uc_taper );
+    setVal( 'wtc_basic', pars.wtc_basic, defaults.wtc_basic );
+
+}
+
+var updater;
+
+function drawRunProgress( result ){
+    // https://getbootstrap.com/docs/5.0/components/progress/
+    console.log( "result.count" + result.count + "result.size" + result.size );
+    var pct = Math.trunc(100 * result.count / result.size);
+    var prog = 
+        "<p>Model Running</p>"+
+        "<div class='progress'>"+
+        "<div class='progress-bar bg-success progress-bar-animated progress-bar-striped' role='progressbar' "+
+            "aria-valuenow='" + pct + "' " + 
+            "style='width: "+pct+"%' " +
+            "aria-valuemin='0' " +
+            "aria-valuemax='100'>"+
+            pct + "%" +
+            "</div> "+
+            "</div>";
+    console.log( "prog="+prog )
+    $("#progress-indicator").html( prog );
+}
+
+
+
+function createLorenzCurve( targetId, result, thumbnail ){
+    var height = 300;
+    var xtitle = "Population Share";
+    var ytitle = "Income Share";
+    var title = "Lorenz Curve"
+    if( thumbnail ){
+        var height = 70;
+        xtitle = "";
+        ytitle = "";
+        title = "";
+    }
+    var width = Math.trunc( GOLDEN_RATIO*height);
+    var data=[];
+    console.log( "deciles" + result.lorenz_pre.toString());
+    console.log( "lorenz_pre length" + result.lorenz_pre.length );
+    // deciles levels are rhs. so push a 0,0
+    data.push( {"popn1":0, "pre":0 });
+    popn = 0.0;
+    incr = 1/result.lorenz_pre.length;
+    for( var i = 0; i < result.lorenz_pre.length; i++){
+        popn += incr;
+        data.push( {"popn1":popn, "pre":result.lorenz_pre[i] });
+    }
+    // var data_post= [];
+    data.push( {"popn2":0, "post":0 });
+    popn = 0.0;
+    for( var i = 0; i < result.lorenz_post.length; i++){
+        popn += incr;
+        data.push( {"popn2":popn, "post":result.lorenz_post[i] });
+    }
+    data.push( {"popn3":0.0, "base":0.0});
+    data.push( {"popn3":1.0, "base":1.0});
+    var gini_vg = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
+        "title": title,
+        "width": width,
+        "height": height,
+        "description": title,
+        "data": {"values": data }, // , "post":data_post
+        "layer":[
+            {
+                "mark": "line",
+                "encoding":{
+                    "x": { "type": "quantitative",
+                           "field": "popn1",
+                           "axis":{
+                               "title": xtitle
+                           }},
+                    "y": { "type": "quantitative",
+                           "field": "pre",
+                           "axis":{
+                              "title": ytitle
+                           } },
+                    "color": {"value":"blue"}
+                } // encoding
+            }, // pre layer line
+            {
+                "mark": "line",
+                "encoding":{
+                    "x": { "type": "quantitative",
+                           "field": "popn2",
+                           "axis":{
+                              "title": xtitle
+                           }},
+                    "y": { "type": "quantitative",
+                           "field": "post",
+                           "axis":{
+                              "title": ytitle
+                           } },
+                   "color": {"value":"red"}
+               } // encoding
+           }, // post line
+          { // diagonal in grey
+               "mark": "line",
+               "encoding":{
+                   "x": { "type": "quantitative",
+                          "field": "popn3" },
+                   "y": { "type": "quantitative",
+                          "field": "base" },
+                   "color": {"value":"#ccc"},
+                   "strokeWidth": {"value": 1.0}
+                   // "strokeDash":
+               } // encoding
+           },
+        ]
+    }
+    vegaEmbed( targetId, gini_vg );
+}
+
+const GOLDEN_RATIO = 1.618
+ 
+function createDecileBarChart( targetId, result, thumbnail ){
+    var height = 300;
+    var xtitle = "Deciles";
+    var ytitle = "Gains in £s p.w.";
+    var title = "Gains By Decile"
+    if( thumbnail ){
+        var height = 70;
+        xtitle = "";
+        ytitle = "";
+        title = "";
+    }
+    var width = Math.trunc( GOLDEN_RATIO*height);
+    var data=[];
+    console.log( "deciles" + result.gains_by_decile.toString());
+    console.log( "lorenz_pre[2] length" + result.gains_by_decile.length );
+    for( var i = 0; i < result.gains_by_decile.length; i++){
+        var dec = (i+1);
+        data.push( {"decile":dec, "gain":result.gains_by_decile[i] });
+    }
+    var deciles_vg = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
+        "title": title,
+        "width": width,
+        "height": height,
+        "description": title,
+        "data": {"values": data }, // , "post":data_post
+        "mark": "bar",
+        "encoding":{
+            "x": { "type": "ordinal",
+                   "field": "decile",
+                   "axis":{
+                      "title": xtitle
+                   }
+             },
+            "y": { "type": "quantitative",
+                   "field": "gain",
+                   "axis":{
+                      "title": ytitle
+                   }
+            }
+        } // encoding
+    }
+    console.log( "deciles_vg=" + JSON.stringify(deciles_vg) );
+
+    vegaEmbed( targetId, deciles_vg );
+}
+
+function createMainOutputs( result ){
+    console.log( result.inequality );
+    console.log( result.examples );
+    console.log( result.overall_costs )
+    $("#examples").html( result.examples );
+    $("#gain-lose-table").html( result.gain_lose );
+    createDecileBarChart( 
+        "#deciles-graph", 
+        result, 
+        false );
+    $("#costs-table").html( result.costs );
+    $("#overall-costs").html( result.overall_costs )
+    $("#mr-table").html( result.mrs );
+    $("#pov-table").html( result.poverty );
+    $("#ineq-table").html( result.inequality );
+    $("#big-costs-table").html( result.big_costs_table );
+    $("#endnotes").html( result.endnotes );
+    createLorenzCurve( 
+        "#lorenz", 
+        result,
+        false );
+}
+
+
+function updateProgress( result ){
+    console.log( "updateSTB  result.phase = " + result.progress.phase );
+    switch( result.progress.phase ){
+        case 'missing':
+            $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Run is waiting to start found.</div>");
+            break;
+        case 'start':
+            $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Run starting: starting pre-run routines.</div>");
+            break;
+        case 'weights':
+            $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Generating sample weights (may take some time..).</div>");
+            break;
+        case 'disability_eligibility':
+            $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Calibrating Disability Benefits.</div>");
+            break;
+        case 'starting':
+            $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Pre-routines completed; run starting.</div>");
+            break;
+        case 'run':
+            drawRunProgress( result.progress );
+            break;
+        case 'dumping_frames':
+            $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Calculations complete; now generating output.</div>");
+            break;
+        case 'end':
+            $("#progress-indicator").html( "<div></div>" );
+            updater.stop();
+            $.ajax(
+                { url: "/stb2/output",
+                method: 'post',
+                dataType: 'json',
+                contentType: "application/json",
+                data:""
+                }).done(
+                    function( outp ){
+                        console.log( "submitForm; result %o", outp);
+                        createMainOutputs( outp.output );
+                    }
+                );
+                
+        break;  
+        case 'na':
+            updater.stop();
+            break;  
+        default:
+            $("#progress-indicator").html( "<div class='alert alert-danger' role='alert'>Problem: run "+result.uuid+" can't be found.</div>");
+            break;                                      
+    }
+}
+
+function submitForm( action, target ){
+     var url = "/stb2/"+action;
      if( target != null ){
         url += "/"+target;
      }
-    var formdata = "f1";
-    var uuid = "xxxx";
-    var systype = "sys1";
-    var data = JSON.stringify({
-        params:formdata,
-        uuid:uuid,
-        systype:systype});
-    $.ajax(
-        {
-            url: url,
-            method: 'post',
-            dataType: 'json',
-            contentType: "application/json",
-            data: data
-        }
-    ).done(
-        function( resp ){
-            console.log( "submitForm; resp %o", resp);      
-        }
-    )
+     $("#mainform").validate();
+     var dataset = JSON.stringify(scrapeData());
+     console.log( "submitForm; data = %o", dataset );
+     // console.debug( "submitForm submitForm url="+url );
+     $.ajax(
+        { url: url,
+         method: 'post',
+         dataType: 'json',
+         contentType: "application/json",
+         data: dataset
+        }).done(
+            function( result ){
+                console.log( "submitForm; result %o", result );
+                console.log( "target " + target );
+                populateForm( result[0].pars, result[1].def );
+                if( action == 'run'){
+                    // start updater if no immediate output
+                    if( result[2].output == "" ){
+                        console.log( "starting run and timer");               
+                        console.log( "result " + result );
+                        var uri = '/stb2/progress/';
+                        updater = $.PeriodicalUpdater('/stb2/progress', {
+                            url: uri,         // URL of ajax request
+                            cache: false,     // By default, don't allow caching
+                            method: 'POST',    // method; get or post
+                            data: '',         // array of values to be passed to the page - e.g. {name: "John", greeting: "hello"}
+                            minTimeout: 500, // starting value for the timeout in milliseconds was: 1000
+                            maxTimeout:32000, // maximum length of time between requests was: 64000
+                            multiplier: 1,    // if set to 2, timerInterval will double each time the response hasn't changed (up to maxTimeout)
+                            maxCalls: 0,      // maximum number of calls. 0 = no limit.
+                            maxCallsCallback: null, // The callback to execute when we reach our max number of calls
+                            autoStop: 0,      // automatically stop requests after this many returns of the same data. 0 = disabled
+                            autoStopCallback: null, // The callback to execute when we autoStop
+                            cookie: false,    // whether (and how) to store a cookie
+                            runatonce: false, // Whether to fire initially or wait
+                            verbose: 0        // The level to be logging at: 0 = none; 1 = some; 2 = all
+                        }, function(remoteData, success, xhr, handle) {
+                            console.log( "progress: got %o", remoteData );
+                            updateProgress( remoteData.progress );
+                        });
+                    } else {
+                        createMainOutputs( result[2].output );
+                    }
+                } else if( action == 'reset'){
+                    createMainOutputs( result[2].output );
+                }
+            }
+        ).fail(
+            function( jqXHR, textStatus, errorThrown ){
+                console.log( "failed with " + textStatus + " errorThrown "+errorThrown );
+                console.log( "jqXHR.statusCode" + jqXHR.status + " text" + jqXHR.statusText );
+            }
+        );
 }
 
+$(document).ready(function(){
+        $("mainform").submit(function(e){
+                alert('submit intercepted');
+                e.preventDefault(e);
+        });
+        // submitForm("params");
+        
+        submitForm("reset");
+    });
 
 </script>
 </html>
