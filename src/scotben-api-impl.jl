@@ -190,20 +190,18 @@ const DEFAULT_SIMPLE_PARAMS :: SimpleParams = map_full_to_simple( DEFAULT_PARAMS
 #
 const BASE_UUID = UUID("985c312f-129b-4acd-9e40-cb629d184183")
 const DEF_PROGRESS = Progress( BASE_UUID, "na", 0, 0, 0, 0 )
-const DEFAULT_SETTINGS = Settings()
 
+#
+# This goes in the sessions and job queues
+#
+@with_kw mutable struct ParamsAndSettings
+	settings = RunSettings.DEFAULT_SETTINGS # use thing declared in Scottis..RunSettings to avoid weird precompilation error
+	params = [DEFAULT_SIMPLE_PARAMS, DEFAULT_SIMPLE_PARAMS]
+    hid = riskyhash( [RunSettings.DEFAULT_SETTINGS, DEFAULT_SIMPLE_PARAMS])
+end
 
 function hid( prs :: ParamsAndSettings )::UInt
     return riskyhash( [prs.settings, prs.params[2]])
-end
-
-#
-# This goes in the job queue
-#
-@with_kw mutable struct ParamsAndSettings
-	settings = DEFAULT_SETTINGS
-	params = [DEFAULT_SIMPLE_PARAMS, DEFAULT_SIMPLE_PARAMS]
-    hid = riskyhash( [DEFAULT_SETTINGS, DEFAULT_SIMPLE_PARAMS])
 end
 
 #
@@ -395,7 +393,7 @@ end
 
 """
 function scotben_params_describe()
-    return string(TEXT_DESC) # server objects to md"...  
+    return TEXT_DESC # server objects to md"...  
 end
 
 """
@@ -544,7 +542,7 @@ end
 """
 
 """
-function scotben_output_fetch_item(, item, subitem )
+function scotben_output_fetch_item( item, subitem )
     session = GenieSession.session() #  :: GenieSession.Session 
     id = session.id
     prs = allfromsession( id )
