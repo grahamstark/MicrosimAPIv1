@@ -27,7 +27,7 @@ const OUTPUT_ITEMS = OrderedDict([
     "poverty_lines" => "Computed Poverty Lines ",
     "short_income_summary"=>"Short Income Summary ",
     "income_hists"=>"Histogram of Incomes ",
-    "povtrans_matrix_df"=>"Movements in and out of poverty",
+    "povtrans_matrix_df"=>"Movements in and out of poverty (as a labelled dataframe)",
     "examples"=>"Simple Worked Examples "
 ])
 

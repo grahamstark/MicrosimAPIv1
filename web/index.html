@@ -111,13 +111,7 @@
                                     <input id='uc_taper' type='number' name="uc_taper" min='1' max='100' value='' step='1' size="10" class='form-control w-50'/>
                                 </div>
                             </div>
-                            <div class="row">                                        
-                                <div class="col">                                                    
-                                    <label for='wtc_basic' class='form-label'>Working Tax Credit (Basic) £pa</label>
-                                    <input id='wtc_basic' type='number' name="wtc_basic" min='0' max='30000' value='' step='1' size="10" class='form-control w-50'/>
-                                </div>
-                            </div>
-                                <div class="row">
+                            <div class="row">
                                 <div class="col">                                                    
                                     <label for='child_benefit' class='form-label'>Child Benefit (1st child) £pw</label>
                                     <input id='child_benefit' type='number' name="child_benefit" min='0' max='1000' value='' step='0.01' size="10" class='form-control w-50'/>
@@ -144,13 +138,13 @@
                     <div class="col">
                         <ul class="nav">
                             <li class="nav-item  p-2">                      
-                                <button  type="button" class='btn btn-warning rounded-2' value='' onclick='submitForm( "reset" )'>Reset</button>
+                                <button  type="button" class='btn btn-warning rounded-2' value='' onclick='params_initialise()'>Reset</button>
                             </li>
                             <li class="nav-item p-2">                      
-                                <button  type="button" class='btn btn-info rounded-2' value='' onclick='submitForm( "save" )'>Save</button>
+                                <button  type="button" class='btn btn-info rounded-2' value='' onclick='params_set()'>Save</button>
                             </li>
                             <li class="nav-item p-2">                      
-                                <button  type="button" class='btn btn-success rounded-2' value='' onclick='submitForm( "run" )'>Run</button>
+                                <button  type="button" class='btn btn-success rounded-2' value='' onclick='run_submit()'>Run</button>
                             </li>
                         </ul>
                     </div>
@@ -366,9 +360,7 @@ function scrapeData(){
         scottish_child_payment: parseFloat( $( "#scottish_child_payment" ).val()),
         scp_age: parseInt( $( "#scp_age" ).val()),
         uc_single: parseFloat( $( "#uc_single" ).val()),
-        uc_taper: parseFloat( $( "#uc_taper" ).val()),
-        wtc_basic: parseFloat( $( "#wtc_basic" ).val()),
-        target: -1
+        uc_taper: parseFloat( $( "#uc_taper" ).val())
     }
     // console.log( "data.taxrates " + data.taxrates );
     return data;
@@ -394,8 +386,6 @@ function populateForm( pars, defaults ){
     setVal( 'scp_age', pars.scp_age, defaults.scp_age );
     setVal( 'uc_single', pars.uc_single, defaults.uc_single );
     setVal( 'uc_taper', pars.uc_taper, defaults.uc_taper );
-    setVal( 'wtc_basic', pars.wtc_basic, defaults.wtc_basic );
-
 }
 
 var updater;
@@ -633,6 +623,86 @@ function updateProgress( result ){
     }
 }
 
+const API = "http://microapi/scotben/"
+
+function params_initialise(){
+     $.ajax(
+        { url: API+"params/initialise",
+         method: 'get',
+         dataType: 'json',
+         contentType: "application/json",
+        }).done(
+            function( result ){
+                console.log( "load_parameters; results are ", result );
+                populateForm( result, result );
+            }
+        ).fail(
+            function( jqXHR, textStatus, errorThrown ){
+                console.log( "failed with " + textStatus + " errorThrown "+errorThrown );
+                console.log( "jqXHR.statusCode" + jqXHR.status + " text" + jqXHR.statusText );
+            }
+    );
+}
+
+function params_validate(){
+    var dataset = JSON.stringify(scrapeData());
+    console.log( "params_validate dataset=",dataset)
+    var valid = {};
+    $.ajax(
+        { url: API+"params/validate",
+         method: 'post',
+         dataType: 'json',
+         contentType: "application/json",
+         data: dataset
+        }).done(
+            function( errs ){
+                console.log( "validate_parameters; results are ", errs );
+                valid = {"dataset":dataset, "errs":errs };
+                // populateForm( result, result );
+            }
+        ).fail(
+            function( jqXHR, textStatus, errorThrown ){
+                console.log( "failed with " + textStatus + " errorThrown "+errorThrown );
+                console.log( "jqXHR.statusCode" + jqXHR.status + " text" + jqXHR.statusText );
+                valid = {"dataset":dataset, "errs":errorThrown };
+            }
+    );
+    return valid;
+}
+
+function run_submit(){
+
+}
+
+function params_set(){
+    var valid = params_validate()
+    console.log( "params_set; valid=", valid )
+    var nerrs = Object.keys(valid.errs).length
+    if(nerrs == 0){
+        $.ajax(
+            { url: API+"params/set",
+            method: 'get',
+            dataType: 'json',
+            data: valid.dataset,
+            contentType: "application/json",
+            }).done(
+                function( result ){
+                    /*
+                    console.log( "load_parameters; results are ", result );
+                    populateForm( result, result );
+                    */
+                }
+            ).fail(
+                function( jqXHR, textStatus, errorThrown ){
+                    console.log( "failed with " + textStatus + " errorThrown "+errorThrown );
+                    console.log( "jqXHR.statusCode" + jqXHR.status + " text" + jqXHR.statusText );
+                }
+        );
+    } else {
+        // place errers by inputs
+    }
+}
+
 function submitForm( action, target ){
      var url = "/stb2/"+action;
      if( target != null ){
@@ -694,14 +764,8 @@ function submitForm( action, target ){
 }
 
 $(document).ready(function(){
-        $("mainform").submit(function(e){
-                alert('submit intercepted');
-                e.preventDefault(e);
-        });
-        // submitForm("params");
-        
-        submitForm("reset");
-    });
+        params_initialise();
+});
 
 </script>
 </html>

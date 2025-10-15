@@ -50,8 +50,8 @@ end
 
 function validate( sp :: SimpleParams )::Dict
     errs = Dict()
-    validate_ratebands!( errs, "tax", sp.taxrates, sb.taxbands )
-    validate_ratebands!( errs, "ni", sp.nirates, sb.nibands )
+    validate_ratebands!( errs, "tax", sp.taxrates, sp.taxbands )
+    validate_ratebands!( errs, "ni", sp.nirates, sp.nibands )
     validate_value!(errs, "taxallowance", sp.taxallowance; max=100_000)
     validate_value!(errs, "child_benefit", sp.child_benefit)
     validate_value!(errs, "pension", sp.pension)
@@ -60,7 +60,7 @@ function validate( sp :: SimpleParams )::Dict
     validate_value!(errs, "uc_single", sp.uc_single)
     validate_value!(errs, "uc_single", sp.uc_single)
     validate_value!(errs, "uc_taper", sp.uc_taper; min=0, max=100)
-    errs
+    return errs
 end
 
 function loaddefs() :: TaxBenefitSystem 
@@ -550,12 +550,15 @@ function scotben_output_fetch_item()
             sns = Symbol( subitem )  
             return json( res.summary.gain_lose[2][sns])
         else 
-            # this just deals with INFs in the output, which json objects to
+            # this just deals with INFs in the output, which json objects to: 
             s = JSON3.write( res.summary[ns]; allow_inf=true)
             s = replace(s,"Infinity"=>"99999999")
             return HTTP.Response(
                 200,
                 ["Content-Type" => "application/json"], s )
         end
+    else
+        return HTTP.Response(
+                404, body="No such output yet" )
     end
 end
