@@ -1,6 +1,7 @@
 module MicrosimAPIv1
 
 using Genie
+
 using GenieSession 
 using Genie.Requests
 using GenieSessionFileSession
@@ -47,7 +48,9 @@ const up = Genie.up
 export up
 
 function main()
-  Genie.genie(; context = @__MODULE__)
+    # Genie.Configuration.config!(; server_handle_static_files = true )
+    # Genie.Configuration.config!(; server_document_root = "/home/graham_s/julia/vw/MicrosimAPIv1/web/" )
+    Genie.genie(; context = @__MODULE__)
 end
 
 function __init__()
