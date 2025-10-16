@@ -42,6 +42,9 @@
 
 
         <form id='mainform' action="thing" method="POST">       
+
+            <input type="hidden" id="session_id" name="session_id" value="-999999"/>
+
             <div class='container-fluid'>                 
                 <div class='row'><!-- input row -->
                     <fieldset class="col border rounded-2 m-1 p-2">
@@ -367,7 +370,7 @@ function scrapeData(){
 }
 
 
-function populateForm( pars, defaults ){
+function populateForm( session_id, pars, defaults ){
     initialiseTable( "tax", 
         pars.taxrates, 
         pars.taxbands,
@@ -379,6 +382,7 @@ function populateForm( pars, defaults ){
         defaults.nirates, 
         defaults.nibands
             );
+    $( "#session_id" ).val( session_id );
     setVal( 'taxallowance', pars.taxallowance, defaults.taxallowance);
     setVal( 'child_benefit', pars.child_benefit, defaults.child_benefit );
     setVal( 'pension', pars.pension, defaults.pension );
@@ -625,16 +629,19 @@ function updateProgress( result ){
 
 const API = "http://microapi/scotben/"
 
+// const API = "http://localhost:8000/scotben/"
+
 function params_initialise(){
-     $.ajax(
+    $.ajax(
         { url: API+"params/initialise",
          method: 'get',
          dataType: 'json',
+         credentials: 'include',
          contentType: "application/json",
         }).done(
             function( result ){
                 console.log( "load_parameters; results are ", result );
-                populateForm( result, result );
+                populateForm( result.session_id, result.pars, result.pars );
             }
         ).fail(
             function( jqXHR, textStatus, errorThrown ){
@@ -644,21 +651,24 @@ function params_initialise(){
     );
 }
 
+
 function params_validate(){
-    var dataset = JSON.stringify(scrapeData());
+    var dataset = JSON.stringify({'dataset':scrapeData(),'session_id':session_id} );
+    var session_id = $( "#session_id" ).val();
+    var num_validation_errors = 0;
     console.log( "params_validate dataset=",dataset)
-    var valid = {};
-    $.ajax(
+    var jqXHR = $.ajax(
         { url: API+"params/validate",
          method: 'post',
          dataType: 'json',
          contentType: "application/json",
          data: dataset
-        }).done(
+        });
+        /*
+.done(
             function( errs ){
                 console.log( "validate_parameters; results are ", errs );
                 valid = {"dataset":dataset, "errs":errs };
-                // populateForm( result, result );
             }
         ).fail(
             function( jqXHR, textStatus, errorThrown ){
@@ -667,7 +677,14 @@ function params_validate(){
                 valid = {"dataset":dataset, "errs":errorThrown };
             }
     );
-    return valid;
+    */
+    jqXHR.done( function( data ) {
+        console.log( "second complete", data );
+        num_validation_errors = Object.keys(data).length;
+        console.log( "data length", num_validation_errors );
+    });
+    console.log( "params_validate; returning valid=", num_validation_errors )
+    return num_validation_errors;
 }
 
 function run_submit(){
@@ -675,22 +692,22 @@ function run_submit(){
 }
 
 function params_set(){
-    var valid = params_validate()
-    console.log( "params_set; valid=", valid )
-    var nerrs = Object.keys(valid.errs).length
-    if(nerrs == 0){
+    num_validation_errors = params_validate()
+    console.log( "params_set; valid=", num_validation_errors )
+    // var nerrs = Object.keys(valid.errs).length
+    
+    if( num_validation_errors == 0){
+        var dataset = JSON.stringify(scrapeData());
         $.ajax(
             { url: API+"params/set",
-            method: 'get',
+            method: 'post',
             dataType: 'json',
-            data: valid.dataset,
+            data: {"session_id":session_id, "dataset":dataset},
             contentType: "application/json",
             }).done(
-                function( result ){
-                    /*
+                function( result ){                    
                     console.log( "load_parameters; results are ", result );
-                    populateForm( result, result );
-                    */
+                    populateForm( result.session_id, result.pars, result.defaults );                    
                 }
             ).fail(
                 function( jqXHR, textStatus, errorThrown ){

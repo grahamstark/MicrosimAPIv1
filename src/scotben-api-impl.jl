@@ -367,7 +367,7 @@ function scotben_params_set()
     if length( errs ) == 0
         SESSIONS[id].params_and_settings.params[2] = pars
         SESSIONS[id].hid = hid( SESSIONS[id].params_and_settings )
-        return json((; session_id=id, pars=pars))
+        return json((; session_id=id, pars=pars, default=DEFAULT_SIMPLE_PARAMS))
     else
         return json((;session_id=id, errs=errs ))
     end
