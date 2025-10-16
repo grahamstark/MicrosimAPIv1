@@ -16,6 +16,7 @@ using Markdown
 using LoggingExtras
 using Observables
 using Parameters
+using Random
 using StructTypes
 using SwaggerMarkdown
 using SwagUI
@@ -43,14 +44,24 @@ include( "examples.jl")
 include( "scotben-api-constants.jl")
 include( "scotben-api-impl.jl")
 
-
 const up = Genie.up
 export up
 
 function main()
     # Genie.Configuration.config!(; server_handle_static_files = true )
     # Genie.Configuration.config!(; server_document_root = "/home/graham_s/julia/vw/MicrosimAPIv1/web/" )
-    Genie.genie(; context = @__MODULE__)
+    # Genie.Configuration.config!(; cors_allowed_origins = ["*"])
+    # Genie.Configuration.add_cors_header!("Access-Control-Allow-Origin", "*")
+    # Genie.Configuration.config!("Access-Control-Allow-Origin", "*")
+     Genie.genie(; context = @__MODULE__)
+end
+
+function get_session_id()
+    id = payload(:session_id,"Missing")
+    if id == "Missing"
+        id = randstring(60)
+    end
+    return id;
 end
 
 function __init__()
@@ -61,6 +72,12 @@ function __init__()
         errormonitor(t)
     end
 end
+
+#=
+Genie.config.cors_allowed_origins=["*"]
+Genie.config.cors_headers["Access-Control-Allow-Credentials"]="true"
+Genie.config.cors_headers["Access-Control-Allow-Headers"]="*"
+=# 
 
 #=
     to start from repl: 

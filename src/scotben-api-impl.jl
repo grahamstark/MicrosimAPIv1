@@ -316,50 +316,60 @@ function hidfromsession(id::String)::UInt
 end
 
 function getparams()
-    pars = paramsfromsession()
-    (:pars=>pars,:def=>DEFAULT_SIMPLE_PARAMS) |> json
+    id = get_session_id()
+    pars = paramsfromsession(id)
+    return (; session_id=id, pars=pars,def=DEFAULT_SIMPLE_PARAMS) |> json
 end
 
 """
 
 """
 function scotben_params_list_available()
-    session = GenieSession.session() #  :: GenieSession.Session 
+    id = get_session_id()
+    #=
+    session = GenieSession.session(params()) #  :: GenieSession.Session 
     @show session
     id = session.id
+    =#
     @show id
-    return json(DEFAULT_SYSTEMS)
+    return json( (;session_id=id, systems=DEFAULT_SYSTEMS))
 end
 
 """
 
 """
 function scotben_params_initialise() # req::HTTP.Request, resp :: HTTP.Response)
-    session = GenieSession.session() #  :: GenieSession.Session 
+    id = get_session_id()
+    #=
+    session = GenieSession.session(params()) #  :: GenieSession.Session 
     @show session
     id = session.id
+    =#
     @show id
     prs = allfromsession(id)
     prs.params[2]=deepcopy(DEFAULT_SIMPLE_PARAMS)
     prs.hid = hid( prs )
     @show SESSIONS
-    return json( prs.params[2] )
+    return json((;session_id=id, pars=prs.params[2]))
 end
 
 """
 
 """
 function scotben_params_set()
-    session = GenieSession.session() #  :: GenieSession.Session 
+    id = get_session_id()
+    #=
+    session = GenieSession.session(params()) 
     id = session.id
+    =#
     pars = paramsfrompayload( rawpayload() )
     errs = validate( pars )
     if length( errs ) == 0
         SESSIONS[id].params_and_settings.params[2] = pars
         SESSIONS[id].hid = hid( SESSIONS[id].params_and_settings )
-        return json(pars)
+        return json((; session_id=id, pars=pars))
     else
-        return json( errs )
+        return json((;session_id=id, errs=errs ))
     end
 end
 
@@ -367,11 +377,16 @@ end
 
 """
 function scotben_params_validate()
-    session = GenieSession.session() #  :: GenieSession.Session 
+    id = get_session_id()
+    #=
+    session = GenieSession.session(params())
     id = session.id
-    pars = paramsfrompayload( rawpayload() )
+    =#
+    pars = paramsfrompayload( payload(:dataset))
+    @show pars
     errs = validate( pars )
-    return json( errs )
+    @show errs
+    return json((;session_id=id, errs=errs ))
 end
 
 
@@ -449,8 +464,11 @@ end
 
 """
 function scotben_run_submit()
-    session = GenieSession.session() #  :: GenieSession.Session 
+    id = get_session_id()
+    #=
+    session = GenieSession.session( params()) #  :: GenieSession.Session 
     id = session.id    
+    =#
     prs = allfromsession(id)
     res = get(CACHED_RESULTS, prs.hid, nothing )
     @show CACHED_RESULTS
@@ -461,13 +479,13 @@ function scotben_run_submit()
         try
             println( "submitting job")
             submit_job( prs )
-            return json((; error="ok", info=Progress( BASE_UUID, "submitted", 0, 0, 0, 0 ) ))
+            return json((; session_id=id, error="ok", info=Progress( BASE_UUID, "submitted", 0, 0, 0, 0 )))
         catch e
             println( "exception $e")
-            return json((; error="error", info=e))
+            return json((;session_id=id, error="error", info=e))
         end
     else
-        return json((; error="ok", info=res.progress ))
+        return json((;error="ok", session_id=id, info=res.progress ))
     end
 end
 
@@ -475,8 +493,11 @@ end
 
 """
 function scotben_run_status()
-    session = GenieSession.session() #  :: GenieSession.Session 
+    id = get_session_id()
+    #=
+    session = GenieSession.session( params()) #  :: GenieSession.Session 
     id = session.id
+    =#
     @show CACHED_RESULTS
     @show JOB_QUEUE
     prs = allfromsession(id)
@@ -484,9 +505,9 @@ function scotben_run_status()
     res = Base.get(CACHED_RESULTS, prs.hid, nothing )
     @show res
     if isnothing( res )
-        return json((; error="no_run", info="" ))
+        return json((;session_id=id, error="no_run", info="" ))
     else
-        return json((; error="ok", info=res.progress ))
+        return json((;session_id=id, error="ok", info=res.progress ))
     end
     return "Status"
 end
@@ -536,22 +557,25 @@ end
 
 """
 function scotben_output_fetch_item()
-    session = GenieSession.session() #  :: GenieSession.Session 
+    id = get_session_id()
+    #=
+    session = GenieSession.session( params()) #  :: GenieSession.Session 
     id = session.id
+    =#
     prs = allfromsession( id )
     res = Base.get(CACHED_RESULTS, prs.hid, nothing )
     if ! isnothing( res )
         item = payload(:item)
         ns = Symbol( item )
         if item == "examples"          
-            return json(res.examples)
+            return json((; session_id=id, item=res.examples))
         elseif item == "gain_lose"
             subitem = payload(:subitem)
             sns = Symbol( subitem )  
-            return json( res.summary.gain_lose[2][sns])
+            return json((; session_id=id, item=res.summary.gain_lose[2][sns]))
         else 
             # this just deals with INFs in the output, which json objects to: 
-            s = JSON3.write( res.summary[ns]; allow_inf=true)
+            s = JSON3.write((;session_id=id, item=res.summary[ns]); allow_inf=true)
             s = replace(s,"Infinity"=>"99999999")
             return HTTP.Response(
                 200,

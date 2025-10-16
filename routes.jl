@@ -108,6 +108,7 @@ route( "/scotben/output/phunpak", MSA.scotben_output_phunpak, method = GET  )
 route( "/scotben/output/labels", MSA.scotben_output_labels, method = GET  )
 route( "/scotben/output/fetch/:item/:subitem", MSA.scotben_output_fetch_item, method = GET  )
 
+route( "/get_session_id", MSA.get_session_id, method=GET )
 route("/docs") do 
   # FIXME this is broken.
   # build a swagger document from markdown
