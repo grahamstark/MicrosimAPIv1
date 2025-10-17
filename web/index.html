@@ -254,14 +254,40 @@ function makeInput( n, name, type ){
     return "<input id='"+id+"' name='"+id+"' type='number' min='"+min+"' max='"+max+"' step='"+step+"' value='' class=' w-75' />";
 }
 
+/**
+ * action: like 'del-tax'
+ * n : array index (from 1, not 0)
+ **/
+function editTable( action, n ){
+    console.log( "action=", action, "n=", n );
+    var tt = action.split("-");
+    which = tt[1];
+    rbs = scrapetax( which );
+    rates = rbs[0];
+    bands = rbs[1];
+
+    pos = n-1
+    if(tt[0] == 'del'){
+        rbs[0].splice(pos,1)
+        rbs[1].splice(pos,1)
+    } else if(tt[0] == 'add'){
+
+
+    } else {
+        console.log( "unknown action=", tt[0] );
+    }
+    console.log( "rbs=", rbs, "n=", n );
+    initialiseTable( which, rbs[0], rbs[1], rbs[0], rbs[1] );
+}
+
 function makeAddDel( n, name, isdel ){
-    var action = 'add'+name;
+    var action = 'add-'+name;
     var icon = "bi-plus-circle text-success";
     if(isdel===true){
-        action = 'del'+name;
+        action = 'del-'+name;
         icon = "bi-dash-circle text-danger";
     }
-    return "<span onclick='submitForm(\""+action+"\", "+n+")' ><i class=\""+icon+"\" style=\"font-size: 1rem\"></i></span>";
+    return "<span onclick='editTable(\""+action+"\", "+n+")' ><i class=\""+icon+"\" style=\"font-size: 1rem\"></i></span>";
 }
 
 function makeRow( n, name, addDel ){
@@ -632,16 +658,18 @@ const API = "http://microapi/scotben/"
 // const API = "http://localhost:8000/scotben/"
 
 function params_initialise(){
+    var session_id = $( "#session_id" ).val();
     $.ajax(
         { url: API+"params/initialise",
          method: 'get',
          dataType: 'json',
          credentials: 'include',
+         data: {"session_id":session_id},
          contentType: "application/json",
         }).done(
             function( result ){
                 console.log( "load_parameters; results are ", result );
-                populateForm( result.session_id, result.pars, result.pars );
+                populateForm( result.session_id, result.params, result.params );
             }
         ).fail(
             function( jqXHR, textStatus, errorThrown ){
@@ -653,8 +681,10 @@ function params_initialise(){
 
 
 function params_validate(){
-    var dataset = JSON.stringify({'dataset':scrapeData(),'session_id':session_id} );
+    var params = scrapeData();
     var session_id = $( "#session_id" ).val();
+    // var dataset = JSON.stringify({'params':params,'session_id':session_id});    
+    var dataset = {'params':params,'session_id':session_id};    
     var num_validation_errors = 0;
     console.log( "params_validate dataset=",dataset)
     var jqXHR = $.ajax(
@@ -664,20 +694,6 @@ function params_validate(){
          contentType: "application/json",
          data: dataset
         });
-        /*
-.done(
-            function( errs ){
-                console.log( "validate_parameters; results are ", errs );
-                valid = {"dataset":dataset, "errs":errs };
-            }
-        ).fail(
-            function( jqXHR, textStatus, errorThrown ){
-                console.log( "failed with " + textStatus + " errorThrown "+errorThrown );
-                console.log( "jqXHR.statusCode" + jqXHR.status + " text" + jqXHR.statusText );
-                valid = {"dataset":dataset, "errs":errorThrown };
-            }
-    );
-    */
     jqXHR.done( function( data ) {
         console.log( "second complete", data );
         num_validation_errors = Object.keys(data).length;
@@ -692,23 +708,27 @@ function run_submit(){
 }
 
 function params_set(){
-    num_validation_errors = params_validate()
+    // num_validation_errors = params_validate()
+    num_validation_errors = 0
     console.log( "params_set; valid=", num_validation_errors )
     // var nerrs = Object.keys(valid.errs).length
-    
+    var params = scrapeData();
+    var session_id = $( "#session_id" ).val();
+    var dataset = JSON.stringify({'params':params,'session_id':session_id});    
+    // var dataset = {'params':params,'session_id':session_id};
+    console.log( "params_set; dataset=", dataset )
+    // $.getJSON( API+"params/set", JSON.stringify(dataset), populateForm );    
     if( num_validation_errors == 0){
-        var dataset = );
-        
         $.ajax(
             { url: API+"params/set",
             method: 'post',
             dataType: 'json',
-            data: { "dataset": JSON.stringify(scrapeData()), "session_id":session_id },
+            data: dataset,
             contentType: "application/json",
             }).done(
                 function( result ){                    
                     console.log( "load_parameters; results are ", result );
-                    populateForm( result.session_id, result.pars, result.defaults );                    
+                    populateForm( result.session_id, result.params, result.default );                    
                 }
             ).fail(
                 function( jqXHR, textStatus, errorThrown ){
@@ -719,6 +739,7 @@ function params_set(){
     } else {
         // place errers by inputs
     }
+    
 }
 
 function submitForm( action, target ){
