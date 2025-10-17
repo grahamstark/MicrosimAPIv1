@@ -37,6 +37,7 @@ route( "/scotben/params/initialise", MSA.scotben_params_initialise, method = GET
         description: A json list of new parameters.
 """
 route( "/scotben/params/set", MSA.scotben_params_set, method = POST  )
+route( "/scotben/params/set", MSA.scotben_params_set, method = GET  )
 
 
 

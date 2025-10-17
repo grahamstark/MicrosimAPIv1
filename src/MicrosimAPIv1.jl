@@ -2,9 +2,9 @@ module MicrosimAPIv1
 
 using Genie
 
-using GenieSession 
+# using GenieSession 
 using Genie.Requests
-using GenieSessionFileSession
+# using GenieSessionFileSession
 import Genie.Renderer.Json: json
 using Jedis
 
@@ -59,7 +59,13 @@ end
 function get_session_id()
     id = payload(:session_id,"Missing")
     if id == "Missing"
-        id = randstring(60)
+        jp = jsonpayload()
+        if !isnothing(jp)
+            id = get(jp,"session_id","Missing")
+        end
+    end
+    if id == "Missing"
+        id = randstring(40)
     end
     return id;
 end

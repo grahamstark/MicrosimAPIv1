@@ -14,12 +14,19 @@ struct SimpleParams{T}
     uc_taper :: T
 end
 
+struct ParamsAndId{T}
+    params :: SimpleParams{T}
+    session_id :: String
+end
+
 StructTypes.StructType(::Type{SimpleParams}) = StructTypes.Struct()
+StructTypes.StructType(::Type{ParamsAndId}) = StructTypes.Struct()
 StructTypes.StructType(::Type{Progress})  = StructTypes.Struct()
 
-function paramsfrompayload( payload )
-    @show payload
-    pars = JSON3.read(payload, SimpleParams{Float64})
+function paramsfrompayload( )::ParamsAndId
+    println( "paramsfrompayload entered:")
+    @show rawpayload()
+    pars = JSON3.read( rawpayload(), ParamsAndId{Float64}) # SimpleParams{Float64} ) #ParamsAndId{Float64})
     return pars
 end
 
@@ -340,17 +347,12 @@ end
 """
 function scotben_params_initialise() # req::HTTP.Request, resp :: HTTP.Response)
     id = get_session_id()
-    #=
-    session = GenieSession.session(params()) #  :: GenieSession.Session 
-    @show session
-    id = session.id
-    =#
     @show id
     prs = allfromsession(id)
     prs.params[2]=deepcopy(DEFAULT_SIMPLE_PARAMS)
     prs.hid = hid( prs )
     @show SESSIONS
-    return json((;session_id=id, pars=prs.params[2]))
+    return json((;session_id=id, params=prs.params[2]))
 end
 
 """
@@ -358,16 +360,16 @@ end
 """
 function scotben_params_set()
     id = get_session_id()
-    #=
-    session = GenieSession.session(params()) 
-    id = session.id
-    =#
-    pars = paramsfrompayload( rawpayload() )
-    errs = validate( pars )
+    println( "scotben_params_set")
+    @show id
+    pars_and_id = paramsfrompayload()
+    @assert id == pars_and_id.session_id
+    @show params
+    errs = validate( pars_and_id.params )
     if length( errs ) == 0
-        SESSIONS[id].params_and_settings.params[2] = pars
-        SESSIONS[id].hid = hid( SESSIONS[id].params_and_settings )
-        return json((; session_id=id, pars=pars, default=DEFAULT_SIMPLE_PARAMS))
+        SESSIONS[id].params[2] = pars_and_id.params
+        SESSIONS[id].hid = hid( SESSIONS[id] )
+        return json((; session_id=id, params=pars_and_id.params, default=DEFAULT_SIMPLE_PARAMS))
     else
         return json((;session_id=id, errs=errs ))
     end
@@ -378,13 +380,10 @@ end
 """
 function scotben_params_validate()
     id = get_session_id()
-    #=
-    session = GenieSession.session(params())
-    id = session.id
-    =#
-    pars = paramsfrompayload( payload(:dataset))
-    @show pars
-    errs = validate( pars )
+    @show payload()
+    pars_and_id = paramsfrompayload()
+    @show pars_and_id
+    errs = validate( pars_and_id.params )
     @show errs
     return json((;session_id=id, errs=errs ))
 end
@@ -465,10 +464,6 @@ end
 """
 function scotben_run_submit()
     id = get_session_id()
-    #=
-    session = GenieSession.session( params()) #  :: GenieSession.Session 
-    id = session.id    
-    =#
     prs = allfromsession(id)
     res = get(CACHED_RESULTS, prs.hid, nothing )
     @show CACHED_RESULTS
@@ -494,10 +489,6 @@ end
 """
 function scotben_run_status()
     id = get_session_id()
-    #=
-    session = GenieSession.session( params()) #  :: GenieSession.Session 
-    id = session.id
-    =#
     @show CACHED_RESULTS
     @show JOB_QUEUE
     prs = allfromsession(id)
@@ -558,10 +549,6 @@ end
 """
 function scotben_output_fetch_item()
     id = get_session_id()
-    #=
-    session = GenieSession.session( params()) #  :: GenieSession.Session 
-    id = session.id
-    =#
     prs = allfromsession( id )
     res = Base.get(CACHED_RESULTS, prs.hid, nothing )
     if ! isnothing( res )
