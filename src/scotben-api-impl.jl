@@ -37,7 +37,7 @@ function validate_value!( d::Dict, name::String, v :: Real ; min=0, max=1000 )
     d
 end
 
-function validate_ratebands!( d::Dict, name::String, rates::Vector, bands::Vector)
+function validate_ratebands!( errs::Dict, name::String, rates::Vector, bands::Vector)
     nr = length( rates )
     nb = length( bands )
     if nr - nb > 1
