@@ -697,12 +697,13 @@ function params_set(){
     // var nerrs = Object.keys(valid.errs).length
     
     if( num_validation_errors == 0){
-        var dataset = JSON.stringify(scrapeData());
+        var dataset = );
+        
         $.ajax(
             { url: API+"params/set",
             method: 'post',
             dataType: 'json',
-            data: {"session_id":session_id, "dataset":dataset},
+            data: { "dataset": JSON.stringify(scrapeData()), "session_id":session_id },
             contentType: "application/json",
             }).done(
                 function( result ){                    
