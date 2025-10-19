@@ -1,0 +1,2 @@
+#!/bin/sh
+julia -t6 --heap-size-hint=2G --color=no --depwarn=no --project=@. -q -i -- $(dirname $0)/../bootstrap.jl -s=true "$@"
