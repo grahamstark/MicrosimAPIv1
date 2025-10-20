@@ -24,8 +24,8 @@ StructTypes.StructType(::Type{ParamsAndId}) = StructTypes.Struct()
 StructTypes.StructType(::Type{Progress})  = StructTypes.Struct()
 
 function paramsfrompayload( )::ParamsAndId
-    @debug  "paramsfrompayload entered:"
-    @debug rawpayload()
+    @info  "paramsfrompayload entered:"
+    @info rawpayload()
     pars = JSON3.read( rawpayload(), ParamsAndId{Float64}) # SimpleParams{Float64} ) #ParamsAndId{Float64})
     return pars
 end
@@ -239,15 +239,19 @@ JOB_QUEUE = Channel{ParamsAndSettings}(QSIZE)
 
 function get_session_id()
     id = payload(:session_id,"Missing")
+    @info "get_session_id; initial id " id
     if id == "Missing"
         jp = jsonpayload()
         if !isnothing(jp)
             id = get(jp,"session_id","Missing")
         end
+        @info "trying id from jsonpayload id=" id
     end
     prs = get(SESSIONS, id, nothing )
+    @info "getting session for id " id 
     if(id == "Missing") || isnothing( prs )        
         id = randstring(40)
+        @info "creating new session " id
         SESSIONS[id] = ParamsAndSettings()
     end
     SESSIONS[id].last_accessed = now()
@@ -311,11 +315,11 @@ function do_run( prs :: ParamsAndSettings; do_dumps = false )
 end
 
 function submit_job( prs :: ParamsAndSettings )
-    @debug "submit_job entered"
+    @info "submit_job entered"
     @assert (! haskey( CACHED_RESULTS, prs.hid )) # if so, why are we here?
     CACHED_RESULTS[prs.hid] = NULL_ALL_OUTPUT # initialise blank entry
     put!( JOB_QUEUE, prs )
-	@debug "submit exiting queue is now $JOB_QUEUE"
+	@info "submit exiting queue is now $JOB_QUEUE"
 end
 
 function calc_one()
@@ -363,36 +367,49 @@ function scotben_params_list_available()
     id = get_session_id()
     #=
     session = GenieSession.session(params()) #  :: GenieSession.Session 
-    @debug session
+    @info session
     id = session.id
     =#
-    @debug id
+    @info id
     return json( (;session_id=id, systems=DEFAULT_SYSTEMS))
 end
 
 """
 
 """
-function scotben_params_initialise() # req::HTTP.Request, resp :: HTTP.Response)
+function scotben_params_initialise() 
     id = get_session_id()
-    @debug id
+    @info id
     prs = allfromsession(id)
     prs.params[2]=deepcopy(DEFAULT_SIMPLE_PARAMS)
     prs.hid = hid( prs )
-    @debug SESSIONS
-    return json((;session_id=id, params=prs.params[2]))
+    # @info SESSIONS
+    return json((;session_id=id, params=prs.params[2], default=DEFAULT_SIMPLE_PARAMS ))
 end
+
+"""
+
+"""
+function scotben_params_get() 
+    id = get_session_id()
+    @info "scotben_params_get entered"
+    @info id
+    prs = allfromsession(id)
+    # @info SESSIONS
+    return json((;session_id=id, params=prs.params[2], default=DEFAULT_SIMPLE_PARAMS))
+end
+
 
 """
 
 """
 function scotben_params_set()
     id = get_session_id()
-    @debug  "scotben_params_set"
-    @debug id
+    @info  "scotben_params_set"
+    @info id
     pars_and_id = paramsfrompayload()
     @assert id == pars_and_id.session_id
-    @debug params
+    @info params
     errs = validate( pars_and_id.params )
     if length( errs ) == 0
         SESSIONS[id].params[2] = pars_and_id.params
@@ -408,11 +425,11 @@ end
 """
 function scotben_params_validate()
     id = get_session_id()
-    @debug payload()
+    @info payload()
     pars_and_id = paramsfrompayload()
-    @debug pars_and_id
+    @info pars_and_id
     errs = validate( pars_and_id.params )
-    @debug errs
+    @info errs
     return json((;session_id=id, errs=errs ))
 end
 
@@ -428,7 +445,7 @@ end
 
 """
 function scotben_params_subsys()
-    @debug "/scotben/params/subsys"
+    @info "/scotben/params/subsys"
     return "Subsys Not Implemented."
 end
 
@@ -494,21 +511,21 @@ function scotben_run_submit()
     id = get_session_id()
     prs = allfromsession(id)
     res = get(CACHED_RESULTS, prs.hid, nothing )
-    @debug CACHED_RESULTS
-    @debug JOB_QUEUE
-    @debug prs
-    @debug res
+    @info CACHED_RESULTS
+    @info JOB_QUEUE
+    @info prs
+    @info res
     if isnothing( res )
         try
-            @debug  "submitting job"
+            @info  "submitting job"
             submit_job( prs )
             return json((; session_id=id, error="ok", info=Progress( BASE_UUID, "submitted", 0, 0, 0, 0 )))
         catch e
-            @debug  "exception $e"
+            @info  "exception $e"
             return json((;session_id=id, error="error", info=e))
         end
-    else
-        return json((;error="ok", session_id=id, info=res.progress ))
+    else # already submitted 
+        return json((;session_id=id, error="ok", info=res.progress ))
     end
 end
 
@@ -517,15 +534,14 @@ end
 """
 function scotben_run_status()
     id = get_session_id()
-    @debug CACHED_RESULTS
-    @debug JOB_QUEUE
+    @info "scotben_run_status got id = " id
     prs = allfromsession(id)
-    @debug prs
+    @info "getting hid " prs.hid
     res = Base.get(CACHED_RESULTS, prs.hid, nothing )
-    @debug res
     if isnothing( res )
         return json((;session_id=id, error="no_run", info="" ))
     else
+        @info "got progress as " res.progress
         return json((;session_id=id, error="ok", info=res.progress ))
     end
     return "Status"
@@ -583,7 +599,11 @@ function scotben_output_fetch_item()
         item = payload(:item)
         ns = Symbol( item )
         if item == "examples"          
-            return json((; session_id=id, item=res.examples))
+            s = JSON3.write((;session_id=id, item=res.examples); allow_inf=true)
+            s = replace(s,"Infinity"=>"99999999")
+            return HTTP.Response(
+                200,
+                ["Content-Type" => "application/json"], s )
         elseif item == "gain_lose"
             subitem = payload(:subitem)
             sns = Symbol( subitem )  
