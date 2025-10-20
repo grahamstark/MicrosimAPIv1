@@ -137,97 +137,97 @@ route( "/scotben/settings/validate", MSA.scotben_settings_validate, method = POS
 @swagger"""
 /scotben/settings/describe:
   get:
-    description: set model parameters to the payload.
+    description: a dict of key/description for each setting variable.
     responses:
       '200':
-        description: A json list of new parameters.
+        description:  a dict of key/description for each setting variable.
 """
 route( "/scotben/settings/describe", MSA.scotben_settings_describe, method = GET  )
 
 @swagger"""
 /scotben/settings/helppage:
   get:
-    description: set model parameters to the payload.
+    description: A help page (probably in markdown) for the run settings.
     responses:
       '200':
-        description: A json list of new parameters.
+        description: A help page (probably in markdown) for the run settings.
 """
 route( "/scotben/settings/helppage", MSA.scotben_settings_helppage, method = GET  )
 
 @swagger"""
-/scotben/settings/helppage:
+/scotben/settings/labels:
   get:
-    description: set model parameters to the payload.
+    description: Key/value dict of labels for each settings option.
     responses:
       '200':
-        description: A json list of new parameters.
+        description: Key/value dict of labels for each settings option.
 """
 route( "/scotben/settings/labels", MSA.scotben_settings_labels, method = GET  )
 
 @swagger"""
-/scotben/settings/helppage:
+/scotben/run/status:
   get:
-    description: set model parameters to the payload.
+    description: The status of the current run, if any.
     responses:
       '200':
-        description: A json list of new parameters.
+        description: A json dict with one of the keys from `/scotben/run/statuses` and optional counts.
 """
 route( "/scotben/run/status", MSA.scotben_run_status, method = GET )
 
 @swagger"""
-/scotben/settings/helppage:
+/scotben/run/statuses:
   get:
-    description: set model parameters to the payload.
+    description: an ordered dict of key/label values for possible run statuses (queued/executing/output, etc.) Should also describle any additional info e.g. counts of units processed, position in job queue, etc..
     responses:
       '200':
-        description: A json list of new parameters.
+        description: an ordered dict of key/label values for possible run statuses (queued/executing/output, etc.)..
 """
 route( "/scotben/run/statuses", MSA.scotben_run_statuses, method = GET  )
 
 @swagger"""
-/scotben/settings/helppage:
+/scotben/run/submit:
   get:
-    description: set model parameters to the payload.
+    description: submit a run with the current params and settings.
     responses:
       '200':
-        description: A json list of new parameters.
+        description: xxx.
 """
 route( "/scotben/run/submit", MSA.scotben_run_submit, method = GET  )
 
 @swagger"""
-/scotben/settings/helppage:
+/scotben/run/abort:
   get:
-    description: set model parameters to the payload.
+    description: abort the run associated with the session
     responses:
       '200':
-        description: A json list of new parameters.
+        description: if aborted OK.
 """
 route( "/scotben/run/abort", MSA.scotben_run_abort, method = GET  )
 
 @swagger"""
-/scotben/settings/helppage:
+/scotben/output/items:
   get:
-    description: set model parameters to the payload.
+    description: A name/description dict of items created by a run, in json.
     responses:
       '200':
-        description: A json list of new parameters.
+        description: A name/description dict of items created by a run, in json.
 """
 route( "/scotben/output/items", MSA.scotben_output_items, method = GET  )
 
 @swagger"""
-/scotben/settings/helppage:
+/scotben/output/phunpa:
   get:
-    description: set model parameters to the payload.
+    description: All or most outputs from a run as a zip file.
     responses:
       '200':
-        description: A json list of new parameters.
+        description: downloadable zipfile.
 """
 route( "/scotben/output/phunpak", MSA.scotben_output_phunpak, method = GET  )
 
 @swagger"""
-/scotben/settings/helppage:
+/scotben/output/labels:
   get:
-    description: set model parameters to the payload.
+    description: Return a dict of key/value labels for all output items.
     responses:
       '200':
         description: A json list of new parameters.
@@ -235,9 +235,9 @@ route( "/scotben/output/phunpak", MSA.scotben_output_phunpak, method = GET  )
 route( "/scotben/output/labels", MSA.scotben_output_labels, method = GET  )
 
 @swagger"""
-/scotben/settings/helppage:
+/scotben/output/fetch/:item/:subitem:
   get:
-    description: set model parameters to the payload.
+    description: return an output item `item` and optionally `subitem`. Should be in the list of outputs from `/scotben/settings/helppage`. Probably in json.
     responses:
       '200':
         description: A json list of new parameters.
@@ -245,9 +245,29 @@ route( "/scotben/output/labels", MSA.scotben_output_labels, method = GET  )
 route( "/scotben/output/fetch/:item/:subitem", MSA.scotben_output_fetch_item, method = GET  )
 
 @swagger"""
+/get_session_id:
+  get:
+    description: Get the id for the current session or create one if no current session.
+    responses:
+      '200':
+        description: id of session
+"""
+route( "/get_session_id", MSA.get_session_id, method=GET )
+
+@swagger"""
+/destroy_session:
+  get:
+    description: 
+    responses:
+      '200':
+        description: the old id and 'result=0' if OK.
+"""
+route( "/destroy_session", MSA.destroy_session, method=GET )
+
+@swagger"""
 /scotben/settings/helppage:
   get:
-    description: set model parameters to the payload.
+    description: Get the id for the current session or create one if no current session.
     responses:
       '200':
         description: A json list of new parameters.

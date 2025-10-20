@@ -205,6 +205,8 @@ const DEF_PROGRESS = Progress( BASE_UUID, "na", 0, 0, 0, 0 )
 	settings = RunSettings.DEFAULT_SETTINGS # use thing declared in Scottis..RunSettings to avoid weird precompilation error
 	params = [DEFAULT_SIMPLE_PARAMS, DEFAULT_SIMPLE_PARAMS]
     hid = riskyhash( [RunSettings.DEFAULT_SETTINGS, DEFAULT_SIMPLE_PARAMS])
+    last_accessed :: Date = now()
+    created :: Date  = now()
 end
 
 function hid( prs :: ParamsAndSettings )::UInt
@@ -232,6 +234,32 @@ const QSIZE = 32
 const SESSIONS = Dict{String, ParamsAndSettings}()
 const CACHED_RESULTS = Dict{UInt, AllOutput}()
 JOB_QUEUE = Channel{ParamsAndSettings}(QSIZE)
+
+
+
+function get_session_id()
+    id = payload(:session_id,"Missing")
+    if id == "Missing"
+        jp = jsonpayload()
+        if !isnothing(jp)
+            id = get(jp,"session_id","Missing")
+        end
+    end
+    prs = get(SESSIONS, id, nothing )
+    if(id == "Missing") || isnothing( prs )        
+        id = randstring(40)
+        SESSIONS[id] = ParamsAndSettings()
+    end
+    SESSIONS[id].last_acccessed = now()
+    return id;
+end
+
+function destroy_session()
+    id = payload(:session_id,"Missing")
+    delete!(SESSIONS,id)
+    return json(;(id=id,result=0))
+end
+
 
 #
 # this many simultaneous (sp) runs
