@@ -10,6 +10,7 @@ using Jedis
 
 using DataFrames
 using DataStructures
+using Dates
 using HTTP
 using JSON3
 using Markdown 
@@ -55,21 +56,6 @@ function main()
     # Genie.Configuration.config!("Access-Control-Allow-Origin", "*")
      Genie.genie(; context = @__MODULE__)
 end
-
-function get_session_id()
-    id = payload(:session_id,"Missing")
-    if id == "Missing"
-        jp = jsonpayload()
-        if !isnothing(jp)
-            id = get(jp,"session_id","Missing")
-        end
-    end
-    if id == "Missing"
-        id = randstring(40)
-    end
-    return id;
-end
-
 function __init__()
     global t
     t = @async calc_one()

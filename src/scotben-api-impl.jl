@@ -24,8 +24,8 @@ StructTypes.StructType(::Type{ParamsAndId}) = StructTypes.Struct()
 StructTypes.StructType(::Type{Progress})  = StructTypes.Struct()
 
 function paramsfrompayload( )::ParamsAndId
-    println( "paramsfrompayload entered:")
-    @show rawpayload()
+    @debug  "paramsfrompayload entered:"
+    @debug rawpayload()
     pars = JSON3.read( rawpayload(), ParamsAndId{Float64}) # SimpleParams{Float64} ) #ParamsAndId{Float64})
     return pars
 end
@@ -250,14 +250,14 @@ function get_session_id()
         id = randstring(40)
         SESSIONS[id] = ParamsAndSettings()
     end
-    SESSIONS[id].last_acccessed = now()
+    SESSIONS[id].last_accessed = now()
     return id;
 end
 
 function destroy_session()
     id = payload(:session_id,"Missing")
     delete!(SESSIONS,id)
-    return json(;(id=id,result=0))
+    return json((;id=id,result=0))
 end
 
 
@@ -363,10 +363,10 @@ function scotben_params_list_available()
     id = get_session_id()
     #=
     session = GenieSession.session(params()) #  :: GenieSession.Session 
-    @show session
+    @debug session
     id = session.id
     =#
-    @show id
+    @debug id
     return json( (;session_id=id, systems=DEFAULT_SYSTEMS))
 end
 
@@ -375,11 +375,11 @@ end
 """
 function scotben_params_initialise() # req::HTTP.Request, resp :: HTTP.Response)
     id = get_session_id()
-    @show id
+    @debug id
     prs = allfromsession(id)
     prs.params[2]=deepcopy(DEFAULT_SIMPLE_PARAMS)
     prs.hid = hid( prs )
-    @show SESSIONS
+    @debug SESSIONS
     return json((;session_id=id, params=prs.params[2]))
 end
 
@@ -388,11 +388,11 @@ end
 """
 function scotben_params_set()
     id = get_session_id()
-    println( "scotben_params_set")
-    @show id
+    @debug  "scotben_params_set"
+    @debug id
     pars_and_id = paramsfrompayload()
     @assert id == pars_and_id.session_id
-    @show params
+    @debug params
     errs = validate( pars_and_id.params )
     if length( errs ) == 0
         SESSIONS[id].params[2] = pars_and_id.params
@@ -408,11 +408,11 @@ end
 """
 function scotben_params_validate()
     id = get_session_id()
-    @show payload()
+    @debug payload()
     pars_and_id = paramsfrompayload()
-    @show pars_and_id
+    @debug pars_and_id
     errs = validate( pars_and_id.params )
-    @show errs
+    @debug errs
     return json((;session_id=id, errs=errs ))
 end
 
@@ -428,7 +428,7 @@ end
 
 """
 function scotben_params_subsys()
-    @show "/scotben/params/subsys"
+    @debug "/scotben/params/subsys"
     return "Subsys Not Implemented."
 end
 
@@ -494,17 +494,17 @@ function scotben_run_submit()
     id = get_session_id()
     prs = allfromsession(id)
     res = get(CACHED_RESULTS, prs.hid, nothing )
-    @show CACHED_RESULTS
-    @show JOB_QUEUE
-    @show prs
-    @show res
+    @debug CACHED_RESULTS
+    @debug JOB_QUEUE
+    @debug prs
+    @debug res
     if isnothing( res )
         try
-            println( "submitting job")
+            @debug  "submitting job"
             submit_job( prs )
             return json((; session_id=id, error="ok", info=Progress( BASE_UUID, "submitted", 0, 0, 0, 0 )))
         catch e
-            println( "exception $e")
+            @debug  "exception $e"
             return json((;session_id=id, error="error", info=e))
         end
     else
@@ -517,12 +517,12 @@ end
 """
 function scotben_run_status()
     id = get_session_id()
-    @show CACHED_RESULTS
-    @show JOB_QUEUE
+    @debug CACHED_RESULTS
+    @debug JOB_QUEUE
     prs = allfromsession(id)
-    @show prs
+    @debug prs
     res = Base.get(CACHED_RESULTS, prs.hid, nothing )
-    @show res
+    @debug res
     if isnothing( res )
         return json((;session_id=id, error="no_run", info="" ))
     else
