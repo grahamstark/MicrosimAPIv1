@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-</html>
+<html>
 <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="UTF-8">
@@ -7,7 +7,7 @@
     <link rel="icon" href="images/favicon.ico?v=2.0.0" type="image/x-icon">
     <link rel="stylesheet" href="css/stb-bootstrap.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
-    </script><script type='text/javascript' src='js/jquery.js'></script>
+    <script type='text/javascript' src='js/jquery.js'></script>
     <script type='text/javascript' src='js/jquery.periodicalupdater.js'></script>
     <script type='text/javascript' src='js/jquery.validate.js'></script>
      <!-- bootstrap -->
@@ -43,7 +43,7 @@
 
         <form id='mainform' action="thing" method="POST">       
 
-            <input type="hidden" id="session_id" name="session_id" value="-999999"/>
+            <input type="hidden" id="session_id" name="session_id" />
 
             <div class='container-fluid'>                 
                 <div class='row'><!-- input row -->
@@ -141,7 +141,7 @@
                     <div class="col">
                         <ul class="nav">
                             <li class="nav-item  p-2">                      
-                                <button  type="button" class='btn btn-warning rounded-2' value='' onclick='params_initialise()'>Reset</button>
+                                <button  type="button" class='btn btn-warning rounded-2' value='' onclick='params_get("initialise")'>Reset</button>
                             </li>
                             <li class="nav-item p-2">                      
                                 <button  type="button" class='btn btn-info rounded-2' value='' onclick='params_set()'>Save</button>
@@ -179,7 +179,9 @@
                                     <div class='col'>
                                         <h4>Gainers and Losers</h4>
                                         <div class='row'>
-                                            <div class='col' id="gain-lose-table">,</div>
+                                            <div class='col' id="gain-lose-ten-gl">,</div>
+                                            <div class='col' id="gain-lose-dec-gl">,</div>
+                                            <div class='col' id="gain-lose-children-gl">,</div>
                                             <div class='col' id="deciles-graph">,</div>
                                         </div>
                                     </div>
@@ -190,21 +192,21 @@
                                             data-bs-target='#big-costs-popup'>
                                             <div id="costs-table"></div>
                                         </div>
-                                        <div id="overall-costs"></div>
+                                        <div id="short_income_summary"></div>
                                     </div>                            
                                     <div class='col'>
                                         <h4>Incentives - Marginal Effective Tax Rates</h4>
-                                        <div id="mr-table"></div>
+                                        <div id="metrs"></div>
                                     </div>                            
                                 </div><!-- row -->
                                 <div class='row'>
                                     <div class='col'>
                                         <h4>Poverty</h4>
-                                        <div id='pov-table'></div>
+                                        <div id='povtrans_matrix'></div>
                                     </div>
                                     <div class='col'>
                                         <h4>Inequality</h4>
-                                        <div id='ineq-table'></div>
+                                        <div id='inequality'></div>
                                     </div>
                                     <div class='col'>
                                         <div id='lorenz'></div>
@@ -408,7 +410,8 @@ function populateForm( session_id, pars, defaults ){
         defaults.nirates, 
         defaults.nibands
             );
-    $( "#session_id" ).val( session_id );
+    console.log( "setting the session_id to ", session_id );
+    setSessionId( session_id );
     setVal( 'taxallowance', pars.taxallowance, defaults.taxallowance);
     setVal( 'child_benefit', pars.child_benefit, defaults.child_benefit );
     setVal( 'pension', pars.pension, defaults.pension );
@@ -602,46 +605,147 @@ function createMainOutputs( result ){
         false );
 }
 
-function create_outputs(){
-    
+
+
+
+function make_example_card( hh, res ){
+    /*
+    change = res.pres.bhc_net_income - res.bres.bhc_net_income
+    ( gnum, glclass, glstr ) = format_and_class( change )
+    i2sp = inctostr(res.pres.income )
+    i2sb = inctostr(res.bres.income )
+    changestr = gnum != "" ? "&nbsp;"*ARROWS_1[glstr]*"&nbsp;&pound;"* gnum*"pw" : "No Change"
+    */
+    var card = `
+    <div class='card' 
+        style='width: 12rem;' 
+        data-bs-toggle='modal' 
+        data-bs-target='#$(hh.picture)' >
+            <div class='row'>
+                <img src='images/families/${FAMDIR}/${hh.picture}.svg'  
+                    width='130'
+                    height='93'
+                    alt='Picture of Family'/>                    
+             </div>
+            <div class='card-body'>
+                <p class='$glclass'><strong>$changestr</strong></p>
+                <h5 class='card-title'>${hh.label}</h5>
+                <p class='card-text text-black'>$(hh.description)</p>
+            </div>
+        </div><!-- card -->
+    `;
+    return card
 }
 
-function updateProgress( result ){
-    console.log( "updateSTB  result.phase = " + result.phase );
-    var session_id = $( "#session_id" ).val();
-    switch( result.phase ){
-        case 'missing':
-            $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Run is waiting to start found.</div>");
-            break;
-        case 'start':
-            $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Run starting: starting pre-run routines.</div>");
-            break;
-        case 'weights':
-            $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Generating sample weights (may take some time..).</div>");
-            break;
-        case 'disability_eligibility':
-            $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Calibrating Disability Benefits.</div>");
-            break;
-        case 'starting':
-            $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Pre-routines completed; run starting.</div>");
-            break;
-        case 'run':
-            drawRunProgress( result );
-            break;
-        case 'dumping_frames':
-            $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Calculations complete; now generating output.</div>");
-            break;
-        case 'end':
-            $("#progress-indicator").html( "<div></div>" );
-            updater.stop();
-            create_outputs()
-        break;  
-        case 'na':
-            updater.stop();
+
+function passthrough( json ){
+    return "<pre>GOES HERE</pre>";
+}
+
+function get_result( item, subitem, session_id, htmlifier, target ){
+    var url = API+"output/fetch/"+item+"/"+subitem +"?session_id="+session_id;
+    console.log( "get_result; url=", url);
+    var jqXHR = $.ajax({ 
+        url: url,
+        method: 'get',
+        contentType: "application/json"});
+    jqXHR.done(  
+        function( data ){
+            var out = htmlifier( data );
+            $( "#"+target ).html( out );
+        });
+}
+
+function create_outputs( session_id ){
+    /*
+    "headline_figures"=>"Headline Summary ",
+    "quantiles_df"=>"Quantiles (50 rows serialsed DF) ", 
+    "deciles_df" => "Quantiles (10 rows serialsed DF) ",
+    "income_summary" => "Income Summary ", 
+    "poverty" => "Poverty Measures ", 
+    "inequality" => "Inequality Measures ", 
+    "metrs" => "Marginal Effective Tax Rates histogram ", 
+    "child_poverty" => "Child Poverty Count ",
+    "gain_lose/ten_gl" => "Gain Lose by Tenure ",
+    "gain_lose/dec_gl" => "Gain Lose by Decile ",
+    "gain_lose/children_gl" => "Gain Lose by Number of Children ",
+    "gain_lose/hhtype_gl" => "Gain Lose by Household Size ",
+    "poverty_lines" => "Computed Poverty Lines ",
+    "short_income_summary"=>"Short Income Summary ",
+    "income_hists"=>"Histogram of Incomes ",
+    "povtrans_matrix_df"=>"Movements in and out of poverty (as a labelled dataframe)",
+    "examples"=>"Simple Worked Examples "
+    */
+    get_result( "examples", null, session_id, passthrough, "examples");
+    get_result( "gain_lose", 'ten_gl', session_id, format_df, "gain-lose-ten-gl");
+    
+    // #gain-lose-table-dec-gl
+    // #gain-lose-table-dec-gl
+}
+
+function format_df( df ){
+    body = `
+    <table class='table-sm table-striped'>
+
+    </table>
+    `;
+
+    return body;
+}
+
+function updateProgress( session_id, results ){
+    console.log( "updateSTB results = ", results );
+    /*
+    "submitted" => "Job Submitted",
+    "do-one-run-start" => "Run Started",
+    "weights" => "Weights Calculation",
+    "disability_eligibility" => "Calibrating Disability Eligibility",
+    "starting" => "Main Calculations Starting",
+    "run" => "Running Through Households",
+    "dumping_frames" => "Dumping Data to Files",
+    "do-one-run-end" => "Run Ended",
+    "completed" => "Task Completed - Output is Ready"])
+    */
+    if( results.error == 'ok' ){
+        var progress = results.info;
+        switch( progress.phase ){
+            case 'submitted':
+                $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Run is waiting to start.</div>");
+                break;
+            case 'do-one-run-start':
+                $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Run starting: starting pre-run routines.</div>");
+                break;
+            case 'weights':
+                $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Generating sample weights (may take some time..).</div>");
+                break;
+            case 'disability_eligibility':
+                $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Calibrating Disability Benefits.</div>");
+                break;
+            case 'starting':
+                $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Pre-routines completed; run starting.</div>");
+                break;
+            case 'run':
+                drawRunProgress( progress );
+                break;
+            case 'dumping_frames':
+                $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Calculations complete; now generating output.</div>");
+                break;
+            case 'do-one-run-end':
+                $("#progress-indicator").html( "<div class='alert alert-info' role='alert'>Calculations Abd Output Generation complete.</div>");
+                break;
+
+            case 'completed':
+                $("#progress-indicator").html( "<div></div>" );
+                updater.stop();
+                create_outputs( session_id )
             break;  
-        default:
-            $("#progress-indicator").html( "<div class='alert alert-danger' role='alert'>Problem: run "+result.uuid+" can't be found.</div>");
-            break;                                      
+            default:
+                $("#progress-indicator").html( "<div class='alert alert-danger' role='alert'>Problem: run "+progress.phase+" can't be found.</div>");
+                break; 
+        }                                     
+    } else {
+        $("#progress-indicator").html( "<div class='alert alert-danger'>A Run Error Has Occurred: error is " + results.err + " info: " + results.info + "</div>");
+        updater.stop();
     }
 }
 
@@ -649,19 +753,22 @@ const API = "http://microapi/scotben/"
 
 // const API = "http://localhost:8000/scotben/"
 
-function params_initialise(){
-    var session_id = $( "#session_id" ).val();
+/**
+ * action - one of 'initialise', 'get'
+ */
+function params_get(action){
+    var session_id = getSessionId();
     $.ajax(
-        { url: API+"params/initialise",
-         method: 'get',
+        { url: API+"params/"+action,
+         method: 'post',
          dataType: 'json',
          credentials: 'include',
-         data: {"session_id":session_id},
+         data: JSON.stringify({"session_id":session_id}),
          contentType: "application/json",
         }).done(
             function( result ){
                 console.log( "load_parameters; results are ", result );
-                populateForm( result.session_id, result.params, result.params );
+                populateForm( result.session_id, result.params, result.default );
             }
         ).fail(
             function( jqXHR, textStatus, errorThrown ){
@@ -671,17 +778,32 @@ function params_initialise(){
     );
 }
 
+function getSessionId(){
+    var session_id = localStorage.getItem( "session_id");
+    if(session_id == null){
+        session_id = $( "#session_id" ).val();
+        if(session_id !== null){
+            localStorage.setItem( "session_id", session_id );
+        }
+    }
+    console.log( "getSessionId; got id as ", session_id );
+    return session_id;
+}
+
+function setSessionId( session_id ){
+    // localStorage.setItem( "session_id", session_id );
+    $( "#session_id" ).val( session_id );
+    localStorage.setItem("session_id", session_id );
+}
+
 function params_set(){
     // num_validation_errors = params_validate()
     num_validation_errors = 0
+    var session_id = getSessionId();
     console.log( "params_set; valid=", num_validation_errors )
-    // var nerrs = Object.keys(valid.errs).length
-    var params = scrapeData();
-    var session_id = $( "#session_id" ).val();
+    var params = scrapeData();    
     var dataset = JSON.stringify({'params':params,'session_id':session_id});    
-    // var dataset = {'params':params,'session_id':session_id};
     console.log( "params_set; dataset=", dataset )
-    // $.getJSON( API+"params/set", JSON.stringify(dataset), populateForm );    
     if( num_validation_errors == 0){
         $.ajax(
             { url: API+"params/set",
@@ -707,7 +829,7 @@ function params_set(){
 
 function params_validate(){
     var params = scrapeData();
-    var session_id = $( "#session_id" ).val();
+    var session_id = getSessionId(); // ( "#session_id" ).val();
     // var dataset = JSON.stringify({'params':params,'session_id':session_id});    
     var dataset = JSON.stringify({'params':params,'session_id':session_id});    
     var num_validation_errors = 0;
@@ -731,22 +853,19 @@ function params_validate(){
     return num_validation_errors;
 }
 
-function runComplete( data ){
-
-}
-
 function startMonitor( data, textStatus, jqXHR ){
     console.log( "starting run and timer");               
-    console.log( "result " + data );
-    var uri = API+'run/status';
-    var session_id = $( "#session_id" ).val();
-    var dataset = {'session_id':session_id};
+    console.log( "startMonitor; data.session_id=" + data.session_id );
+    var session_id = getSessionId();
+    var uri = API+'run/status?session_id='+session_id;
+    console.log( "startMonitor; got session id ", session_id);
+    var dataset = JSON.stringify({'session_id':session_id});
     updater = $.PeriodicalUpdater(API+'run/status', {
         url: uri,         // URL of ajax request
         cache: false,     // By default, don't allow caching
         method: 'GET',    // method; get or post
-        data: dataset,         // array of values to be passed to the page - e.g. {name: "John", greeting: "hello"}
-        minTimeout: 500, // starting value for the timeout in milliseconds was: 1000
+        data: dataset,    // array of values to be passed to the page - e.g. {name: "John", greeting: "hello"}
+        minTimeout: 500,  // starting value for the timeout in milliseconds was: 1000
         maxTimeout:32000, // maximum length of time between requests was: 64000
         multiplier: 1,    // if set to 2, timerInterval will double each time the response hasn't changed (up to maxTimeout)
         maxCalls: 0,      // maximum number of calls. 0 = no limit.
@@ -758,7 +877,7 @@ function startMonitor( data, textStatus, jqXHR ){
         verbose: 0        // The level to be logging at: 0 = none; 1 = some; 2 = all
     }, function( remoteData, success, xhr, handle ) {
         console.log( "progress: got %o", remoteData );
-        updateProgress( remoteData.info );
+        updateProgress( session_id, remoteData );
     });
 }
 
@@ -769,80 +888,23 @@ function handleRunFailure( data, textStatus, jqXHR ){
 function run_submit(){
     params_set();
     num_validation_errors = params_validate();   
+    var session_id = getSessionId(); 
+    var dataset = JSON.stringify({'session_id':session_id});
     if(num_validation_errors == 0){
         $.ajax(
             { url: API+"run/submit",
-            method: 'get',
+            method: 'post',
             dataType: 'json',
             contentType: "application/json",
+            data:  dataset,
             success: startMonitor,
             fail: handleRunFailure 
             });
     }
 }
 
-function submitForm( action, target ){
-     var url = "/stb2/"+action;
-     if( target != null ){
-        url += "/"+target;
-     }
-     $("#mainform").validate();
-     var dataset = JSON.stringify(scrapeData());
-     console.log( "submitForm; data = %o", dataset );
-     // console.debug( "submitForm submitForm url="+url );
-     $.ajax(
-        { url: url,
-         method: 'post',
-         dataType: 'json',
-         contentType: "application/json",
-         data: dataset
-        }).done(
-            function( result ){
-                console.log( "submitForm; result %o", result );
-                console.log( "target " + target );
-                populateForm( result[0].pars, result[1].def );
-                if( action == 'run'){
-                    // start updater if no immediate output
-                    if( result[2].output == "" ){
-                        console.log( "starting run and timer");               
-                        console.log( "result " + result );
-                        var uri = '/stb2/progress/';
-                        updater = $.PeriodicalUpdater('/stb2/progress', {
-                            url: uri,         // URL of ajax request
-                            cache: false,     // By default, don't allow caching
-                            method: 'POST',    // method; get or post
-                            data: '',         // array of values to be passed to the page - e.g. {name: "John", greeting: "hello"}
-                            minTimeout: 500, // starting value for the timeout in milliseconds was: 1000
-                            maxTimeout:32000, // maximum length of time between requests was: 64000
-                            multiplier: 1,    // if set to 2, timerInterval will double each time the response hasn't changed (up to maxTimeout)
-                            maxCalls: 0,      // maximum number of calls. 0 = no limit.
-                            maxCallsCallback: null, // The callback to execute when we reach our max number of calls
-                            autoStop: 0,      // automatically stop requests after this many returns of the same data. 0 = disabled
-                            autoStopCallback: null, // The callback to execute when we autoStop
-                            cookie: false,    // whether (and how) to store a cookie
-                            runatonce: false, // Whether to fire initially or wait
-                            verbose: 0        // The level to be logging at: 0 = none; 1 = some; 2 = all
-                        }, function(remoteData, success, xhr, handle) {
-                            console.log( "progress: got %o", remoteData );
-                            updateProgress( remoteData.progress );
-                        });
-                    } else {
-                        createMainOutputs( result[2].output );
-                    }
-                } else if( action == 'reset'){
-                    createMainOutputs( result[2].output );
-                }
-            }
-        ).fail(
-            function( jqXHR, textStatus, errorThrown ){
-                console.log( "failed with " + textStatus + " errorThrown "+errorThrown );
-                console.log( "jqXHR.statusCode" + jqXHR.status + " text" + jqXHR.statusText );
-            }
-        );
-}
-
 $(document).ready(function(){
-        params_initialise();
+    params_get("get");
 });
 
 </script>

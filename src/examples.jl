@@ -254,7 +254,7 @@ function calc_examples( base :: TaxBenefitSystem, sys :: TaxBenefitSystem, setti
 	for ehh in EXAMPLE_HHS
 		bres = do_one_calc( ehh.hh, base, settings )
 		pres = do_one_calc( ehh.hh, sys, settings )
-		push!( v, ( bres=bres, pres=pres ))
+		push!( v, ( household=ehh, bres=bres, pres=pres ))
 	end
 	return v
 end

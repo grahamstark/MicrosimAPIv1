@@ -25,13 +25,23 @@ route( "/scotben/params/list-available", MSA.scotben_params_list_available, meth
 
 @swagger"""
 /scotben/params/initialise:
-  get:
+  post:
     description: Reset parameters to the default.
     responses:
       '200':
         description: A json list of default parameters.
 """
-route( "/scotben/params/initialise", MSA.scotben_params_initialise, method = GET  )
+route( "/scotben/params/initialise", MSA.scotben_params_initialise, method = POST  )
+
+@swagger"""
+/scotben/params/get:
+  post:
+    description: Get the current parameters.
+    responses:
+      '200':
+        description: A json list of current parameters.
+"""
+route( "/scotben/params/get", MSA.scotben_params_get, method = POST  )
 
 @swagger"""
 /scotben/params/set:
@@ -186,13 +196,13 @@ route( "/scotben/run/statuses", MSA.scotben_run_statuses, method = GET  )
 
 @swagger"""
 /scotben/run/submit:
-  get:
+  post:
     description: submit a run with the current params and settings.
     responses:
       '200':
         description: xxx.
 """
-route( "/scotben/run/submit", MSA.scotben_run_submit, method = GET  )
+route( "/scotben/run/submit", MSA.scotben_run_submit, method = POST )
 
 @swagger"""
 /scotben/run/abort:

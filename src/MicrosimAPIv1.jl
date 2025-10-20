@@ -49,11 +49,6 @@ const up = Genie.up
 export up
 
 function main()
-    # Genie.Configuration.config!(; server_handle_static_files = true )
-    # Genie.Configuration.config!(; server_document_root = "/home/graham_s/julia/vw/MicrosimAPIv1/web/" )
-    # Genie.Configuration.config!(; cors_allowed_origins = ["*"])
-    # Genie.Configuration.add_cors_header!("Access-Control-Allow-Origin", "*")
-    # Genie.Configuration.config!("Access-Control-Allow-Origin", "*")
      Genie.genie(; context = @__MODULE__)
 end
 function __init__()
