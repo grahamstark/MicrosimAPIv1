@@ -183,6 +183,7 @@
                                         <div class='row'>
                                             <div class='col' id="gain-lose-ten-gl">,</div>
                                             <div class='col' id="gain-lose-dec-gl">,</div>
+                                            <div class='col' id="gain-lose-hhtype-gl">,</div>
                                             <div class='col' id="gain-lose-children-gl">,</div>
                                             <div class='col' id="deciles-graph">,</div>
                                         </div>
@@ -191,10 +192,10 @@
                                         <h4>Revenues and Costs</h4>
                                         <div
                                             data-bs-toggle='modal' 
-                                            data-bs-target='#big-costs-popup'>
-                                            <div id="costs-table"></div>
+                                            data-bs-target='#short_income_summary'>
+                                            <div id="short_income_summary"></div>
                                         </div>
-                                        <div id="short_income_summary"></div>
+                                        <div id="very_short_income_summary"></div>
                                     </div>                            
                                     <div class='col'>
                                         <h4>Incentives - Marginal Effective Tax Rates</h4>
@@ -609,37 +610,6 @@ function createMainOutputs( result ){
 
 
 
-
-function make_example_card( hh, res ){
-    /*
-    change = res.pres.bhc_net_income - res.bres.bhc_net_income
-    ( gnum, glclass, glstr ) = format_and_class( change )
-    i2sp = inctostr(res.pres.income )
-    i2sb = inctostr(res.bres.income )
-    changestr = gnum != "" ? "&nbsp;"*ARROWS_1[glstr]*"&nbsp;&pound;"* gnum*"pw" : "No Change"
-    */
-    var card = `
-    <div class='card' 
-        style='width: 12rem;' 
-        data-bs-toggle='modal' 
-        data-bs-target='#$(hh.picture)' >
-            <div class='row'>
-                <img src='images/families/${FAMDIR}/${hh.picture}.svg'  
-                    width='130'
-                    height='93'
-                    alt='Picture of Family'/>                    
-             </div>
-            <div class='card-body'>
-                <p class='$glclass'><strong>$changestr</strong></p>
-                <h5 class='card-title'>${hh.label}</h5>
-                <p class='card-text text-black'>$(hh.description)</p>
-            </div>
-        </div><!-- card -->
-    `;
-    return card
-}
-
-
 function passthrough( json ){
     return "<pre>GOES HERE</pre>";
 }
@@ -653,7 +623,7 @@ function get_result( item, subitem, session_id, htmlifier, target ){
         contentType: "application/json"});
     jqXHR.done(  
         function( data ){
-            var out = htmlifier( data );
+            var out = htmlifier( target, data.item );
             $( "#"+target ).html( out );
         });
 }
@@ -673,13 +643,18 @@ function create_outputs( session_id ){
     "gain_lose/children_gl" => "Gain Lose by Number of Children ",
     "gain_lose/hhtype_gl" => "Gain Lose by Household Size ",
     "poverty_lines" => "Computed Poverty Lines ",
-    "short_income_summary"=>"Short Income Summary ",
+    "short_income_summary"=>"Short Income Summary",
+    "very_short_income_summary"=>"Income Summary - just a few key items.",
     "income_hists"=>"Histogram of Incomes ",
     "povtrans_matrix_df"=>"Movements in and out of poverty (as a labelled dataframe)",
     "examples"=>"Simple Worked Examples "
     */
     get_result( "examples", null, session_id, passthrough, "examples");
-    get_result( "gain_lose", 'ten_gl', session_id, format_df, "gain-lose-ten-gl");
+    get_result( "gain_lose", 'ten_gl', session_id, formatGainLose, "gain-lose-ten-gl");
+    get_result( "gain_lose", 'dec_gl', session_id, formatGainLose, "gain-lose-dec-gl");
+    get_result( "gain_lose", 'hhtype_gl', session_id, formatGainLose, "gain-lose-hhtype-gl");
+    get_result( "gain_lose", 'children_gl', session_id, formatGainLose, "gain-lose-children-gl");
+    get_result( "very_short_income_summary", null, session_id, formatGainLose, "very_short_income_summary");
     
     // #gain-lose-table-dec-gl
     // #gain-lose-table-dec-gl
@@ -739,7 +714,7 @@ function updateProgress( session_id, results ){
             case 'completed':
                 $("#progress-indicator").html( "<div></div>" );
                 updater.stop();
-                create_outputs( session_id )
+                create_outputs( session_id );
             break;  
             default:
                 $("#progress-indicator").html( "<div class='alert alert-danger' role='alert'>Problem: run "+progress.phase+" can't be found.</div>");

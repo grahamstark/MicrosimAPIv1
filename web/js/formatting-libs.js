@@ -5,13 +5,13 @@ const examples = {"session_id":"sxzUbcehtLScWhhsGGELnTEzX1sjDw6V5x98JRJ9","item"
 
 function formatTable( id, caption, headerRow, tableBody ){
     return `
-    <table id='${id}' name='${id}' class='table-sm table-striped'>
+    <table id='${id}' name='${id}' class='table table-sm table-striped'>
         <thead>
             <caption>
             ${caption}
-            </caption>
-            <tr>${headerRow}</tr>
+            </caption>            
         </thead>
+        <tr>${headerRow}</tr>
         <tbody>
             ${tableBody}
         </tbody<
@@ -27,9 +27,38 @@ function fmt2( v ){
     return $.number( v, 2 );
 }
 
+const OUT_SUBS = {
+    'avch':'Average Change',
+    'pct_change':"% Change",
+    'total_transfer': 'Total Transfer £mn'
+};
+
+/**
+ * borrowed from Stack Exchange: https://stackoverflow.com/questions/196972/convert-string-to-title-case-with-javascript
+ * @param {*} str 
+ * @returns 
+ */
+function toTitleCase(str) {
+  return str.replace(
+    /\w\S*/g,
+    text => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
+  );
+}
+
+function formatLabel( s ){
+    if( ! isNaN(s)){ // thing is a number
+        return s;
+    }
+    if(OUT_SUBS[s] !== undefined){ // thing is a predifined string
+        return OUT_SUBS[s];
+    }
+    s = s.replaceAll( "_", " ");
+    return toTitleCase(s);
+}
+
 function formatRow( rowLabel, rowCells ){
     return `
-    <tr><th>${rowLabel}</th>${rowCells}>/tr>
+    <tr><th>${rowLabel}</th>${rowCells}</tr>
     `;
 }
 
@@ -40,18 +69,53 @@ function formatJuliaDataframe( id, df, formatter ){
     var tableBody = '';
     var headerRow = '';
     for( var c = 0; c < colLabels.length; c++){
-        headerRow += `<th>${colLabels[c]}</th>`;
+        headerRow += `<th>${formatLabel(colLabels[c])}</th>`;
     }
     for( var r = 0; r < rowLabels.length; r++){
         var rowCells = "";
         for( var c = 1; c < df.columns.length; c++){ // 1st col is row label
             v = df.columns[c][r];
             vs = formatter(v)
-            rowCells += `<td>${vs}</td>`;
+            rowCells += `<td style='text-align:right'>${vs}</td>`;
         }
-        tableBody += formatRow( rowLabels[r], rowCells );
+        tableBody += formatRow( formatLabel(rowLabels[r]), rowCells );
     }
-    return formatTable( id, caption, headerRow, tableBody );
+    var t = formatTable( id, caption, headerRow, tableBody );
+    // console.log( "created table as ", t )
+    return t;
+}
+
+function formatGainLose(id, df ){
+    return formatJuliaDataframe(id, df, fmt0);
+}
+
+function make_example_card( hh, res ){
+    /*
+    change = res.pres.bhc_net_income - res.bres.bhc_net_income
+    ( gnum, glclass, glstr ) = format_and_class( change )
+    i2sp = inctostr(res.pres.income )
+    i2sb = inctostr(res.bres.income )
+    changestr = gnum != "" ? "&nbsp;"*ARROWS_1[glstr]*"&nbsp;&pound;"* gnum*"pw" : "No Change"
+    */
+    var card = `
+    <div class='card' 
+        style='width: 12rem;' 
+        data-bs-toggle='modal' 
+        data-bs-target='#$(hh.picture)' >
+            <div class='row'>
+                <img src='images/families/${FAMDIR}/${hh.picture}.svg'  
+                    width='130'
+                    height='93'
+                    alt='Picture of Family'/>                    
+             </div>
+            <div class='card-body'>
+                <p class='$glclass'><strong>$changestr</strong></p>
+                <h5 class='card-title'>${hh.label}</h5>
+                <p class='card-text text-black'>$(hh.description)</p>
+            </div>
+        </div><!-- card -->
+    `;
+    return card
 }
 
 /*
