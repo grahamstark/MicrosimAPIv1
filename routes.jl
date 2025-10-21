@@ -267,7 +267,7 @@ route( "/get_session_id", MSA.get_session_id, method=GET )
 @swagger"""
 /destroy_session:
   get:
-    description: 
+    description: destroy!
     responses:
       '200':
         description: the old id and 'result=0' if OK.
