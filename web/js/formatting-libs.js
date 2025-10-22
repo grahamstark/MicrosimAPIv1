@@ -257,7 +257,7 @@ function make_examples( exampleResults ){
 
 function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
     prestr = formatter(pre);
-    posttr = formatter(post);
+    poststr = formatter(post);
     m = upIsGood ? 100 : -100;
     change = m*(delta/pre);
     var gnum = fmt2( Math.abs(delta));
@@ -265,30 +265,29 @@ function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
     var glstr = ""
     if( change > 20.0 ){
         glstr = "positive_strong"
-        glclass = "text-success"
+        glclass = upIsGood ? "text-success" : "text-danger";
     } else if (change > 10.0) {
         glstr = "positive_med"
-        glclass = "text-success"
+        glclass = upIsGood ? "text-success" : "text-danger";
     } else if (change > 0.01) {
         glstr = "positive_weak"
-        glclass = "text-success"
+        glclass = upIsGood ? "text-success" : "text-danger";
     } else if (change < -20.0) {
         glstr = "negative_strong"
-        glclass = "text-danger"
+        glclass = upIsGood ? "text-danger" : "text-success";
     } else if (change < -10) {
         glstr = "negative_med"
-        glclass = "text-danger"
+        glclass = upIsGood ? "text-danger" : "text-success";
     } else if (change < -0.01) {
         glstr = "negative_weak"
-        glclass = "text-danger"
+        glclass = upIsGood ? "text-danger" : "text-success";
     } else {
         glstr = "nonsig"
         glclass = "text-body"
         gnum = "";
     }
-    var changestr = gnum !== "" ? "&nbsp;"+ARROWS_1[glstr]+"&nbsp;&pound;"+gnum+"pw" : "No Change";
-    var 
-    return {"gnum":gnum, "glclass":glclass, "glstr":glstr, "changestr":changestr,  };
+    var changestr = gnum !== "" ? "&nbsp;"+ARROWS_1[glstr]+"&nbsp;"+gnum+"pw" : "No Change";
+    return {"gnum":gnum, "glclass":glclass, "glstr":glstr, "changestr":changestr, 'prestr':prestr, 'poststr':poststr };
 }
 
 
@@ -331,11 +330,13 @@ net_direct	2.964431355503334e9JS:2964431355.503334
 
 */
 
-function makeSummaryBlock( sum ){
-    fc = formatAndClass( sum.net_cost );
+function makeSummaryBlock( id, res ){
+    var sum = res[1];
+    console.log( "makeSummaryBlock; sum = ", res );
+    var fc = formatAndClass( sum.net_cost );
     var headline = `<p class='${fc.glclass}'>Net Cost of your changes: ${fc.changestr}</p>`;
     var glline = `<p>Gainers: <b> ${fmt0(sum.gainers)}</b> Losers: <b>${fmt0(sum.losers)}</b> Unchanged: <b>${fmt0(sum.no_change)}  </b> </p>`
-    var cards = "<div class='card-group'>";
+    var cards = `<div id=${id} class='card-group'>`;
     cards += summarycard( "Direct Taxes £m", 
         sum.tax1/1000000, sum.tax2/1000000, sum.Δtax/1000000, true, fmt0 );
     cards += summarycard( "Benefit Spending £m", 
