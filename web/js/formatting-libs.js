@@ -133,13 +133,11 @@ function formatAndClass( change ){
 
 
 function make_example_card( hh, res ){
-    
     var change = res.pres.bhc_net_income - res.bres.bhc_net_income
     // ( gnum, glclass, glstr ) 
     var fc = formatAndClass( change )
     // i2sp = inctostr(res.pres.income )
     // i2sb = inctostr(res.bres.income )
-    
     var card = `
     <div class='card' 
         style='width: 12rem;' 
@@ -163,28 +161,28 @@ function make_example_card( hh, res ){
 
 
 function hhsummary( hh ){
-    caption = ""
-    ten = pretty(hh.tenure)
-    rm = "Rent"
-    hc = format( hh.gross_rent, commas=true, precision=2)
-    hregion = pretty(hh.region)
-    if is_owner_occupier( hh.tenure )
+    var caption = ""
+    var ten = formatLabel(hh.tenure)
+    var rm = "Rent"
+    var hc = fmt2( hh.gross_rent, commas=true, precision=2)
+    var hregion = fmt2(hh.region)
+    if(hh.tenure == 'owner_occupier'){
         hc = format(hh.mortgage_payment, commas=true, precision=2)
         rm = "Mortgage"
-    end
-    table = "<table class='table table-sm'>"
-    table += "<thead>
+    }
+    var table = "<table class='table table-sm'>"
+    table += `<thead>
         <tr>
             <th></th><th style='text-align:right'></th>
-        </tr>";
+        </tr>`;
     table += "<caption>$caption</caption>"
-    table += "
+    table += `
         </thead>
-        <tbody>"
+        <tbody>`
     table += "<tr><th>Tenure</th><td style='text-align:right'>${ten}</td></tr>"
     table += "<tr><th>$rm</th><td style='text-align:right'>${hc}</td></tr>"
     table += "<tr><th>Living in:</th><td style='text-align:right'>${hregion}</td></tr>"
-    # ... and so on
+    // ... and so on
     table += "</tbody></table>"
     return table;
 }
