@@ -154,7 +154,19 @@
                     <div class='col'>
                             <div id='output-fields'>
                                 <div class='row'>
-        
+                                    <div class='col-4'></div>
+                                    <div class='col-4'>
+                                        <h2>Results At A Glance</h2>
+                                    </div>
+                                    <div class='col-4'></div>
+                                </div>
+                                <div class='row'>
+                                    <div class='col-12' id='headline_figures'>
+                                       
+                                    </div>
+                                </div>
+
+                                <div class='row'>
                                     <div class='col-4'></div>
                                     <div class='col-4'>
                                         <h2>Results for some Example Families</h2>
@@ -166,10 +178,11 @@
                                        
                                     </div>
                                 </div>
+
                                 <div class='row'>
                                     <div class='col-4'></div>
                                     <div class='col-4'>
-                                        <h2>Results for the Whole of Scotland</h2>
+                                        <h2>Detailed Results for the Whole of Scotland</h2>
                                     </div>
                                     <div class='col-4'></div>
                                 </div>
@@ -656,6 +669,8 @@ function create_outputs( session_id ){
     "povtrans_matrix_df"=>"Movements in and out of poverty (as a labelled dataframe)",
     "examples"=>"Simple Worked Examples "
     */
+
+    get_result( "headline_figures", null, session_id, makeSummaryBlock, "headline_figures");
     get_result( "examples", null, session_id, makeExampleBlock, "examples");
     get_result( "gain_lose", 'ten_gl', session_id, formatGainLose, "gain-lose-ten-gl");
     get_result( "gain_lose", 'dec_gl', session_id, formatGainLose, "gain-lose-dec-gl");

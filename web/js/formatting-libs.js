@@ -23,6 +23,14 @@ function fmt2( v ){
     return $.number( v, 2 );
 }
 
+function moneyfmt( v ){
+    return '&pound;'+fmt2(v);
+}
+
+function pctfmt( v ){
+    return fmt2(v)+'%';
+}
+
 const OUT_SUBS = {
     'avch':'Average Change',
     'pct_change':"% Change",
@@ -243,4 +251,109 @@ function make_examples( exampleResults ){
         cards += make_example_popups( exampleResults[i])
     }
     return cards;
+}
+
+
+
+function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
+    prestr = formatter(pre);
+    posttr = formatter(post);
+    m = upIsGood ? 100 : -100;
+    change = m*(delta/pre);
+    var gnum = fmt2( Math.abs(delta));
+    var glclass = "";
+    var glstr = ""
+    if( change > 20.0 ){
+        glstr = "positive_strong"
+        glclass = "text-success"
+    } else if (change > 10.0) {
+        glstr = "positive_med"
+        glclass = "text-success"
+    } else if (change > 0.01) {
+        glstr = "positive_weak"
+        glclass = "text-success"
+    } else if (change < -20.0) {
+        glstr = "negative_strong"
+        glclass = "text-danger"
+    } else if (change < -10) {
+        glstr = "negative_med"
+        glclass = "text-danger"
+    } else if (change < -0.01) {
+        glstr = "negative_weak"
+        glclass = "text-danger"
+    } else {
+        glstr = "nonsig"
+        glclass = "text-body"
+        gnum = "";
+    }
+    var changestr = gnum !== "" ? "&nbsp;"+ARROWS_1[glstr]+"&nbsp;&pound;"+gnum+"pw" : "No Change";
+    var 
+    return {"gnum":gnum, "glclass":glclass, "glstr":glstr, "changestr":changestr,  };
+}
+
+
+function summarycard( label, pre, post, delta, upIsGood, formatter ){
+    var fc = formatAndClassSummary( pre, post, delta, upIsGood, formatter );
+    return `
+<div id='#${label}' class="card" style="width: 18rem;">
+  <div class="card-body">
+    <h5 class="card-title">${label}</h5>
+    <p class="card-text ${fc.glclass}">${fc.changestr} pre: ${fc.prestr} post: ${fc.poststr}<p>
+  </div>
+</div>
+    `;
+}
+
+
+
+/*
+
+gainers	710249.4316886746
+losers	4.3139657900036e6JS:4313965.7900036
+no_change	418767.2673887266
+ben1	2.7599549369699135e10JS:27599549369.699135
+ben2	2.8069550519604668e10JS:28069550519.604668
+tax1	3.689785996315472e10JS:36897859963.15472
+tax2	4.033229246856358e10JS:40332292468.56358
+palma1	0.9281274467034024
+palma2	1.1535255723115374
+gini1	0.2674798905761182
+gini2	0.3055580593206566
+pov_headcount1	0.1344091839937771
+pov_headcount2	0.18173504816581115
+Δtax	3.434432505408867e9JS:3434432505.408867
+Δben	4.7000114990553284e8JS:470001149.90553284
+net_cost	2.964431355503333e9JS:2964431355.503333
+net_direct	2.964431355503334e9JS:2964431355.503334
+Δpalma	0.225398125608135
+Δgini	0.0380781687445384
+Δpov_headcount	0.04732586417203405
+
+*/
+
+function makeSummaryBlock( sum ){
+    fc = formatAndClass( sum.net_cost );
+    var headline = `<p class='${fc.glclass}'>Net Cost of your changes: ${fc.changestr}</p>`;
+    var glline = `<p>Gainers: <b> ${fmt0(sum.gainers)}</b> Losers: <b>${fmt0(sum.losers)}</b> Unchanged: <b>${fmt0(sum.no_change)}  </b> </p>`
+    var cards = "<div class='card-group'>";
+    cards += summarycard( "Direct Taxes £m", 
+        sum.tax1/1000000, sum.tax2/1000000, sum.Δtax/1000000, true, fmt0 );
+    cards += summarycard( "Benefit Spending £m", 
+        sum.ben1/1000000, sum.ben2/1000000, sum.Δben/1000000, false, fmt0 );
+    cards += summarycard( "Inequality (Gini Coefficient)", 
+        sum.gini1, sum.gini2, sum.Δgini, false, fmt2 );
+    cards += summarycard( "Inequality (Palma Index)", 
+        sum.palma1, sum.palma2, sum.Δpalma, false, fmt2 );
+    cards += summarycard( "Poverty (Headcount))", 
+        sum.pov_headcount1, sum.pov_headcount2, sum.Δpov_headcount, false, fmt2 );
+    cards += summarycard( "Mean Marginal Effective Tax Rates (METRs)", 
+        sum.mean_metr1, sum.mean_metr2, sum.Δmean_metr, false, pctfmt );
+    cards += summarycard( "Median METRs", 
+        sum.median_metr1, sum.median_metr2, sum.Δmedian_metr, false, pctfmt );
+    cards += summarycard( "Mean Equivalised Household Income", 
+        sum.mean_income1, sum.mean_income2, sum.Δmean_income, true, moneyfmt );
+    cards += summarycard( "Median Equivalised Household Income", 
+        sum.median_income1, sum.median_income2, sum.Δmedian_income, true, moneyfmt );
+    cards += "</div>"
+    return headline + glline + cards;
 }
