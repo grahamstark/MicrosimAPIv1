@@ -62,7 +62,7 @@ function formatJuliaDataframe( id, df, formatter ){
     var rowLabels = df.columns[0];
     var colLabels = df.colindex.names;
     var caption = ''
-    if(df.metadata !== undefined){
+    if(df["metadata"] != undefined){
         caption = df.metadata.caption[0];
     }
     var tableBody = '';
