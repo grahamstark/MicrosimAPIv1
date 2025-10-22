@@ -254,8 +254,9 @@ function make_examples( exampleResults ){
     return cards;
 }
 
-
-
+/**
+ * FIXME this needs redone for UPISGOOD!!
+ */
 function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
     prestr = formatter(pre);
     poststr = formatter(post);
