@@ -55,6 +55,8 @@ of interacting..
 
 Based on our experience since then ...
 
+Object - run a model from something like Wordpress - without needing to have the model to hand.
+
 = Characteristics of Microsimulation Models
 
 Long running 
@@ -65,9 +67,15 @@ Phases (queues, running)
 
 Different inputs and outputs
 
+Parameters vs Settings
+
+
+
 = Features
 
-Out of scope: security 
+RESTful (sort of). Reference O'Reilly.
+
+Out of scope: security because ... 
 
 Learn about exact formats of inputs/outputs
 
@@ -79,7 +87,32 @@ Typically front-ended by Apache/NGNX
 
 Formats: JSON - optionally Markdown/XML/CSV
 
+Describe parameters: 
+
+Validate at server end, even if also at client-side
+
 = The API
+
+Different for e.g. Julia Scotben, Python Landman so:
+
+```
+
+#link("https://microapi.virtual-worlds.scot")[https://microapi.virtual-worlds.scot]
+
+```
+
+Typical items:
+
+```julia 
+
+    /model/params/set
+
+    /model/settings/set
+
+    /model/output/fetch/item
+```
+
+#link("https://microapi.virtual-worlds.scot/docs/")[Swagger Docs].
 
 == 
 
