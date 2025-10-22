@@ -89,17 +89,15 @@ Formats: JSON - optionally Markdown/XML/CSV
 
 Describe parameters: 
 
-Validate at server end, even if also at client-side
+Validate at server end, even if also at client-side.
+
+#link("")[Swagger].
 
 = The API
 
-Different for e.g. Julia Scotben, Python Landman so:
-
-```
+Different for e.g. Julia Scotben, Python Landman so Julia one is:
 
 #link("https://microapi.virtual-worlds.scot")[https://microapi.virtual-worlds.scot]
-
-```
 
 Typical items:
 
@@ -118,7 +116,7 @@ Typical items:
 
 == Problems
 
-
+buggy!
 
 
 #figure(
