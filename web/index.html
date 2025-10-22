@@ -614,6 +614,10 @@ function passthrough( json ){
     return "<pre>GOES HERE</pre>";
 }
 
+function makeExampleBlock( exampleResults ){
+    return make_examples( exampleResults );
+}
+
 function get_result( item, subitem, session_id, htmlifier, target ){
     var url = API+"output/fetch/"+item+"/"+subitem +"?session_id="+session_id;
     console.log( "get_result; url=", url);
@@ -649,7 +653,7 @@ function create_outputs( session_id ){
     "povtrans_matrix_df"=>"Movements in and out of poverty (as a labelled dataframe)",
     "examples"=>"Simple Worked Examples "
     */
-    get_result( "examples", null, session_id, passthrough, "examples");
+    get_result( "examples", null, session_id, makeExampleBlock, "examples");
     get_result( "gain_lose", 'ten_gl', session_id, formatGainLose, "gain-lose-ten-gl");
     get_result( "gain_lose", 'dec_gl', session_id, formatGainLose, "gain-lose-dec-gl");
     get_result( "gain_lose", 'hhtype_gl', session_id, formatGainLose, "gain-lose-hhtype-gl");

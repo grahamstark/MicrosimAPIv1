@@ -65,7 +65,10 @@ function formatRow( rowLabel, rowCells ){
 function formatJuliaDataframe( id, df, formatter ){
     var rowLabels = df.columns[0];
     var colLabels = df.colindex.names;
-    var caption = df.metadata.caption[0];
+    var caption = ''
+    if(df.metadata !== undefined){
+        caption = df.metadata.caption[0];
+    }
     var tableBody = '';
     var headerRow = '';
     for( var c = 0; c < colLabels.length; c++){
@@ -131,11 +134,11 @@ function formatAndClass( change ){
     return {"gnum":gnum, "glclass":glclass, "glstr":glstr, "changestr":changestr };
 }
 
-
-function make_example_card( hh, res ){
-    var change = res.pres.bhc_net_income - res.bres.bhc_net_income
+function make_example_card( res ){
+    var hh = res.household;
+    var change = res.pres.bhc_net_income - res.bres.bhc_net_income;
     // ( gnum, glclass, glstr ) 
-    var fc = formatAndClass( change )
+    var fc = formatAndClass( change );
     // i2sp = inctostr(res.pres.income )
     // i2sb = inctostr(res.bres.income )
     var card = `
@@ -156,40 +159,36 @@ function make_example_card( hh, res ){
             </div>
         </div><!-- card -->
     `;
-    return card
+    return card;
 }
 
 
 function hhsummary( hh ){
-    var caption = ""
-    var ten = formatLabel(hh.tenure)
-    var rm = "Rent"
-    var hc = fmt2( hh.gross_rent, commas=true, precision=2)
-    var hregion = fmt2(hh.region)
+    var ten = formatLabel(hh.tenure);
+    var rm = "Rent";
+    var hc = fmt2( hh.gross_rent, commas=true, precision=2);
     if(hh.tenure == 'owner_occupier'){
-        hc = format(hh.mortgage_payment, commas=true, precision=2)
-        rm = "Mortgage"
+        hc = fmt2(hh.mortgage_payment);
+        rm = "Mortgage";
     }
-    var table = "<table class='table table-sm'>"
-    table += `<thead>
-        <tr>
-            <th></th><th style='text-align:right'></th>
-        </tr>`;
-    table += "<caption>$caption</caption>"
-    table += `
+    var table = `
+    <table class='table table-sm'>
+        <thead>
+            <tr>
+                <th></th><th style='text-align:right'></th>
+            </tr>
         </thead>
-        <tbody>`
-    table += "<tr><th>Tenure</th><td style='text-align:right'>${ten}</td></tr>"
-    table += "<tr><th>$rm</th><td style='text-align:right'>${hc}</td></tr>"
-    table += "<tr><th>Living in:</th><td style='text-align:right'>${hregion}</td></tr>"
-    // ... and so on
-    table += "</tbody></table>"
+        <tbody>
+            <tr><th>Tenure</th><td style='text-align:right'>${ten}</td></tr>
+            <tr><th>${rm}</th><td style='text-align:right'>${hc}</td></tr>
+        </tbody>
+    </table>`;
     return table;
 }
 
-function make_example_popups( hh, res ){
+function make_example_popups( res ){
     var pit = "PIT"; // pers_inc_table( res );
-    var hhtab = "HHTAB"; // hhsummary( hh.hh );
+    var hhtab = hhsummary( res.household.hh );
     var modal = `
 <!-- Modal -->
 <div class='modal fade' id='${hh.picture}' tabindex='-1' role='dialog' aria-labelledby='${hh.picture}-label' aria-hidden='true'>
@@ -201,8 +200,7 @@ function make_example_popups( hh, res ){
          
       </div> <!-- header -->
       <div class='modal-body'>
-        <div class='row'>
-            
+        <div class='row'>            
             <img src='images/families/${FAMDIR}/${hh.picture}.svg'  
                 width='195' height='140'
                 alt='Picture of Family'
@@ -226,11 +224,11 @@ function make_example_popups( hh, res ){
 function make_examples( exampleResults ){
     var cards = "<div class='card-group'>";
     for( var i = 0; i < exampleResults.length; i++ ){
-        cards += make_example_card( settings, EXAMPLE_HHS[i], exampleResults[i])
+        cards += make_example_card( exampleResults[i])
     }
     cards += "</div>"
     for( var i = 0; i < exampleResults.length; i++ ){
-        cards += make_example_popups( settings, EXAMPLE_HHS[i], exampleResults[i])
+        cards += make_example_popups( exampleResults[i])
     }
     return cards;
 }
