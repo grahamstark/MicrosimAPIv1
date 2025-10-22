@@ -286,18 +286,19 @@ function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
         glclass = "text-body"
         gnum = "";
     }
-    var changestr = gnum !== "" ? "&nbsp;"+ARROWS_1[glstr]+"&nbsp;"+gnum+"pw" : "No Change";
+    var changestr = gnum !== "" ? "&nbsp;"+ARROWS_1[glstr]+"&nbsp;<b>"+gnum+"</b>" : "No Change";
     return {"gnum":gnum, "glclass":glclass, "glstr":glstr, "changestr":changestr, 'prestr':prestr, 'poststr':poststr };
 }
 
 
-function summarycard( label, pre, post, delta, upIsGood, formatter ){
+function summarycard( label, description, pre, post, delta, upIsGood, formatter ){
     var fc = formatAndClassSummary( pre, post, delta, upIsGood, formatter );
     return `
 <div id='#${label}' class="card" style="width: 18rem;">
   <div class="card-body">
     <h5 class="card-title">${label}</h5>
-    <p class="card-text ${fc.glclass}">${fc.changestr} pre: ${fc.prestr} post: ${fc.poststr}<p>
+    <p class="card-text ${fc.glclass}">${fc.changestr} pre: <b>${fc.prestr}</b> post: <b>${fc.poststr}</b><p>
+    <p class='small text-muted'>${description}</p>
   </div>
 </div>
     `;
@@ -333,27 +334,27 @@ net_direct	2.964431355503334e9JS:2964431355.503334
 function makeSummaryBlock( id, res ){
     var sum = res[1];
     console.log( "makeSummaryBlock; sum = ", res );
-    var fc = formatAndClass( sum.net_cost );
-    var headline = `<p class='${fc.glclass}'>Net Cost of your changes: ${fc.changestr}</p>`;
+    var fc = formatAndClass( sum.net_cost/1000000 );
+    var headline = `<p class='${fc.glclass}'>Net Cost of your changes: &pound;${fc.changestr}mn p.a.</p>`;
     var glline = `<p>Gainers: <b> ${fmt0(sum.gainers)}</b> Losers: <b>${fmt0(sum.losers)}</b> Unchanged: <b>${fmt0(sum.no_change)}  </b> </p>`
     var cards = `<div id=${id} class='card-group'>`;
-    cards += summarycard( "Direct Taxes £m", 
+    cards += summarycard( "Taxes", "Direct Taxes £m", 
         sum.tax1/1000000, sum.tax2/1000000, sum.Δtax/1000000, true, fmt0 );
-    cards += summarycard( "Benefit Spending £m", 
+    cards += summarycard( "Benefits", "Benefit Spending £m", 
         sum.ben1/1000000, sum.ben2/1000000, sum.Δben/1000000, false, fmt0 );
-    cards += summarycard( "Inequality (Gini Coefficient)", 
+    cards += summarycard( "Gini", "Inequality (Gini Coefficient)", 
         sum.gini1, sum.gini2, sum.Δgini, false, fmt2 );
-    cards += summarycard( "Inequality (Palma Index)", 
+    cards += summarycard( "Palma", "Inequality (Palma Index)", 
         sum.palma1, sum.palma2, sum.Δpalma, false, fmt2 );
-    cards += summarycard( "Poverty (Headcount))", 
+    cards += summarycard( "Poverty", "Poverty (Headcount))", 
         sum.pov_headcount1, sum.pov_headcount2, sum.Δpov_headcount, false, fmt2 );
-    cards += summarycard( "Mean Marginal Effective Tax Rates (METRs)", 
+    cards += summarycard( "Mean METRs", "Mean Marginal Effective Tax Rates (METRs)", 
         sum.mean_metr1, sum.mean_metr2, sum.Δmean_metr, false, pctfmt );
-    cards += summarycard( "Median METRs", 
+    cards += summarycard( "Median METRs", "Median METRs", 
         sum.median_metr1, sum.median_metr2, sum.Δmedian_metr, false, pctfmt );
-    cards += summarycard( "Mean Equivalised Household Income", 
+    cards += summarycard( "Mean Income", "Mean Equivalised Household Income", 
         sum.mean_income1, sum.mean_income2, sum.Δmean_income, true, moneyfmt );
-    cards += summarycard( "Median Equivalised Household Income", 
+    cards += summarycard( "Median Income", "Median Equivalised Household Income", 
         sum.median_income1, sum.median_income2, sum.Δmedian_income, true, moneyfmt );
     cards += "</div>"
     return headline + glline + cards;
