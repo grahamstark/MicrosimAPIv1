@@ -1,0 +1,20 @@
+[Unit]
+Description=MicrosimAPI Server in Julia
+After=network.target remote-fs.target nss-lookup.target
+
+[Service]
+# Type=forking
+User=graham_s
+# note this now includes GINI_ENV=prod to use production environment
+EnvironmentFile=/etc/systemd/user/gks_environment
+# The PID file is optional, but recommended in the manpage
+# "so that systemd can identify the main process of the daemon"
+PIDFile=/run/MicrosimAPI.pid
+WorkingDirectory=/home/graham_s/julia/vw/MicrosimAPIv1/
+ExecStart=/home/graham_s/julia/vw/MicrosimAPIv1/bin/server
+ExecStop=/bin/kill -WINCH ${MAINPID}
+KillSignal=SIGKILL
+PrivateTmp=true
+TimeoutStartSec=360
+[Install]
+WantedBy=multi-user.target
