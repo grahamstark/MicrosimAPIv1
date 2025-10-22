@@ -13,8 +13,8 @@ const TEXT_DESC = OrderedDict([
 
 const OUTPUT_ITEMS = OrderedDict([
     "headline_figures"=>"Headline Summary ",
-    "quantiles_df"=>"Quantiles (50 rows serialsed DF) ", 
-    "deciles_df" => "Quantiles (10 rows serialsed DF) ",
+    "quantiles_df"=>"Quantiles (50 rows serialised DF) ", 
+    "deciles_df" => "Quantiles (10 rows serialised DF) ",
     "income_summary" => "Income Summary ", 
     "poverty" => "Poverty Measures ", 
     "inequality" => "Inequality Measures ", 

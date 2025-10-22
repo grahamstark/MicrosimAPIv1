@@ -14,7 +14,7 @@ function formatTable( id, caption, headerRow, tableBody ){
         <tr>${headerRow}</tr>
         <tbody>
             ${tableBody}
-        </tbody<
+        </tbody>
     </table>
     `;
 }
@@ -30,7 +30,7 @@ function fmt2( v ){
 const OUT_SUBS = {
     'avch':'Average Change',
     'pct_change':"% Change",
-    'total_transfer': 'Total Transfer £mn'
+    'total_transfer': 'Total Transfer &pound;mn'
 };
 
 /**
@@ -89,19 +89,62 @@ function formatGainLose(id, df ){
     return formatJuliaDataframe(id, df, fmt0);
 }
 
+const FAMDIR = "bisite" // old budget images; alternative is 'keiko' for VE images
+
+const ARROWS_1 = {
+    "nonsig"          : "",
+    "positive_strong" : "<i class='bi bi-arrow-up-circle-fill'></i>",
+    "positive_med"    : "<i class='bi bi-arrow-up-circle'></i>",
+    "positive_weak"   : "<i class='bi bi-arrow-up'></i>",
+    "negative_strong" : "<i class='bi bi-arrow-down-circle-fill'></i>",
+    "negative_med"    : "<i class='bi bi-arrow-down-circle'></i>",
+    "negative_weak"   : "<i class='bi bi-arrow-down'></i>" };
+
+function formatAndClass( change ){
+    var gnum = fmt2( Math.abs(change));
+    var glclass = "";
+    var glstr = ""
+    if( change > 20.0 ){
+        glstr = "positive_strong"
+        glclass = "text-success"
+    } else if (change > 10.0) {
+        glstr = "positive_med"
+        glclass = "text-success"
+    } else if (change > 0.01) {
+        glstr = "positive_weak"
+        glclass = "text-success"
+    } else if (change < -20.0) {
+        glstr = "negative_strong"
+        glclass = "text-danger"
+    } else if (change < -10) {
+        glstr = "negative_med"
+        glclass = "text-danger"
+    } else if (change < -0.01) {
+        glstr = "negative_weak"
+        glclass = "text-danger"
+    } else {
+        glstr = "nonsig"
+        glclass = "text-body"
+        gnum = "";
+    }
+    var changestr = gnum !== "" ? "&nbsp;"+ARROWS_1[glstr]+"&nbsp;&pound;"+gnum+"pw" : "No Change";
+    return {"gnum":gnum, "glclass":glclass, "glstr":glstr, "changestr":changestr };
+}
+
+
 function make_example_card( hh, res ){
-    /*
-    change = res.pres.bhc_net_income - res.bres.bhc_net_income
-    ( gnum, glclass, glstr ) = format_and_class( change )
-    i2sp = inctostr(res.pres.income )
-    i2sb = inctostr(res.bres.income )
-    changestr = gnum != "" ? "&nbsp;"*ARROWS_1[glstr]*"&nbsp;&pound;"* gnum*"pw" : "No Change"
-    */
+    
+    var change = res.pres.bhc_net_income - res.bres.bhc_net_income
+    // ( gnum, glclass, glstr ) 
+    var fc = formatAndClass( change )
+    // i2sp = inctostr(res.pres.income )
+    // i2sb = inctostr(res.bres.income )
+    
     var card = `
     <div class='card' 
         style='width: 12rem;' 
         data-bs-toggle='modal' 
-        data-bs-target='#$(hh.picture)' >
+        data-bs-target='#${hh.picture}' >
             <div class='row'>
                 <img src='images/families/${FAMDIR}/${hh.picture}.svg'  
                     width='130'
@@ -109,13 +152,89 @@ function make_example_card( hh, res ){
                     alt='Picture of Family'/>                    
              </div>
             <div class='card-body'>
-                <p class='$glclass'><strong>$changestr</strong></p>
+                <p class='$glclass'><strong>${fc.changestr}</strong></p>
                 <h5 class='card-title'>${hh.label}</h5>
-                <p class='card-text text-black'>$(hh.description)</p>
+                <p class='card-text text-black'>${hh.description}</p>
             </div>
         </div><!-- card -->
     `;
     return card
+}
+
+
+function hhsummary( hh ){
+    caption = ""
+    ten = pretty(hh.tenure)
+    rm = "Rent"
+    hc = format( hh.gross_rent, commas=true, precision=2)
+    hregion = pretty(hh.region)
+    if is_owner_occupier( hh.tenure )
+        hc = format(hh.mortgage_payment, commas=true, precision=2)
+        rm = "Mortgage"
+    end
+    table = "<table class='table table-sm'>"
+    table += "<thead>
+        <tr>
+            <th></th><th style='text-align:right'></th>
+        </tr>";
+    table += "<caption>$caption</caption>"
+    table += "
+        </thead>
+        <tbody>"
+    table += "<tr><th>Tenure</th><td style='text-align:right'>${ten}</td></tr>"
+    table += "<tr><th>$rm</th><td style='text-align:right'>${hc}</td></tr>"
+    table += "<tr><th>Living in:</th><td style='text-align:right'>${hregion}</td></tr>"
+    # ... and so on
+    table += "</tbody></table>"
+    return table;
+}
+
+function make_example_popups( hh, res ){
+    var pit = "PIT"; // pers_inc_table( res );
+    var hhtab = "HHTAB"; // hhsummary( hh.hh );
+    var modal = `
+<!-- Modal -->
+<div class='modal fade' id='${hh.picture}' tabindex='-1' role='dialog' aria-labelledby='${hh.picture}-label' aria-hidden='true'>
+  <div class='modal-dialog' role='document'>
+    <div class='modal-content'>
+      <div class='modal-header'>
+      <h5 class='modal-title' id='${hh.picture}-label'/>${hh.label}</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+         
+      </div> <!-- header -->
+      <div class='modal-body'>
+        <div class='row'>
+            
+            <img src='images/families/${FAMDIR}/${hh.picture}.svg'  
+                width='195' height='140'
+                alt='Picture of Family'
+              />
+            </div>
+            <div class='col'>
+                ${hhtab}
+            </div>
+        </div>
+        
+        ${pit}
+          
+      </div> <!-- body -->
+    </div> <!-- content -->
+  </div> <!-- dialog -->
+</div><!-- modal container -->
+`
+    return modal;
+}
+
+function make_examples( exampleResults ){
+    var cards = "<div class='card-group'>";
+    for i in 1:n
+        cards += make_example_card( settings, EXAMPLE_HHS[i], exampleResults[i])
+    end
+    cards += "</div>"
+    for i in 1:n
+        cards += make_example_popups( settings, EXAMPLE_HHS[i], exampleResults[i])
+    end
+    return cards;
 }
 
 /*
