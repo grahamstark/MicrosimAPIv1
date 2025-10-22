@@ -225,36 +225,12 @@ function make_example_popups( hh, res ){
 
 function make_examples( exampleResults ){
     var cards = "<div class='card-group'>";
-    for i in 1:n
+    for( var i = 0; i < exampleResults.length; i++ ){
         cards += make_example_card( settings, EXAMPLE_HHS[i], exampleResults[i])
-    end
+    }
     cards += "</div>"
-    for i in 1:n
+    for( var i = 0; i < exampleResults.length; i++ ){
         cards += make_example_popups( settings, EXAMPLE_HHS[i], exampleResults[i])
-    end
+    }
     return cards;
 }
-
-/*
-
-*/
-
-function format_example_hh( hhitem ){
-    /*
-    hhitem.household.picture
-    hhitem.household.income
-    hhitem.household.label
-    hhitem.household.description
-
-    hhitem.incsummary # dataframe
-   
-    hhitem.bres.net_income: 425.6288601414557
-    hhitem.pres.net_income
-    'household':
-    {"picture":"family1","income":"income-25k","label":"Single Person, £25k","description":"Single female, aged 25, earning £25,000",    
-    'bres'
-    'pres'
-     */
-   
-}
-
