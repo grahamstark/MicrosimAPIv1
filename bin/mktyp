@@ -1,0 +1,1 @@
+typst compile docs/microsimapi-v1.typ web/docs/microsimapi-v1.pdf
