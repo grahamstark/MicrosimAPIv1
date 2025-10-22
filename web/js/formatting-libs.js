@@ -135,6 +135,7 @@ function formatAndClass( change ){
 }
 
 function make_example_card( res ){
+    console.log( "make_example_card; res = ", res );
     var hh = res.household;
     var change = res.pres.bhc_net_income - res.bres.bhc_net_income;
     // ( gnum, glclass, glstr ) 
@@ -191,17 +192,17 @@ function make_example_popups( res ){
     var hhtab = hhsummary( res.household.hh );
     var modal = `
 <!-- Modal -->
-<div class='modal fade' id='${hh.picture}' tabindex='-1' role='dialog' aria-labelledby='${hh.picture}-label' aria-hidden='true'>
+<div class='modal fade' id='${res.household.picture}' tabindex='-1' role='dialog' aria-labelledby='${res.household.picture}-label' aria-hidden='true'>
   <div class='modal-dialog' role='document'>
     <div class='modal-content'>
       <div class='modal-header'>
-      <h5 class='modal-title' id='${hh.picture}-label'/>${hh.label}</h5>
+      <h5 class='modal-title' id='${res.household.picture}-label'/>${res.household.label}</h5>
       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
          
       </div> <!-- header -->
       <div class='modal-body'>
         <div class='row'>            
-            <img src='images/families/${FAMDIR}/${hh.picture}.svg'  
+            <img src='images/families/${FAMDIR}/${res.household.picture}.svg'  
                 width='195' height='140'
                 alt='Picture of Family'
               />
@@ -222,6 +223,7 @@ function make_example_popups( res ){
 }
 
 function make_examples( exampleResults ){
+    console.log( " make_examples; exampleResults", exampleResults );
     var cards = "<div class='card-group'>";
     for( var i = 0; i < exampleResults.length; i++ ){
         cards += make_example_card( exampleResults[i])
