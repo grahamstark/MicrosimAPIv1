@@ -158,10 +158,10 @@ function make_example_card( res ){
                     alt='Picture of Family'/>                    
              </div>
             <div class='card-body'>
-                <p class='$glclass'><strong>${fc.changestr}</strong>p.w.</p>
+                <p class='$glclass'><strong>${fc.changestr}</strong></p>
                 <h5 class='card-title'>${hh.label}</h5>
                 <p class='card-text text-black'>${hh.description}</p>
-                <p class='card-text small text-muted'>&pound;p.w.</p>
+                <p class='card-text small text-muted'>Money Amounts in &pound;p.w.</p>
             </div>
         </div><!-- card -->
     `;
