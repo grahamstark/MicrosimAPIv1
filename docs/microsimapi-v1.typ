@@ -65,19 +65,15 @@ Based on our experience since then ...
 
 Object - run a model from something like Wordpress - without needing to have the model to hand.
 
-= Characteristics of Microsimulation Models
+= A typical Sequence
 
-Long running
-
-Very different implementations
-
-Phases (queues, running)
-
-Different inputs and outputs
-
-Parameters vs Settings
+Session start - in the current implementation this is implicit in any request. In a fuller implementation this could include sending an api key, for example a JSON Web Token.
 
 
+
+Submit - asyncronous possibly to a queueing program such as Torque
+
+Monitor - 
 
 = Features
 
