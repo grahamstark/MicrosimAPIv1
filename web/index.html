@@ -12,6 +12,7 @@
     <script type='text/javascript' src='js/jquery.validate.js'></script>
     <script type='text/javascript' src='js/jquery.number.js'></script>
     <script type='text/javascript' src='js/formatting-libs.js'></script>
+    <script type='text/javascript' src='js/graphics-libs.js'></script>
     <!-- bootstrap -->
     <script src="js/bootstrap.bundle.js"></script>
     <!-- vega graphics -->
@@ -468,145 +469,6 @@ function drawRunProgress( result ){
 }
 
 
-
-function createLorenzCurve( targetId, result, thumbnail ){
-    var height = 300;
-    var xtitle = "Population Share";
-    var ytitle = "Income Share";
-    var title = "Lorenz Curve"
-    if( thumbnail ){
-        var height = 70;
-        xtitle = "";
-        ytitle = "";
-        title = "";
-    }
-    var width = Math.trunc( GOLDEN_RATIO*height);
-    var data=[];
-    console.log( "deciles" + result.lorenz_pre.toString());
-    console.log( "lorenz_pre length" + result.lorenz_pre.length );
-    // deciles levels are rhs. so push a 0,0
-    data.push( {"popn1":0, "pre":0 });
-    popn = 0.0;
-    incr = 1/result.lorenz_pre.length;
-    for( var i = 0; i < result.lorenz_pre.length; i++){
-        popn += incr;
-        data.push( {"popn1":popn, "pre":result.lorenz_pre[i] });
-    }
-    // var data_post= [];
-    data.push( {"popn2":0, "post":0 });
-    popn = 0.0;
-    for( var i = 0; i < result.lorenz_post.length; i++){
-        popn += incr;
-        data.push( {"popn2":popn, "post":result.lorenz_post[i] });
-    }
-    data.push( {"popn3":0.0, "base":0.0});
-    data.push( {"popn3":1.0, "base":1.0});
-    var gini_vg = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
-        "title": title,
-        "width": width,
-        "height": height,
-        "description": title,
-        "data": {"values": data }, // , "post":data_post
-        "layer":[
-            {
-                "mark": "line",
-                "encoding":{
-                    "x": { "type": "quantitative",
-                           "field": "popn1",
-                           "axis":{
-                               "title": xtitle
-                           }},
-                    "y": { "type": "quantitative",
-                           "field": "pre",
-                           "axis":{
-                              "title": ytitle
-                           } },
-                    "color": {"value":"blue"}
-                } // encoding
-            }, // pre layer line
-            {
-                "mark": "line",
-                "encoding":{
-                    "x": { "type": "quantitative",
-                           "field": "popn2",
-                           "axis":{
-                              "title": xtitle
-                           }},
-                    "y": { "type": "quantitative",
-                           "field": "post",
-                           "axis":{
-                              "title": ytitle
-                           } },
-                   "color": {"value":"red"}
-               } // encoding
-           }, // post line
-          { // diagonal in grey
-               "mark": "line",
-               "encoding":{
-                   "x": { "type": "quantitative",
-                          "field": "popn3" },
-                   "y": { "type": "quantitative",
-                          "field": "base" },
-                   "color": {"value":"#ccc"},
-                   "strokeWidth": {"value": 1.0}
-                   // "strokeDash":
-               } // encoding
-           },
-        ]
-    }
-    vegaEmbed( targetId, gini_vg );
-}
-
-const GOLDEN_RATIO = 1.618
- 
-function createDecileBarChart( targetId, result, thumbnail ){
-    var height = 300;
-    var xtitle = "Deciles";
-    var ytitle = "Gains in £s p.w.";
-    var title = "Gains By Decile"
-    if( thumbnail ){
-        var height = 70;
-        xtitle = "";
-        ytitle = "";
-        title = "";
-    }
-    var width = Math.trunc( GOLDEN_RATIO*height);
-    var data=[];
-    console.log( "deciles" + result.gains_by_decile.toString());
-    console.log( "lorenz_pre[2] length" + result.gains_by_decile.length );
-    for( var i = 0; i < result.gains_by_decile.length; i++){
-        var dec = (i+1);
-        data.push( {"decile":dec, "gain":result.gains_by_decile[i] });
-    }
-    var deciles_vg = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v3.json",
-        "title": title,
-        "width": width,
-        "height": height,
-        "description": title,
-        "data": {"values": data }, // , "post":data_post
-        "mark": "bar",
-        "encoding":{
-            "x": { "type": "ordinal",
-                   "field": "decile",
-                   "axis":{
-                      "title": xtitle
-                   }
-             },
-            "y": { "type": "quantitative",
-                   "field": "gain",
-                   "axis":{
-                      "title": ytitle
-                   }
-            }
-        } // encoding
-    }
-    console.log( "deciles_vg=" + JSON.stringify(deciles_vg) );
-
-    vegaEmbed( targetId, deciles_vg );
-}
-
 function createMainOutputs( result ){
     console.log( result.inequality );
     console.log( result.examples );
@@ -624,10 +486,7 @@ function createMainOutputs( result ){
     $("#ineq-table").html( result.inequality );
     $("#big-costs-table").html( result.big_costs_table );
     $("#endnotes").html( result.endnotes );
-    createLorenzCurve( 
-        "#lorenz", 
-        result,
-        false );
+
 }
 
 function makeExampleBlock( target, exampleResults ){
@@ -645,6 +504,20 @@ function get_result( item, subitem, session_id, htmlifier, target ){
         function( data ){
             var out = htmlifier( target, data.item );
             $( "#"+target ).html( out );
+        });
+}
+
+function get_graphic( item, subitem, session_id, get_graphic, target ){
+    var url = API+"output/fetch/"+item+"/"+subitem +"?session_id="+session_id;
+    console.log( "get_graphic; url=", url);
+    var jqXHR = $.ajax({ 
+        url: url,
+        method: 'get',
+        contentType: "application/json"});
+    jqXHR.done(  
+        function( data ){
+            var is_thumbnail = false;
+            var out = get_graphic( target, data.item, is_thumbnail );
         });
 }
 
@@ -677,6 +550,7 @@ function create_outputs( session_id ){
     get_result( "gain_lose", 'hhtype_gl', session_id, formatGainLose, "gain-lose-hhtype-gl");
     get_result( "gain_lose", 'children_gl', session_id, formatGainLose, "gain-lose-children-gl");
     get_result( "very_short_income_summary", null, session_id, formatGainLose, "very_short_income_summary");
+    get_graphic( "quantiles_df", null, session_id, createLorenzCurve, "#lorenz");
     
     // #gain-lose-table-dec-gl
     // #gain-lose-table-dec-gl
@@ -902,7 +776,11 @@ function run_submit(){
 }
 
 $(document).ready(function(){
+    // load default params ..
     params_get("get");
+    // .. then load initial outputs
+    var session_id = getSessionId();     
+    create_outputs( session_id )
 });
 
 </script>
