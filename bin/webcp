@@ -1,2 +1,2 @@
 #!/bin/sh
-/bin/cp -rf web/* /var/www/scotben/
+/bin/cp -rf web/* /var/www/scotben-2026/

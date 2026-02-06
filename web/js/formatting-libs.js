@@ -261,7 +261,7 @@ function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
     prestr = formatter(pre);
     poststr = formatter(post);
     m = upIsGood ? 100 : -100;
-    change = m*(delta/pre);
+    change = (delta/pre);
     var gnum = fmt2( Math.abs(delta));
     var glclass = "";
     var glstr = ""
@@ -276,13 +276,13 @@ function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
         glclass = upIsGood ? "text-success" : "text-danger";
     } else if (change < -20.0) {
         glstr = "negative_strong"
-        glclass = upIsGood ? "text-danger" : "text-success";
+        glclass = upIsGood ? "text-success" : "text-danger";
     } else if (change < -10) {
         glstr = "negative_med"
-        glclass = upIsGood ? "text-danger" : "text-success";
+        glclass = upIsGood ? "text-success" : "text-danger";
     } else if (change < -0.01) {
         glstr = "negative_weak"
-        glclass = upIsGood ? "text-danger" : "text-success";
+        glclass = upIsGood ? "text-success" : "text-danger";
     } else {
         glstr = "nonsig"
         glclass = "text-body"
