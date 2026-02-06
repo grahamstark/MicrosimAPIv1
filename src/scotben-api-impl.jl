@@ -72,7 +72,7 @@ end
 
 function loaddefs() :: TaxBenefitSystem 
     return get_default_system_for_fin_year( 
-        2025; 
+        2026;
         scotland = true,
         autoweekly = false )    
 end
@@ -118,8 +118,8 @@ function map_full_to_simple( sys :: TaxBenefitSystem )::SimpleParams
         sys.it.personal_allowance,
     	sys.nmt_bens.child_benefit.first_child,
 		sys.nmt_bens.pensions.new_state_pension,
-		sys.scottish_child_payment.amount,
-		sys.scottish_child_payment.maximum_age,
+		sys.scottish_child_payment.amounts[1],
+		sys.scottish_child_payment.maximum_ages[1],
 	    sys.uc.age_25_and_over,
 		sys.uc.taper )
 end
@@ -165,8 +165,8 @@ function map_simple_to_full!( sys ::  TaxBenefitSystem, sm :: SimpleParams )
     sys.nmt_bens.pensions.cat_d  = roundm( sys.nmt_bens.pensions.cat_d, p )
     sys.nmt_bens.pensions.cat_b_survivor  = roundm( sys.nmt_bens.pensions.cat_b_survivor, p )
 
-    sys.scottish_child_payment.amount = sm.scottish_child_payment
-    sys.scottish_child_payment.maximum_age = sm.scp_age
+    sys.scottish_child_payment.amounts[1] = sm.scottish_child_payment
+    sys.scottish_child_payment.maximum_ages[1] = sm.scp_age
 
     sys.uc.taper = sm.uc_taper
     p = sm.uc_single/sys.uc.age_25_and_over
@@ -271,7 +271,9 @@ end
 const NUM_HANDLERS = 4
 # configure logger; see: https://docs.julialang.org/en/v1/stdlib/Logging/index.html
 # and: https://github.com/oxinabox/LoggingExtras.jl
-logger = FileLogger(joinpath("log", "microsim-api-log.txt"))
+logdir = mktempdir()
+logger = FileLogger(joinpath( logdir, "microsim-api-log.txt"))
+@show logdir
 global_logger(logger)
 LogLevel( Logging.Debug )
 
