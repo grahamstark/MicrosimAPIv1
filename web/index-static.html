@@ -46,20 +46,17 @@
     <div id='change-2'></div>
 </div>
 
-<div class='#thing'>
+<div id='item-3-item-container'></div>
 
-HERE IS THE THING.
-
-</div>
 
 <div class="container">
 
   <div class="row">
-    <div class="col-sm">
+    <div class="col">
 
       <div class="d-flex"
         data-bs-toggle='modal'
-        data-bs-target='#thing'>
+        data-bs-target='#the-popup-popup'>
             <img class="flex-shrink-0" src="images/test-images/mental-health-canvas.png"
                 width='100'
                 height='80'
@@ -73,37 +70,21 @@ HERE IS THE THING.
     </div> <!-- col -->
 
 
-    <div class="col-sm">
-      One of three columns
-    </div>
-    <div class="col-sm">
-      One of three columns
+    <div class="col" id='media-2'>
+
     </div>
   </div>
   <div class="row">
-    <div class="col-sm">
-      One of three columns
-    </div>
-    <div class="col-sm">
-      One of three columns
-    </div>
-    <div class="col-sm">
-      One of three columns
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-sm">
-      One of three columns
-    </div>
-    <div class="col-sm">
-      One of three columns
-    </div>
-    <div class="col-sm">
-      One of three columns
-    </div>
+    <div class="col bg-info bg-opacity-10" id='item-3-modal-container'></div>
+    <div class="col bg-warning bg-opacity-10" id='inequality-modal-container'></div>
+    <div class="col bg-success bg-opacity-10" id='poverty-modal-container'></div>
   </div>
 
 </div>
+
+<div id='poverty-item-container'></div>
+<div id='inequality-item-container'></div>
+<div id='item-3-item-container'></div>
 
 <script>
 
@@ -125,6 +106,33 @@ $(document).ready(function(){
     ch = formatAndClassSummary( pre, post, delta, upIsGood, fmt0 );
     $('#change-2').html( ch['changestr']);
     $('#chclass-2').addClass( ch['glclass']);
+    $('#popup-2').html( make_modal_data( "the-popup-2", "The Title", "The content."));
+    $('#media-2').html( make_media_item( "the-popup-2", "The Title", "The content.", 'images/test-images/mental-health-canvas.png'));
+
+    draw_media_and_modal(
+        "info",
+        "item-3",
+        "The Title 3",
+        "The Summary 3",
+        "The content 3.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "warning",
+        "inequality",
+        "Inequality Title",
+        "Inequality Summary",
+        "Inequality Content.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "success",
+        "poverty",
+        "Poverty Title",
+        "Poverty Summary",
+        "Poverty Content.",
+        'images/test-images/mental-health-canvas.png');
+
 });
 
 

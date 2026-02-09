@@ -173,7 +173,66 @@ function make_example_card( res ){
     return card;
 }
 
-/**
+
+
+function make_media_item( colour, id, title, content, graph ){
+    var template = `
+        <div
+            class="d-flex p-3"
+            id='${id}-media'
+            data-bs-toggle='modal'
+            data-bs-target='#${id}-popup'>
+                <img class="flex-shrink-0"
+                    src="${graph}"
+                    width='100'
+                    height='80'
+                    alt="${title} Image."/>
+                <div class="flex-grow-1 ms-3">
+                    <h5 class="">${title}</h5>
+                    ${content}
+                </div>
+        </div><!-- media -->
+        </div> <!-- col -->
+    `;
+    return template;
+}
+
+function make_modal_data( colour, id, title, content ){
+    var template = `
+            <div
+                class='modal fade'
+                id='${id}-popup'
+                tabindex='-1'
+                role='dialog'
+                aria-labelledby='big-costs-label'
+                aria-hidden='true'>
+                <div class='modal-dialog modal-lg'  role='document'>
+                    <div class='modal-content'>
+                        <div class='modal-header bg-${colour} bg-opacity-10 p-3' >
+                            <h5 class='modal-title' id='${id}-label'/>${title}</h5>
+                            <button
+                                type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                        </div> <!-- header -->
+                        <div class='modal-body  bg-${colour} bg-opacity-10 p-3'>
+                            <div id='${id}'>${content}</div>
+                        </div>
+                    </div> <!-- content -->
+                </div> <!--dialog -->
+            </div> <!-- big-table modal -->
+    `;
+    return template;
+}
+
+
+function draw_media_and_modal( colour, id, title, summary, content, image ){
+    $( "#"+id+"-modal-container").html( make_media_item( colour, id, title, summary, image ));
+    $( "#"+id+"-item-container").html( make_modal_data( colour, id, title, content ));
+}
+
+/*4
  * Nicked from Stack overflow, again: https://stackoverflow.com/questions/1349404/generate-a-string-of-random-characters
  * @param {*} length 
  * @returns 
