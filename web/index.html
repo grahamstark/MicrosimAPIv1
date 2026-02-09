@@ -21,7 +21,13 @@
     <script type="text/javascript" src="js/vega-embed.min.js"></script>
     <!-- templates -->
     <script type='text/javascript' src="js/mustache.min.js"></script>
-   
+    <!-- FIXME add colours in bootstrap -->
+    <style type="text/css">
+        .bg-purple {background:#cdf;}
+        .bg-orange {background:#fec;}
+        .modcon:hover {filter:brightness(0.6);}
+    </style>
+
 </head>
 
 <body class='text-primary p-2'>
@@ -179,6 +185,28 @@
                                        
                                     </div>
                                 </div>
+
+
+
+                                <div class="row">
+                                    <div class="col bg-info bg-opacity-10 modcon" id='gainlose-modal-container'></div>
+                                    <div class="col bg-secondary bg-opacity-10 modcon" id='costs-modal-container'></div>
+                                    <div class="col bg-primary bg-opacity-10 modcon" id='metrs-modal-container'></div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col bg-orange bg-opacity-10  modcon" id='inequality-modal-container'></div>
+                                    <div class="col bg-purple bg-opacity-10  modcon" id='poverty-modal-container'></div>
+                                    <div class="col bg-dark bg-opacity-10 modcon" id='incomes-modal-container'></div>
+                                </div>
+
+                                <div id='gainlose-item-container'></div>
+                                <div id='costs-item-container'></div>
+                                <div id='metrs-item-container'></div>
+                                <div id='inequality-item-container'></div>
+                                <div id='poverty-item-container'></div>
+                                <div id='incomes-item-container'></div>
+
 
                                 <div class='row'>
                                     <div class='col-4'></div>

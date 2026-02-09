@@ -21,7 +21,12 @@
     <script type="text/javascript" src="js/vega-embed.min.js"></script>
     <!-- templates -->
     <script type='text/javascript' src="js/mustache.min.js"></script>
-   
+    <style type="text/css">
+        .bg-purple {background:#cdf;}
+        .bg-orange {background:#fec;}
+        .modcon:hover {filter:brightness(0.6);}
+    </style>
+
 </head>
 
 <body class='text-primary p-2'>
@@ -50,15 +55,15 @@
 <div class="container">
 
   <div class="row">
-    <div class="col bg-info bg-opacity-10" id='gainlose-modal-container'></div>
-    <div class="col bg-secondary bg-opacity-10" id='costs-modal-container'></div>
-    <div class="col bg-primary bg-opacity-10" id='metrs-modal-container'></div>
+    <div class="col bg-info bg-opacity-10 modcon" id='gainlose-modal-container'></div>
+    <div class="col bg-secondary bg-opacity-10 modcon" id='costs-modal-container'></div>
+    <div class="col bg-primary bg-opacity-10 modcon" id='metrs-modal-container'></div>
   </div>
 
   <div class="row">
-    <div class="col bg-danger bg-opacity-10" id='inequality-modal-container'></div>
-    <div class="col bg-success bg-opacity-10" id='poverty-modal-container'></div>
-    <div class="col bg-dark bg-opacity-10" id='incomes-modal-container'></div>
+    <div class="col bg-orange bg-opacity-10  modcon" id='inequality-modal-container'></div>
+    <div class="col bg-purple bg-opacity-10  modcon" id='poverty-modal-container'></div>
+    <div class="col bg-dark bg-opacity-10 modcon" id='incomes-modal-container'></div>
   </div>
 
 </div>
@@ -119,7 +124,7 @@ $(document).ready(function(){
         'images/test-images/mental-health-canvas.png');
 
     draw_media_and_modal(
-        "warning",
+        "orange",
         "inequality",
         "Inequality Title",
         "Inequality Summary",
@@ -127,7 +132,7 @@ $(document).ready(function(){
         'images/test-images/mental-health-canvas.png');
 
     draw_media_and_modal(
-        "success",
+        "purple",
         "poverty",
         "Poverty Title",
         "Poverty Summary",

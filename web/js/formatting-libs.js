@@ -178,7 +178,7 @@ function make_example_card( res ){
 function make_media_item( colour, id, title, content, graph ){
     var template = `
         <div
-            class="d-flex p-3"
+            class="d-flex p-3 "
             id='${id}-media'
             data-bs-toggle='modal'
             data-bs-target='#${id}-popup'>
@@ -187,9 +187,9 @@ function make_media_item( colour, id, title, content, graph ){
                     width='100'
                     height='80'
                     alt="${title} Image."/>
-                <div class="flex-grow-1 ms-3">
-                    <h5 class="">${title}</h5>
-                    ${content}
+                <div class="flex-grow-1 ms-3 ">
+                    <h5 >${title}</h5>
+                    <div class=''>${content}</div>
                 </div>
         </div><!-- media -->
         </div> <!-- col -->
