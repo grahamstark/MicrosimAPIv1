@@ -46,45 +46,30 @@
     <div id='change-2'></div>
 </div>
 
-<div id='item-3-item-container'></div>
-
 
 <div class="container">
 
   <div class="row">
-    <div class="col">
-
-      <div class="d-flex"
-        data-bs-toggle='modal'
-        data-bs-target='#the-popup-popup'>
-            <img class="flex-shrink-0" src="images/test-images/mental-health-canvas.png"
-                width='100'
-                height='80'
-                alt="Generic placeholder image"/>
-
-            <div class="flex-grow-1 ms-3">
-                <h5 class="">Media heading</h5>
-                Cras sit amet nibh libero, in gravida nulla. Nulla vel metus scelerisque ante sollicitudin. Cras purus odio, vestibulum in vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi vulputate fringilla. Donec lacinia congue felis in faucibus.
-            </div>
-       </div><!-- media -->
-    </div> <!-- col -->
-
-
-    <div class="col" id='media-2'>
-
-    </div>
+    <div class="col bg-info bg-opacity-10" id='gainlose-modal-container'></div>
+    <div class="col bg-secondary bg-opacity-10" id='costs-modal-container'></div>
+    <div class="col bg-primary bg-opacity-10" id='metrs-modal-container'></div>
   </div>
+
   <div class="row">
-    <div class="col bg-info bg-opacity-10" id='item-3-modal-container'></div>
-    <div class="col bg-warning bg-opacity-10" id='inequality-modal-container'></div>
+    <div class="col bg-danger bg-opacity-10" id='inequality-modal-container'></div>
     <div class="col bg-success bg-opacity-10" id='poverty-modal-container'></div>
+    <div class="col bg-dark bg-opacity-10" id='incomes-modal-container'></div>
   </div>
 
 </div>
 
-<div id='poverty-item-container'></div>
+<div id='gainlose-item-container'></div>
+<div id='costs-item-container'></div>
+<div id='metrs-item-container'></div>
 <div id='inequality-item-container'></div>
-<div id='item-3-item-container'></div>
+<div id='poverty-item-container'></div>
+<div id='incomes-item-container'></div>
+
 
 <script>
 
@@ -111,10 +96,26 @@ $(document).ready(function(){
 
     draw_media_and_modal(
         "info",
-        "item-3",
-        "The Title 3",
-        "The Summary 3",
-        "The content 3.",
+        "gainlose",
+        "Gainlose Title",
+        "Gainlose Summary",
+        "Gainlose Content.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "secondary",
+        "costs",
+        "Costs Title",
+        "Costs Summary",
+        "Costs Content.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "primary",
+        "metrs",
+        "Metrs Title",
+        "Metrs Summary",
+        "Metrs Content.",
         'images/test-images/mental-health-canvas.png');
 
     draw_media_and_modal(
@@ -133,6 +134,13 @@ $(document).ready(function(){
         "Poverty Content.",
         'images/test-images/mental-health-canvas.png');
 
+    draw_media_and_modal(
+        "dark",
+        "incomes",
+        "Incomes Title",
+        "Incomes Summary",
+        "Incomes Content.",
+        'images/test-images/mental-health-canvas.png');
 });
 
 
