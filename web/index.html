@@ -803,12 +803,66 @@ function run_submit(){
     }
 }
 
+function drawtmp(){
+
+
+    draw_media_and_modal(
+        "info",
+        "gainlose",
+        "Gainlose Title",
+        "Gainlose Summary",
+        "Gainlose Content.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "secondary",
+        "costs",
+        "Costs Title",
+        "Costs Summary",
+        "Costs Content.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "primary",
+        "metrs",
+        "Metrs Title",
+        "Metrs Summary",
+        "Metrs Content.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "orange",
+        "inequality",
+        "Inequality Title",
+        "Inequality Summary",
+        "Inequality Content.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "purple",
+        "poverty",
+        "Poverty Title",
+        "Poverty Summary",
+        "Poverty Content.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "dark",
+        "incomes",
+        "Incomes Title",
+        "Incomes Summary",
+        "Incomes Content.",
+        'images/test-images/mental-health-canvas.png');
+
+}
+
 $(document).ready(function(){
     // load default params ..
     params_get("get");
     // .. then load initial outputs
     var session_id = getSessionId();     
-    create_outputs( session_id )
+    create_outputs( session_id );
+    drawtmp();
 });
 
 </script>
