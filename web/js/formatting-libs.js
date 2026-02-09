@@ -15,12 +15,17 @@ function formatTable( id, caption, headerRow, tableBody ){
     `;
 }
 
+/**
+ * see:
+ * https://stackoverflow.com/questions/2901102/how-can-i-format-a-number-with-commas-as-thousands-separators
+ * on the toLocaleString adding commas.
+ */
 function fmt0( v ){
-    return $.number( v );
+    return $.number( v ).toLocaleString();
 }
 
 function fmt2( v ){
-    return $.number( v, 2 );
+    return $.number( v, 2 ).toLocaleString();
 }
 
 function moneyfmt( v ){
@@ -255,14 +260,13 @@ function make_examples( exampleResults ){
 }
 
 /**
- * FIXME this needs redone for UPISGOOD!!
+ *
  */
 function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
     prestr = formatter(pre);
     poststr = formatter(post);
-    m = upIsGood ? 100 : -100;
-    change = (delta/pre);
-    var gnum = fmt2( Math.abs(delta));
+    change = 100*(delta/pre);
+    var gnum = formatter( Math.abs(delta)); // rely on the arrrow to point up or down for +-=
     var glclass = "";
     var glstr = ""
     if( change > 20.0 ){
@@ -276,20 +280,21 @@ function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
         glclass = upIsGood ? "text-success" : "text-danger";
     } else if (change < -20.0) {
         glstr = "negative_strong"
-        glclass = upIsGood ? "text-success" : "text-danger";
+        glclass = upIsGood ? "text-danger" : "text-success";
     } else if (change < -10) {
         glstr = "negative_med"
-        glclass = upIsGood ? "text-success" : "text-danger";
+        glclass = upIsGood ? "text-danger" : "text-success";
     } else if (change < -0.01) {
         glstr = "negative_weak"
-        glclass = upIsGood ? "text-success" : "text-danger";
+        glclass = upIsGood ? "text-danger" : "text-success";
     } else {
         glstr = "nonsig"
         glclass = "text-body"
         gnum = "";
     }
-    var changestr = gnum !== "" ? "&nbsp;"+ARROWS_1[glstr]+"&nbsp;<b>"+gnum+"</b>" : "No Change";
-    return {"gnum":gnum, "glclass":glclass, "glstr":glstr, "changestr":changestr, 'prestr':prestr, 'poststr':poststr };
+    var arrow = ARROWS_1[glstr];
+    var changestr = gnum !== "" ? "&nbsp;"+ arrow +"&nbsp;<b>"+gnum+"</b>" : "No Change";
+    return {"change":change, "gnum":gnum, "glclass":glclass, "glstr":glstr, "changestr":changestr, 'prestr':prestr, 'poststr':poststr,  'arrow':arrow };
 }
 
 

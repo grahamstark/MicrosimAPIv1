@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="UTF-8">
+    <title>A Budget for Scotland/Microsim API V1 Demo</title>
+    <link rel="icon" href="images/favicon.ico?v=2.0.0" type="image/x-icon">
+    <link rel="stylesheet" href="css/stb-bootstrap.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+    <script type='text/javascript' src='js/jquery.js'></script>
+    <script type='text/javascript' src='js/jquery.periodicalupdater.js'></script>
+    <script type='text/javascript' src='js/jquery.validate.js'></script>
+    <script type='text/javascript' src='js/jquery.number.js'></script>
+    <script type='text/javascript' src='js/formatting-libs.js'></script>
+    <script type='text/javascript' src='js/graphics-libs.js'></script>
+    <!-- bootstrap -->
+    <script src="js/bootstrap.bundle.js"></script>
+    <!-- vega graphics -->
+    <script type="text/javascript" src="js/vega-lite.min.js"></script>
+    <script type="text/javascript" src="js/vega.js"></script>
+    <script type="text/javascript" src="js/vega-embed.min.js"></script>
+    <!-- templates -->
+    <script type='text/javascript' src="js/mustache.min.js"></script>
+   
+</head>
+
+<body class='text-primary p-2'>
+     <nav class="navbar navbar-expand-lg text-primary">
+            <ul class="nav">
+                <li class="nav-item"><a class='nav-link' href='https://stb.virtual-worlds.scot/scotbudg/'>A Scottish Budget</a></li>
+                <li class="nav-item"><a class="nav-link active" aria-current="page" href='https://ubi.virtual-worlds.scot/'>Basic Income</a></li>
+                <li class="nav-item"><a class='nav-link' href='https://stb.virtual-worlds.scot/bcd/'>Budget Constraints</a></li>
+                <li class="nav-item"><a class='nav-link' href='https://stb-blog.virtual-worlds.scot/'>Blog</a></li>
+            </ul>
+        </nav>
+<header>
+    <h1>A Budget for Scotland</h1>
+    <h2>2025/6 Version</h2>
+</header>        
+
+<div id='chclass-1'>
+    <div id='change-1'></div>
+</div>
+
+<div id='chclass-2'>
+    <div id='change-2'></div>
+</div>
+
+<div class='#thing'>
+
+HERE IS THE THING.
+
+</div>
+
+<div class="container">
+
+  <div class="row">
+    <div class="col-sm">
+
+      <div class="d-flex"
+        data-bs-toggle='modal'
+        data-bs-target='#thing'>
+            <img class="flex-shrink-0" src="images/test-images/mental-health-canvas.png"
+                width='100'
+                height='80'
+                alt="Generic placeholder image"/>
+
+            <div class="flex-grow-1 ms-3">
+                <h5 class="">Media heading</h5>
+                Cras sit amet nibh libero, in gravida nulla. Nulla vel metus scelerisque ante sollicitudin. Cras purus odio, vestibulum in vulputate at, tempus viverra turpis. Fusce condimentum nunc ac nisi vulputate fringilla. Donec lacinia congue felis in faucibus.
+            </div>
+       </div><!-- media -->
+    </div> <!-- col -->
+
+
+    <div class="col-sm">
+      One of three columns
+    </div>
+    <div class="col-sm">
+      One of three columns
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm">
+      One of three columns
+    </div>
+    <div class="col-sm">
+      One of three columns
+    </div>
+    <div class="col-sm">
+      One of three columns
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm">
+      One of three columns
+    </div>
+    <div class="col-sm">
+      One of three columns
+    </div>
+    <div class="col-sm">
+      One of three columns
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+$(document).ready(function(){
+
+    var pre=11;
+    var post=10;
+    var delta = post-pre;
+    var upIsGood=true;
+    var ch = formatAndClassSummary( pre, post, delta, upIsGood, moneyfmt );
+    console.log( ch );
+    n = 123456789.01;
+    console.log(n.toLocaleString());
+    $('#change-1').html( ch['changestr']);
+    $('#chclass-1').addClass( ch['glclass']);
+    pre = 12345678;
+    post = 22345678;
+    delta = post-pre;
+    ch = formatAndClassSummary( pre, post, delta, upIsGood, fmt0 );
+    $('#change-2').html( ch['changestr']);
+    $('#chclass-2').addClass( ch['glclass']);
+});
+
+
+</script>
+
+</html>
