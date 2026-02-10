@@ -7,6 +7,8 @@
     <link rel="icon" href="images/favicon.ico?v=2.0.0" type="image/x-icon">
     <link rel="stylesheet" href="css/stb-bootstrap.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@latest"></script>
     <script type='text/javascript' src='js/jquery.js'></script>
     <script type='text/javascript' src='js/jquery.periodicalupdater.js'></script>
     <script type='text/javascript' src='js/jquery.validate.js'></script>
@@ -535,7 +537,7 @@ function get_result( item, subitem, session_id, htmlifier, target ){
         });
 }
 
-function get_graphic( item, subitem, session_id, get_graphic, target ){
+function get_graphic( item, subitem, session_id, get_graphic2, target ){
     var url = API+"output/fetch/"+item+"/"+subitem +"?session_id="+session_id;
     console.log( "get_graphic; url=", url);
     var jqXHR = $.ajax({ 
@@ -545,7 +547,7 @@ function get_graphic( item, subitem, session_id, get_graphic, target ){
     jqXHR.done(  
         function( data ){
             var is_thumbnail = false;
-            var out = get_graphic( target, data.item, is_thumbnail );
+            var out = get_graphic2( target, data.item, is_thumbnail );
         });
 }
 
@@ -571,6 +573,7 @@ function create_outputs( session_id ){
     "examples"=>"Simple Worked Examples "
     */
 
+    get_result( "income_hists_df", null, session_id, formatGainLose, "gain-lose-ten-gl");
     get_result( "headline_figures", null, session_id, makeSummaryBlock, "headline_figures");
     get_result( "examples", null, session_id, makeExampleBlock, "examples");
     get_result( "gain_lose", 'ten_gl', session_id, formatGainLose, "gain-lose-ten-gl");

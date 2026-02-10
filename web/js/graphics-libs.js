@@ -137,6 +137,7 @@ function createDecileBarChart( targetId, result, thumbnail ){
     vegaEmbed( targetId, deciles_vg );
 }
 
+
 function inrange(x,ranges){
   for(var i = 0; i < ranges.length; i++){
     if ((x > ranges[i][0])&&(x<ranges[i][1])){
@@ -146,7 +147,7 @@ function inrange(x,ranges){
   return false;
 }
 
-
+/*
 Plot.plot({
   aspectRatio: 1,
   x: {label: "Age (years)"},
@@ -174,3 +175,4 @@ Plot.plot({
 
 
 test = (bin) => bin.some((d) => inrange( d.weight, [[45,55],[70,99]] ));
+*/

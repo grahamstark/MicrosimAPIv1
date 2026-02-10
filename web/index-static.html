@@ -7,6 +7,12 @@
     <link rel="icon" href="images/favicon.ico?v=2.0.0" type="image/x-icon">
     <link rel="stylesheet" href="css/stb-bootstrap.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@latest"></script>
+    -->
+    <script type='text/javascript' src='js/d3.min.js'></script>
+    <script type='text/javascript' src='js/observable-plot.js'></script>
     <script type='text/javascript' src='js/jquery.js'></script>
     <script type='text/javascript' src='js/jquery.periodicalupdater.js'></script>
     <script type='text/javascript' src='js/jquery.validate.js'></script>
@@ -15,11 +21,6 @@
     <script type='text/javascript' src='js/graphics-libs.js'></script>
     <!-- bootstrap -->
     <script src="js/bootstrap.bundle.js"></script>
-    <!-- vega graphics -->
-    <script type="text/javascript" src="js/vega-lite.min.js"></script>
-    <script type="text/javascript" src="js/vega.js"></script>
-    <script type="text/javascript" src="js/vega-embed.min.js"></script>
-    <!-- templates -->
     <script type='text/javascript' src="js/mustache.min.js"></script>
     <style type="text/css">
         .bg-purple {background:#cdf;}
@@ -51,6 +52,7 @@
     <div id='change-2'></div>
 </div>
 
+<a id='plot-1' download="filename.svg"></a>
 
 <div class="container">
 
@@ -78,8 +80,56 @@
 
 <script>
 
-$(document).ready(function(){
 
+// Your histogram data: upper limits and weights
+const histogramData = [
+  {upperLimit: 10, weight: 5},
+  {upperLimit: 20, weight: 12},
+  {upperLimit: 30, weight: 18},
+  {upperLimit: 40, weight: 15},
+  {upperLimit: 50, weight: 8},
+  {upperLimit: 60, weight: 3}
+];
+
+// Calculate bar widths and positions
+const bandWidth = 10; // assuming uniform band width
+const data = histogramData.map(d => ({
+  x1: d.upperLimit - bandWidth,
+  x2: d.upperLimit,
+  weight: d.weight
+}));
+
+/*
+const histData = fetch( "./output-examples/quantiles.json").then(
+        response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+        return response.resolve().json();
+    })
+*/
+
+function getResult( item ){
+    var url = "http://scotben-2026/output-examples/"+item+".json";
+    console.log( "get_result; url=", url);
+    var jqXHR = $.ajax({
+        url: url,
+        method: 'get',
+        contentType: "application/json"});
+    var x = jqXHR.done(
+        function( data ){
+            console.log( data.responseJSON );
+            return data.item;
+        });
+    console.log(x);
+    return x
+}
+
+
+
+$(document).ready(function(){
+    var histData = getResult( "quantiles")
+    console.log( histData[1] );
     var pre=11;
     var post=10;
     var delta = post-pre;
@@ -146,6 +196,23 @@ $(document).ready(function(){
         "Incomes Summary",
         "Incomes Content.",
         'images/test-images/mental-health-canvas.png');
+    console.log( data )
+    var bars = Plot.rectY(
+                data,
+                {
+                    x1: "x1",
+                    x2: "x2",
+                    y: "weight",
+                    fill: "steelblue"
+                })
+
+    var plot = Plot.plot({
+        marks: [ bars ],
+        y: {label: "Weight"},
+        x: {label: "Value"}
+    });
+    $("#plot-1").append(plot);
+
 });
 
 

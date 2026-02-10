@@ -232,7 +232,9 @@ function draw_media_and_modal( colour, id, title, summary, content, image ){
     $( "#"+id+"-item-container").html( make_modal_data( colour, id, title, content ));
 }
 
-function create_gain_lose( )
+function create_gain_lose( ){
+
+}
 
 /*4
  * Nicked from Stack overflow, again: https://stackoverflow.com/questions/1349404/generate-a-string-of-random-characters
