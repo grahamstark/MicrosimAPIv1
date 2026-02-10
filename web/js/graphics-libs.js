@@ -136,3 +136,41 @@ function createDecileBarChart( targetId, result, thumbnail ){
 
     vegaEmbed( targetId, deciles_vg );
 }
+
+function inrange(x,ranges){
+  for(var i = 0; i < ranges.length; i++){
+    if ((x > ranges[i][0])&&(x<ranges[i][1])){
+      return true;
+    }
+  }
+  return false;
+}
+
+
+Plot.plot({
+  aspectRatio: 1,
+  x: {label: "Age (years)"},
+  y: {
+    grid: true,
+    label: "← Women · Men →",
+    labelAnchor: "center",
+    tickFormat: Math.abs
+  },
+  marks: [
+    Plot.dot(
+      congress,
+      Plot.stackY2({
+        x: (d) => 2023 - d.birthday.getUTCFullYear(),
+        y: (d) => d.gender === "M" ? 1 : -1,
+        fill: "gender",
+        title: "full_name"
+      })
+    ),
+    Plot.ruleY([0]),
+    Plot.ruleX([40],{stroke:"red", title:"Median"}),
+    Plot.textX([40], { text:["Median"], frameAnchor:"top"})
+  ]
+})
+
+
+test = (bin) => bin.some((d) => inrange( d.weight, [[45,55],[70,99]] ));
