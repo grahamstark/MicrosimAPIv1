@@ -186,7 +186,7 @@ function make_media_item( colour, id, title, content, graph ){
                     id='${id}-image-thumbnail'
                     src="${graph}"
                     width='100'
-                    height='80'></div>
+                    height='80'></div>im
                 <div class="flex-grow-1 ms-3 ">
                     <h5 >${title}</h5>
                     <div class=''>${content}</div>
