@@ -125,11 +125,65 @@ function getResult( item ){
     return x
 }
 
+async function processHist(){
+    const histData = await d3.json("output-examples/quantiles.json");
+    console.log( histData );
+    var bars = Plot.rectY(
+                data,
+                {
+                    x1: "x1",
+                    x2: "x2",
+                    y: "weight",
+                    fill: "steelblue"
+                })
 
+    var plot = Plot.plot({
+        marks: [ bars ],
+        y: {label: "Weight"},
+        x: {label: "Value"}
+    });
+    var thumbnail = Plot.plot({
+        marks: [ bars ],
+        width: 150,
+        height: 150
+    });
+
+    var content = `
+    <div>
+    <div id='inequality-image'></div>
+    </div>
+
+    `
+
+    draw_media_and_modal(
+        "orange",
+        "inequality",
+        "Inequality Title xx",
+        "Inequality Summary xx",
+        content,
+        '');
+    $("#inequality-image-thumbnail").append(thumbnail);
+    $("#inequality-image").append(plot);
+
+    return histData;
+}
 
 $(document).ready(function(){
-    var histData = getResult( "quantiles")
-    console.log( histData[1] );
+    // var histData = getResult( "quantiles")
+    /*
+    var histData =
+    d3.json( "output-examples/quantiles.json",
+        function( err, data ){
+            processHist( data, err  );
+            if( err ){
+                throw err;
+            }
+        }
+        // console.log( data );
+    );
+    */
+    var histData = processHist();
+    console.log( histData );
     var pre=11;
     var post=10;
     var delta = post-pre;
@@ -173,13 +227,6 @@ $(document).ready(function(){
         "Metrs Content.",
         'images/test-images/mental-health-canvas.png');
 
-    draw_media_and_modal(
-        "orange",
-        "inequality",
-        "Inequality Title",
-        "Inequality Summary",
-        "Inequality Content.",
-        'images/test-images/mental-health-canvas.png');
 
     draw_media_and_modal(
         "purple",
@@ -197,21 +244,6 @@ $(document).ready(function(){
         "Incomes Content.",
         'images/test-images/mental-health-canvas.png');
     console.log( data )
-    var bars = Plot.rectY(
-                data,
-                {
-                    x1: "x1",
-                    x2: "x2",
-                    y: "weight",
-                    fill: "steelblue"
-                })
-
-    var plot = Plot.plot({
-        marks: [ bars ],
-        y: {label: "Weight"},
-        x: {label: "Value"}
-    });
-    $("#plot-1").append(plot);
 
 });
 
