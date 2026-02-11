@@ -182,11 +182,11 @@ function make_media_item( colour, id, title, content, graph ){
             id='${id}-media'
             data-bs-toggle='modal'
             data-bs-target='#${id}-popup'>
-                <img class="flex-shrink-0"
+                <div class="flex-shrink-0"
+                    id='${id}-image-thumbnail'
                     src="${graph}"
                     width='100'
-                    height='80'
-                    alt="${title} Image."/>
+                    height='80'></div>
                 <div class="flex-grow-1 ms-3 ">
                     <h5 >${title}</h5>
                     <div class=''>${content}</div>
