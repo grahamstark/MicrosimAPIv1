@@ -100,7 +100,7 @@ const data = histogramData.map(d => ({
 }));
 
 /*
-const histData = fetch( "./output-examples/quantiles.json").then(
+const quantileData = fetch( "./output-examples/quantiles.json").then(
         response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -125,9 +125,43 @@ function getResult( item ){
     return x
 }
 
-async function processHist(){
-    const histData = await d3.json("output-examples/quantiles.json");
-    console.log( histData );
+function make_thumb( marks_array ){
+    return Plot.plot({
+        x: {axis: null},
+        y: {axis: null},
+        marks: marks_array,
+        width: 120,
+        height: 80
+    });
+}
+
+
+async function processInequality(){
+    const quantileData = await d3.json("output-examples/quantiles.json");
+    const ineqData = await d3.json("output-examples/inequality.json");
+    console.log( quantileData );
+    console.log( ineqData );
+    var points0 = d3.zip(quantileData.item[0].columns[0], quantileData.item[0].columns[1]);
+    var points1 = d3.zip(quantileData.item[1].columns[0], quantileData.item[1].columns[1]);
+    points0.unshift([0,0]);
+    points1.unshift([0,0]);
+    console.log( points0 );
+    console.log( points1 );
+
+    const lorenz0 = Plot.line( points0, {stroke:"blue", curve: "catmull-rom"} ); //, {x: 0, y: 1})
+    const lorenz1 = Plot.line( points1, {stroke:"red", curve: "catmull-rom"} ); //, {x: 0, y: 1})
+    const equality = Plot.line( [[0,0],[1,1]], {stroke:"gray", label:"Equality"})
+    const lorcurve = Plot.plot(
+        { marks: [ lorenz0, lorenz1, equality ],
+          color: {legend: true},
+          title: "For charts, an informative title",
+          subtitle: "Subtitle to follow with additional context",
+          caption: "Figure 1. A chart with a title, subtitle, and caption.",
+
+          y: {label: "Population Share", grid:true },
+          x: {label: "Income Share", grid:true } })
+    // var lorcurve = lorenz0;
+    const thumbnail = make_thumb( [lorenz0, lorenz1, equality]); //, lorenz1, equality ])
     var bars = Plot.rectY(
                 data,
                 {
@@ -142,12 +176,7 @@ async function processHist(){
         y: {label: "Weight"},
         x: {label: "Value"}
     });
-    var thumbnail = Plot.plot({
-        marks: [ bars ],
-        width: 150,
-        height: 150
-    });
-
+    // var thumbnail = make_thumb( [bars] );
     var content = `
     <div>
     <div id='inequality-image'></div>
@@ -155,23 +184,48 @@ async function processHist(){
 
     `
 
+    var palmadiff = formatAndClassSummary(
+        ineqData.item[0].palma,
+        ineqData.item[1].palma,
+        ineqData.item[1].palma - ineqData.item[0].palma,
+        false,
+        fmt2 );
+    var ginidiff = formatAndClassSummary(
+        ineqData.item[0].gini,
+        ineqData.item[1].gini,
+        ineqData.item[1].gini - ineqData.item[0].gini,
+        false,
+        fmt2 );
+
+    var summary = `
+    <table class='table-sm'>
+        <tr>
+            <th>Gini</th><td class='${ginidiff.glclass}'>${ginidiff.changestr}</td>
+        </tr>
+        <tr>
+            <th>Palma</th><td class='${palmadiff.glclass}'>${palmadiff.changestr}</td>
+        </tr>
+    </table>
+    `
+    //var (ineq1).plot()
+
     draw_media_and_modal(
         "orange",
         "inequality",
-        "Inequality Title xx",
-        "Inequality Summary xx",
+        "Inequality",
+        summary,
         content,
         '');
     $("#inequality-image-thumbnail").append(thumbnail);
-    $("#inequality-image").append(plot);
+    $("#inequality-image").append(lorcurve);
 
-    return histData;
+    return quantileData;
 }
 
 $(document).ready(function(){
-    // var histData = getResult( "quantiles")
+    // var quantileData = getResult( "quantiles")
     /*
-    var histData =
+    var quantileData =
     d3.json( "output-examples/quantiles.json",
         function( err, data ){
             processHist( data, err  );
@@ -182,13 +236,18 @@ $(document).ready(function(){
         // console.log( data );
     );
     */
-    var histData = processHist();
-    console.log( histData );
+
+    var quantileData = processInequality();
     var pre=11;
     var post=10;
     var delta = post-pre;
     var upIsGood=true;
-    var ch = formatAndClassSummary( pre, post, delta, upIsGood, moneyfmt );
+    var ch = formatAndClassSummary(
+        pre,
+        post,
+        delta,
+        false,
+        fmt2 );
     console.log( ch );
     n = 123456789.01;
     console.log(n.toLocaleString());
