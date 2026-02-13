@@ -135,12 +135,58 @@ function make_thumb( marks_array ){
     });
 }
 
+function jdiffs( v, which, upIsGood ){
+    diffs = []
+    for( var i = 0; i < which.length; i++ ){
+        w = which[i];
+        diffs.push( formatAndClassSummary(
+            v.item[0][w],
+            v.item[1][w],
+            v.item[1][w]-v.item[0][w],
+            upIsGood[i],
+            fmt2 ));
+    }
+    return diffs;
+}
+
+function jtable( labels, jd ){
+    var s = `<table class='table'>
+    <thead>
+        <tr><th></th><th>Pre</th><th>Post</th><th>Change</th></tr>
+    </thead>
+    ` ;
+    for( var i = 0; i < labels.length; i++ ){
+        v = jd[i];
+        s += `<tr><th>${labels[i]}</th><td>${v.prestr}</td><td>${v.poststr}</td><td class='${v.glclass}'>${v.gnum}</td></tr>`;
+
+    }
+    s += "</table>";
+    return s;
+}
 
 async function processInequality(){
+
     const quantileData = await d3.json("output-examples/quantiles.json");
     const ineqData = await d3.json("output-examples/inequality.json");
+
+    const palmadiff = formatAndClassSummary(
+        ineqData.item[0].palma,
+        ineqData.item[1].palma,
+        ineqData.item[1].palma - ineqData.item[0].palma,
+        false,
+        fmt2 );
+    const ginidiff = formatAndClassSummary(
+        ineqData.item[0].gini,
+        ineqData.item[1].gini,
+        ineqData.item[1].gini - ineqData.item[0].gini,
+        false,
+        fmt2 );
+
     console.log( quantileData );
     console.log( ineqData );
+    const jd = jdiffs( ineqData, ["gini", "palma", "hoover", "average_income", "median"], [false,false,false,true,true]);
+    const jt = jtable( ["Gini","Palma","Hoover Index", "Mean Income", "Median Income"], jd );
+    console.log( jd );
     var points0 = d3.zip(quantileData.item[0].columns[0], quantileData.item[0].columns[1]);
     var points1 = d3.zip(quantileData.item[1].columns[0], quantileData.item[1].columns[1]);
     points0.unshift([0,0]);
@@ -148,20 +194,34 @@ async function processInequality(){
     console.log( points0 );
     console.log( points1 );
 
-    const lorenz0 = Plot.line( points0, {stroke:"blue", curve: "catmull-rom"} ); //, {x: 0, y: 1})
-    const lorenz1 = Plot.line( points1, {stroke:"red", curve: "catmull-rom"} ); //, {x: 0, y: 1})
-    const equality = Plot.line( [[0,0],[1,1]], {stroke:"gray", label:"Equality"})
+    const lorenz0 = Plot.line( points0, {stroke:"red", curve: "catmull-rom", label:"Pre"} );
+    const lorenz1 = Plot.line( points1, {stroke:"blue", curve: "catmull-rom", label:"Post"} );
+    const equality = Plot.line( [[0,0],[1,1]], {stroke:"#aaa", label:"Equality"})
     const lorcurve = Plot.plot(
-        { marks: [ lorenz0, lorenz1, equality ],
+        { marks: [ lorenz0, lorenz1, equality],
+          //title: "For charts, an informative title",
+          //subtitle: "Subtitle to follow with additional context",
+          caption: "Figure 1. A Lorenz Curve",
           color: {legend: true},
-          title: "For charts, an informative title",
-          subtitle: "Subtitle to follow with additional context",
-          caption: "Figure 1. A chart with a title, subtitle, and caption.",
-
-          y: {label: "Population Share", grid:true },
-          x: {label: "Income Share", grid:true } })
-    // var lorcurve = lorenz0;
-    const thumbnail = make_thumb( [lorenz0, lorenz1, equality]); //, lorenz1, equality ])
+          x: {label: "Population Share", grid:true },
+          y: {label: "Income Share", grid:true }
+    })
+    const thumbnail = make_thumb( [lorenz0, lorenz1, equality]);
+    /*
+    atkinson: Array(9) [ 0.025597348081354387, 0.054748468219076196, 0.08377932384111053, … ]
+atkinson_es: Array(9) [ 0.25, 0.5, 0.75, … ]
+​average_income: 902.4535140906894
+​deciles: Array(40) [ 0.09971143088014561, 0.200285966451981, 0.30001582603011323, … ]
+generalised_entropy: Array(6) [ 0.1328415955882228, 0.1367067192013547, 0.1440013095383991, … ]
+generalised_entropy_alphas: Array(6) [ 1.25, 1.5, 1.75, … ]
+gini: 0.26699359091844876
+hoover: 0.18603872480532677
+median: 819.2663705277412
+negative_or_zero_income_count: 19907.768731346263
+palma: 0.9284565654220309
+theil_l: 0.12179597929567579
+    */
+    /*
     var bars = Plot.rectY(
                 data,
                 {
@@ -170,32 +230,27 @@ async function processInequality(){
                     y: "weight",
                     fill: "steelblue"
                 })
-
     var plot = Plot.plot({
         marks: [ bars ],
         y: {label: "Weight"},
         x: {label: "Value"}
     });
+    */
     // var thumbnail = make_thumb( [bars] );
     var content = `
+    <h4>Lorenz Curve</h4>
     <div>
+    <ul>
+        <li style='color:blue'>Pre</li>
+        <li style='color:red'>Post</li>
+    </ul>
     <div id='inequality-image'></div>
     </div>
 
+    ${jt}
+
     `
 
-    var palmadiff = formatAndClassSummary(
-        ineqData.item[0].palma,
-        ineqData.item[1].palma,
-        ineqData.item[1].palma - ineqData.item[0].palma,
-        false,
-        fmt2 );
-    var ginidiff = formatAndClassSummary(
-        ineqData.item[0].gini,
-        ineqData.item[1].gini,
-        ineqData.item[1].gini - ineqData.item[0].gini,
-        false,
-        fmt2 );
 
     var summary = `
     <table class='table-sm'>
