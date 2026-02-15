@@ -118,7 +118,7 @@ function parseOneGainLoseDF( id, glj ){
     const colNames = Object.keys(glj);
     const breakdowns = glj[colNames[0]];
     const bd = formatLabel( colNames[0]);
-    console.log("keys", colNames, 'breakdowns', breakdowns );
+    // console.log("keys", colNames, 'breakdowns', breakdowns );
     var header = '<tr>';
     for( var c = 0; c < colNames.length-1; c++){
         var colN = formatLabel(colNames[c]);
@@ -131,9 +131,9 @@ function parseOneGainLoseDF( id, glj ){
         for( var c = 0; c < colNames.length-1; c++){
             var colN = colNames[c];
             var dCol = glj[colN];
-            console.log( "dCol", dCol );
-            cellS = dCol[r];
-            console.log( "cellS", cellS );
+            // console.log( "dCol", dCol );
+            var cellS = dCol[r];
+            // console.log( "cellS", cellS );
             if( c == 0 ){
                 cellS = formatLabel( cellS );
                 row += `<th>${cellS}</th>`;
@@ -154,7 +154,6 @@ function parseOneGainLoseDF( id, glj ){
     } else {
         caption = `Counts of Individuals Gaining And Losing, by ${bd}.`;
     }
-
     return formatTable( id, caption, header, rows );
 }
 

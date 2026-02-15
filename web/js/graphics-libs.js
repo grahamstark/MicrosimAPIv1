@@ -177,6 +177,16 @@ Plot.plot({
 test = (bin) => bin.some((d) => inrange( d.weight, [[45,55],[70,99]] ));
 */
 
+function make_thumb( marks_array ){
+    return Plot.plot({
+        x: {axis: null},
+        y: {axis: null},
+        marks: marks_array,
+        width: 120,
+        height: 80
+    });
+}
+
 
 function drawLorenz( quantileData ){
 
@@ -201,4 +211,10 @@ function drawLorenz( quantileData ){
     })
     const thumbnail = make_thumb( [lorenz0, lorenz1, equality]);
     return [lorcurve, thumbnail];
+}
+
+function drawDecileBarChart( deciles ){
+    var points0 = deciles.item[0].columns[2]
+    var points1 = deciles.item[1].columns[2]
+    return [deciles, thumbnail];
 }

@@ -125,16 +125,6 @@ function getResult( item ){
     return x
 }
 
-function make_thumb( marks_array ){
-    return Plot.plot({
-        x: {axis: null},
-        y: {axis: null},
-        marks: marks_array,
-        width: 120,
-        height: 80
-    });
-}
-
 
 async function processGainLose(){
     const gl_d = await d3.json("output-examples/gainlose-bydecile.json");
