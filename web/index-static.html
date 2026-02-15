@@ -135,65 +135,27 @@ function make_thumb( marks_array ){
     });
 }
 
-function jdiffs( v, which, upIsGood ){
-    diffs = []
-    for( var i = 0; i < which.length; i++ ){
-        w = which[i];
-        diffs.push( formatAndClassSummary(
-            v.item[0][w],
-            v.item[1][w],
-            v.item[1][w]-v.item[0][w],
-            upIsGood[i],
-            fmt2 ));
-    }
-    return diffs;
-}
-
-function jtable( labels, jd ){
-    var s = `<table class='table'>
-    <thead>
-        <tr><th></th><th>Pre</th><th>Post</th><th>Change</th></tr>
-    </thead>
-    ` ;
-    for( var i = 0; i < labels.length; i++ ){
-        v = jd[i];
-        s += `<tr><th>${labels[i]}</th><td>${v.prestr}</td><td>${v.poststr}</td><td class='${v.glclass}'>${v.gnum}</td></tr>`;
-
-    }
-    s += "</table>";
-    return s;
-}
-
-/**
- * from json version of julia DataFrame
- * return html in text
-*/
-function parseOneGainLoseDF( glj ){
-    const x = 1;
-    const y = -1;
-    glt = `
-    <table class='table-sm'>
-        <tr>
-            <th>Gini</th><td class='${x}'>${y}</td>
-        </tr>
-        <tr>
-            <th>Palma</th><td class='${x}'>${y}</td>
-        </tr>
-    </table>
-    `
-    return glt;
-}
 
 async function processGainLose(){
     const gl_d = await d3.json("output-examples/gainlose-bydecile.json");
     console.log( gl_d );
-    glt_d = parseOneGainLoseDF( gl_d );
+    glt_d = parseOneGainLoseDF( 'deciles-gl-table', gl_d.item );
+    const gl_ten = gl_d; // await d3.json("output-examples/gainlose-bytenure.json");
+    glt_ten = parseOneGainLoseDF( 'deciles-gl-table', gl_ten.item );
+
+    var gl_content = `
+        <h4>By Decile</h4>
+        ${glt_d}
+        <h4>By Tenure</h4>
+        ${glt_ten}
+
+    `;
     draw_media_and_modal(
         "info",
         "gainlose",
         "Gainlose Title",
         "Gainlose Summary",
-        glt_d,
+        gl_content,
         'images/test-images/mental-health-canvas.png');
 }
 

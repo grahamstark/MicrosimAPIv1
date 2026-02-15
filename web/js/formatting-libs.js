@@ -21,10 +21,16 @@ function formatTable( id, caption, headerRow, tableBody ){
  * on the toLocaleString adding commas.
  */
 function fmt0( v ){
+    if(v == 0){
+        return '-';
+    }
     return $.number( v ).toLocaleString();
 }
 
 function fmt2( v ){
+    if(v == 0){
+        return '-';
+    }
     return $.number( v, 2 ).toLocaleString();
 }
 
@@ -97,9 +103,61 @@ function formatJuliaDataframe( id, df, formatter ){
     return t;
 }
 
+
+
 function formatGainLose(id, df ){
     return formatJuliaDataframe(id, df, fmt0);
 }
+
+/**
+ * SHIT I'd forgotten we'd done the one above when I wrote this ...
+ * from json version of julia DataFrame
+ * return html in text
+*/
+function parseOneGainLoseDF( id, glj ){
+    const colNames = Object.keys(glj);
+    const breakdowns = glj[colNames[0]];
+    const bd = formatLabel( colNames[0]);
+    console.log("keys", colNames, 'breakdowns', breakdowns );
+    var header = '<tr>';
+    for( var c = 0; c < colNames.length-1; c++){
+        var colN = formatLabel(colNames[c]);
+        header += `<th>${colN}</th>`;
+    }
+    header += "</tr>";
+    var rows = '';
+    for( var r = 0; r < breakdowns.length; r++ ){
+        var row = "<tr>";
+        for( var c = 0; c < colNames.length-1; c++){
+            var colN = colNames[c];
+            var dCol = glj[colN];
+            console.log( "dCol", dCol );
+            cellS = dCol[r];
+            console.log( "cellS", cellS );
+            if( c == 0 ){
+                cellS = formatLabel( cellS );
+                row += `<th>${cellS}</th>`;
+            } else if (c >= colNames.length-3){
+                gl = formatAndClassSummary(200,200,cellS,true,fmt2);
+                row += `<td style='text-align:right' class='${gl.glclass}'>${gl.gnum}</td>`;
+            } else {
+                var fn = fmt0( cellS );
+                row += `<td style='text-align:right'>${fn}</td>`;
+            }
+        } // each col
+        row += "</tr>";
+        rows += row;
+    } // each row
+    var caption = '';
+    if(glj["metadata"] != undefined){
+        caption = glj.metadata.caption[0];
+    } else {
+        caption = `Counts of Individuals Gaining And Losing, by ${bd}.`;
+    }
+
+    return formatTable( id, caption, header, rows );
+}
+
 
 const FAMDIR = "bisite" // old budget images; alternative is 'keiko' for VE images
 
@@ -329,7 +387,7 @@ function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
     prestr = formatter(pre);
     poststr = formatter(post);
     change = 100*(delta/pre);
-    var gnum = formatter( Math.abs(delta)); // rely on the arrrow to point up or down for +-=
+    var gnum = formatter( delta ); // rely on the arrrow to point up or down for +-=
     var glclass = "";
     var glstr = ""
     if( change > 20.0 ){
@@ -353,7 +411,7 @@ function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
     } else {
         glstr = "nonsig"
         glclass = "text-body"
-        gnum = "";
+        gnum = "-";
     }
     var arrow = ARROWS_1[glstr];
     var changestr = gnum !== "" ? "&nbsp;"+ arrow +"&nbsp;<b>"+gnum+"</b>" : "No Change";
@@ -429,3 +487,33 @@ function makeSummaryBlock( id, res ){
     cards += "</div>"
     return headline + glline + cards;
 }
+
+function jdiffs( v, which, upIsGood ){
+    diffs = []
+    for( var i = 0; i < which.length; i++ ){
+        w = which[i];
+        diffs.push( formatAndClassSummary(
+            v.item[0][w],
+            v.item[1][w],
+            v.item[1][w]-v.item[0][w],
+            upIsGood[i],
+            fmt2 ));
+    }
+    return diffs;
+}
+
+function jtable( labels, jd ){
+    var s = `<table class='table'>
+    <thead>
+        <tr><th></th><th>Pre</th><th>Post</th><th>Change</th></tr>
+    </thead>
+    ` ;
+    for( var i = 0; i < labels.length; i++ ){
+        v = jd[i];
+        s += `<tr><th>${labels[i]}</th><td>${v.prestr}</td><td>${v.poststr}</td><td class='${v.glclass}'>${v.gnum}</td></tr>`;
+
+    }
+    s += "</table>";
+    return s;
+}
+
