@@ -213,8 +213,11 @@ function drawLorenz( quantileData ){
     return [lorcurve, thumbnail];
 }
 
-function drawDecileBarChart( deciles ){
-    var points0 = deciles.item[0].columns[2]
-    var points1 = deciles.item[1].columns[2]
+function drawDecileBarChart( deciles0, deciles1 ){
+    var decs = Array.from( deciles1 );
+    for( var i = 0; i < decs.length; i++ ){
+        decs[i] -= deciles1[i];
+    }
+    console.log( "decs", decs );
     return [deciles, thumbnail];
 }

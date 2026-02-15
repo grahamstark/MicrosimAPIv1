@@ -121,14 +121,13 @@ function getResult( item ){
             console.log( data.responseJSON );
             return data.item;
         });
-    console.log(x);
     return x
 }
 
 
 async function processGainLose(){
     const gl_d = await d3.json("output-examples/gainlose-bydecile.json");
-    console.log( gl_d );
+    console.log( "gainlose_d", gl_d );
     glt_d = parseOneGainLoseDF( 'deciles-gl-table', gl_d.item );
     const gl_ten = gl_d; // await d3.json("output-examples/gainlose-bytenure.json");
     glt_ten = parseOneGainLoseDF( 'deciles-gl-table', gl_ten.item );
@@ -167,12 +166,11 @@ async function processInequality(){
         false,
         fmt2 );
 
-    console.log( quantileData );
-    console.log( ineqData );
+    console.log( "quantileData", quantileData );
+    console.log( "ineqData", ineqData );
     const [lorcurve, thumbnail] = drawLorenz( quantileData )
     const jd = jdiffs( ineqData, ["gini", "palma", "hoover", "average_income", "median"], [false,false,false,true,true]);
     const jt = jtable( ["Gini","Palma","Hoover Index", "Mean Income", "Median Income"], jd );
-    console.log( jd );
     var content = `
     <h4>Lorenz Curve</h4>
     <div>
@@ -225,9 +223,7 @@ $(document).ready(function(){
         delta,
         false,
         fmt2 );
-    console.log( ch );
     n = 123456789.01;
-    console.log(n.toLocaleString());
     $('#change-1').html( ch['changestr']);
     $('#chclass-1').addClass( ch['glclass']);
     pre = 12345678;
@@ -238,8 +234,6 @@ $(document).ready(function(){
     $('#chclass-2').addClass( ch['glclass']);
     $('#popup-2').html( make_modal_data( "the-popup-2", "The Title", "The content."));
     $('#media-2').html( make_media_item( "the-popup-2", "The Title", "The content.", 'images/test-images/mental-health-canvas.png'));
-
-
     draw_media_and_modal(
         "secondary",
         "costs",
@@ -247,7 +241,6 @@ $(document).ready(function(){
         "Costs Summary",
         "Costs Content.",
         'images/test-images/mental-health-canvas.png');
-
     draw_media_and_modal(
         "primary",
         "metrs",
@@ -255,8 +248,6 @@ $(document).ready(function(){
         "Metrs Summary",
         "Metrs Content.",
         'images/test-images/mental-health-canvas.png');
-
-
     draw_media_and_modal(
         "purple",
         "poverty",
@@ -264,7 +255,6 @@ $(document).ready(function(){
         "Poverty Summary",
         "Poverty Content.",
         'images/test-images/mental-health-canvas.png');
-
     draw_media_and_modal(
         "dark",
         "incomes",
@@ -272,7 +262,6 @@ $(document).ready(function(){
         "Incomes Summary",
         "Incomes Content.",
         'images/test-images/mental-health-canvas.png');
-    console.log( data )
 
 });
 
