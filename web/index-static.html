@@ -164,6 +164,39 @@ function jtable( labels, jd ){
     return s;
 }
 
+/**
+ * from json version of julia DataFrame
+ * return html in text
+*/
+function parseOneGainLoseDF( glj ){
+    const x = 1;
+    const y = -1;
+    glt = `
+    <table class='table-sm'>
+        <tr>
+            <th>Gini</th><td class='${x}'>${y}</td>
+        </tr>
+        <tr>
+            <th>Palma</th><td class='${x}'>${y}</td>
+        </tr>
+    </table>
+    `
+    return glt;
+}
+
+async function processGainLose(){
+    const gl_d = await d3.json("output-examples/gainlose-bydecile.json");
+    console.log( gl_d );
+    glt_d = parseOneGainLoseDF( gl_d );
+    draw_media_and_modal(
+        "info",
+        "gainlose",
+        "Gainlose Title",
+        "Gainlose Summary",
+        glt_d,
+        'images/test-images/mental-health-canvas.png');
+}
+
 async function processInequality(){
 
     const quantileData = await d3.json("output-examples/quantiles.json");
@@ -207,36 +240,6 @@ async function processInequality(){
           y: {label: "Income Share", grid:true }
     })
     const thumbnail = make_thumb( [lorenz0, lorenz1, equality]);
-    /*
-    atkinson: Array(9) [ 0.025597348081354387, 0.054748468219076196, 0.08377932384111053, … ]
-atkinson_es: Array(9) [ 0.25, 0.5, 0.75, … ]
-​average_income: 902.4535140906894
-​deciles: Array(40) [ 0.09971143088014561, 0.200285966451981, 0.30001582603011323, … ]
-generalised_entropy: Array(6) [ 0.1328415955882228, 0.1367067192013547, 0.1440013095383991, … ]
-generalised_entropy_alphas: Array(6) [ 1.25, 1.5, 1.75, … ]
-gini: 0.26699359091844876
-hoover: 0.18603872480532677
-median: 819.2663705277412
-negative_or_zero_income_count: 19907.768731346263
-palma: 0.9284565654220309
-theil_l: 0.12179597929567579
-    */
-    /*
-    var bars = Plot.rectY(
-                data,
-                {
-                    x1: "x1",
-                    x2: "x2",
-                    y: "weight",
-                    fill: "steelblue"
-                })
-    var plot = Plot.plot({
-        marks: [ bars ],
-        y: {label: "Weight"},
-        x: {label: "Value"}
-    });
-    */
-    // var thumbnail = make_thumb( [bars] );
     var content = `
     <h4>Lorenz Curve</h4>
     <div>
@@ -273,26 +276,13 @@ theil_l: 0.12179597929567579
         '');
     $("#inequality-image-thumbnail").append(thumbnail);
     $("#inequality-image").append(lorcurve);
-
-    return quantileData;
 }
 
 $(document).ready(function(){
-    // var quantileData = getResult( "quantiles")
-    /*
-    var quantileData =
-    d3.json( "output-examples/quantiles.json",
-        function( err, data ){
-            processHist( data, err  );
-            if( err ){
-                throw err;
-            }
-        }
-        // console.log( data );
-    );
-    */
 
-    var quantileData = processInequality();
+    processInequality();
+    processGainLose();
+
     var pre=11;
     var post=10;
     var delta = post-pre;
@@ -317,13 +307,6 @@ $(document).ready(function(){
     $('#popup-2').html( make_modal_data( "the-popup-2", "The Title", "The content."));
     $('#media-2').html( make_media_item( "the-popup-2", "The Title", "The content.", 'images/test-images/mental-health-canvas.png'));
 
-    draw_media_and_modal(
-        "info",
-        "gainlose",
-        "Gainlose Title",
-        "Gainlose Summary",
-        "Gainlose Content.",
-        'images/test-images/mental-health-canvas.png');
 
     draw_media_and_modal(
         "secondary",
