@@ -176,3 +176,29 @@ Plot.plot({
 
 test = (bin) => bin.some((d) => inrange( d.weight, [[45,55],[70,99]] ));
 */
+
+
+function drawLorenz( quantileData ){
+
+    var points0 = d3.zip(quantileData.item[0].columns[0], quantileData.item[0].columns[1]);
+    var points1 = d3.zip(quantileData.item[1].columns[0], quantileData.item[1].columns[1]);
+    points0.unshift([0,0]);
+    points1.unshift([0,0]);
+    console.log( points0 );
+    console.log( points1 );
+
+    const lorenz0 = Plot.line( points0, {stroke:"red", curve: "catmull-rom", label:"Pre"} );
+    const lorenz1 = Plot.line( points1, {stroke:"blue", curve: "catmull-rom", label:"Post"} );
+    const equality = Plot.line( [[0,0],[1,1]], {stroke:"#aaa", label:"Equality"})
+    const lorcurve = Plot.plot(
+        { marks: [ lorenz0, lorenz1, equality],
+          //title: "For charts, an informative title",
+          //subtitle: "Subtitle to follow with additional context",
+          caption: "Figure 1. A Lorenz Curve",
+          color: {legend: true},
+          x: {label: "Population Share", grid:true },
+          y: {label: "Income Share", grid:true }
+    })
+    const thumbnail = make_thumb( [lorenz0, lorenz1, equality]);
+    return [lorcurve, thumbnail];
+}

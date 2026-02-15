@@ -179,29 +179,10 @@ async function processInequality(){
 
     console.log( quantileData );
     console.log( ineqData );
+    const [lorcurve, thumbnail] = drawLorenz( quantileData )
     const jd = jdiffs( ineqData, ["gini", "palma", "hoover", "average_income", "median"], [false,false,false,true,true]);
     const jt = jtable( ["Gini","Palma","Hoover Index", "Mean Income", "Median Income"], jd );
     console.log( jd );
-    var points0 = d3.zip(quantileData.item[0].columns[0], quantileData.item[0].columns[1]);
-    var points1 = d3.zip(quantileData.item[1].columns[0], quantileData.item[1].columns[1]);
-    points0.unshift([0,0]);
-    points1.unshift([0,0]);
-    console.log( points0 );
-    console.log( points1 );
-
-    const lorenz0 = Plot.line( points0, {stroke:"red", curve: "catmull-rom", label:"Pre"} );
-    const lorenz1 = Plot.line( points1, {stroke:"blue", curve: "catmull-rom", label:"Post"} );
-    const equality = Plot.line( [[0,0],[1,1]], {stroke:"#aaa", label:"Equality"})
-    const lorcurve = Plot.plot(
-        { marks: [ lorenz0, lorenz1, equality],
-          //title: "For charts, an informative title",
-          //subtitle: "Subtitle to follow with additional context",
-          caption: "Figure 1. A Lorenz Curve",
-          color: {legend: true},
-          x: {label: "Population Share", grid:true },
-          y: {label: "Income Share", grid:true }
-    })
-    const thumbnail = make_thumb( [lorenz0, lorenz1, equality]);
     var content = `
     <h4>Lorenz Curve</h4>
     <div>
@@ -214,8 +195,7 @@ async function processInequality(){
 
     ${jt}
 
-    `
-
+    `;
 
     var summary = `
     <table class='table-sm'>
@@ -226,7 +206,7 @@ async function processInequality(){
             <th>Palma</th><td class='${palmadiff.glclass}'>${palmadiff.changestr}</td>
         </tr>
     </table>
-    `
+    `;
     //var (ineq1).plot()
 
     draw_media_and_modal(
