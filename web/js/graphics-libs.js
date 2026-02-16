@@ -216,8 +216,10 @@ function drawLorenz( quantileData ){
 function drawDecileBarChart( deciles0, deciles1 ){
     var decs = Array.from( deciles1 );
     for( var i = 0; i < decs.length; i++ ){
-        decs[i] -= deciles1[i];
+        decs[i] -= deciles0[i];
     }
+    var deciles = '';
+    thumbnail = '';
     console.log( "decs", decs );
     return [deciles, thumbnail];
 }
