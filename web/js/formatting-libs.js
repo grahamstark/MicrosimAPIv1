@@ -77,7 +77,7 @@ function formatRow( rowLabel, rowCells ){
     `;
 }
 
-function formatJuliaDataframe( id, df, formatter ){
+function formatJuliaDataframe( id, df, highlighter ){
     var rowLabels = df.columns[0];
     var colLabels = df.colindex.names;
     var caption = ''
@@ -93,8 +93,8 @@ function formatJuliaDataframe( id, df, formatter ){
         var rowCells = "";
         for( var c = 1; c < df.columns.length; c++){ // 1st col is row label
             v = df.columns[c][r];
-            vs = formatter(v)
-            rowCells += `<td style='text-align:right'>${vs}</td>`;
+            vs = highligher( v, r, c );
+            rowCells += `<td style='text-align:right' class='${vs.class}'>${vs.str}</td>`;
         }
         tableBody += formatRow( formatLabel(rowLabels[r]), rowCells );
     }
@@ -104,9 +104,23 @@ function formatJuliaDataframe( id, df, formatter ){
 }
 
 
+function costsHighlighter( value, row, col ){
+    var vals = '';
+    var classc = ''
+    if(col == 0){
+        vals = formatLabel( value );
+    } else if(col < 3){
+        vals = fmt0( value );
+    } else {
 
-function formatGainLose(id, df ){
-    return formatJuliaDataframe(id, df, fmt0);
+    }
+    return {'class':classc, 'str':vals}
+}
+
+
+
+function formatCosts(id, df ){
+    return formatJuliaDataframe( id, df, costsHighlighter );
 }
 
 /**

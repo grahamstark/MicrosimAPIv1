@@ -213,13 +213,22 @@ function drawLorenz( quantileData ){
     return [lorcurve, thumbnail];
 }
 
-function drawDecileBarChart( deciles0, deciles1 ){
+function drawDecileBarChart( deciles1, deciles0 ){
     var decs = Array.from( deciles1 );
     for( var i = 0; i < decs.length; i++ ){
         decs[i] -= deciles0[i];
     }
-    var deciles = '';
-    thumbnail = '';
-    console.log( "decs", decs );
-    return [deciles, thumbnail];
+    console.log( "deciles1", deciles1, "deciles0", deciles0, "decs", decs );
+    const bars = Plot.barY( decs )
+    const decplot =  Plot.plot(
+        { marks: [ bars ],
+          //title: "For charts, an informative title",
+          //subtitle: "Subtitle to follow with additional context",
+          caption: "Figure 2. Gains By Decile",
+          color: {legend: true},
+          x: {label: "Decile", grid:true },
+          y: {label: "Change £s pw.", grid:true }
+    })
+    const thumbnail = make_thumb( [bars])
+    return [decplot, thumbnail];
 }

@@ -127,25 +127,53 @@ function getResult( item ){
 
 async function processGainLose(){
     const gl_d = await d3.json("output-examples/gainlose-bydecile.json");
-    console.log( "gainlose_d", gl_d );
-    glt_d = parseOneGainLoseDF( 'deciles-gl-table', gl_d.item );
-    const gl_ten = gl_d; // await d3.json("output-examples/gainlose-bytenure.json");
-    glt_ten = parseOneGainLoseDF( 'deciles-gl-table', gl_ten.item );
+    const gl_ten = await d3.json("output-examples/ten-gl.json");
+    const ineqData = await d3.json("output-examples/inequality.json");
+    const headlineData = await d3.json("output-examples/headline-figures.json");
 
-    var gl_content = `
+    console.log( "ineqData", ineqData );
+    console.log( "gainlose_d", gl_d );
+    const glt_d = parseOneGainLoseDF( 'deciles-gl-table', gl_d.item );
+    // const gl_ten = gl_d; // await d3.json("output-examples/gainlose-bytenure.json");
+    const glt_ten = parseOneGainLoseDF( 'ten-gl-table', gl_ten.item );
+    console.log( "ineqData.item[0].deciles", ineqData.item[0].deciles)
+    console.log( "ineqData.item[1].deciles", ineqData.item[1].deciles)
+    const [decchart,thumbnail] = drawDecileBarChart(
+        ineqData.item[1].deciles.slice(20, 29), // 2d array compressed into 1 d for some reason
+        ineqData.item[0].deciles.slice(20, 29));
+    const gl_summary = `
+
+    <table class='table-sm'>
+        <tr>
+            <th>Gainers</th><td class='text-success'>${fmt0(headlineData.item[1].gainers)}</td>
+        </tr>
+        <tr>
+            <th>Losers</th><td class='text-danger'>${fmt0(headlineData.item[1].losers)}</td>
+        </tr>
+        <tr>
+            <th>Unchanged</th><td class=''>${fmt0(headlineData.item[1].no_change)}</td>
+        </tr>
+    </table>
+
+    `;
+    const gl_content = `
         <h4>By Decile</h4>
+        <div id='deciles-image' ></div>
         ${glt_d}
         <h4>By Tenure</h4>
         ${glt_ten}
-
     `;
     draw_media_and_modal(
         "info",
         "gainlose",
         "Gainlose Title",
-        "Gainlose Summary",
+        gl_summary,
         gl_content,
         'images/test-images/mental-health-canvas.png');
+
+    $("#gainlose-image-thumbnail").append(thumbnail);
+    $("#deciles-image").append(decchart);
+
 }
 
 async function processInequality(){
