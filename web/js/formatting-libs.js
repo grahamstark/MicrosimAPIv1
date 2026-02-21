@@ -1,20 +1,4 @@
 
-function formatTable( id, caption, headerRow, tableBody ){
-    return `
-    <table id='${id}' name='${id}' class='table table-sm table-striped'>
-        <thead>
-            <caption>
-            ${caption}
-            </caption>            
-        </thead>
-        <tr>${headerRow}</tr>
-        <tbody>
-            ${tableBody}
-        </tbody>
-    </table>
-    `;
-}
-
 /**
  * see:
  * https://stackoverflow.com/questions/2901102/how-can-i-format-a-number-with-commas-as-thousands-separators
@@ -40,6 +24,113 @@ function moneyfmt( v ){
 
 function pctfmt( v ){
     return fmt2(v)+'%';
+}
+
+const ARROWS_1 = {
+    "nonsig"          : "",
+    "positive_strong" : "<i class='bi bi-arrow-up-circle-fill'></i>",
+    "positive_med"    : "<i class='bi bi-arrow-up-circle'></i>",
+    "positive_weak"   : "<i class='bi bi-arrow-up'></i>",
+    "negative_strong" : "<i class='bi bi-arrow-down-circle-fill'></i>",
+    "negative_med"    : "<i class='bi bi-arrow-down-circle'></i>",
+    "negative_weak"   : "<i class='bi bi-arrow-down'></i>" };
+
+function formatAndClass( change ){
+    var gnum = fmt2( Math.abs(change));
+    var anum = fmt2( change);
+
+    var glclass = "";
+    var glstr = ""
+    if( change > 20.0 ){
+        glstr = "positive_strong"
+        glclass = "text-success"
+    } else if (change > 10.0) {
+        glstr = "positive_med"
+        glclass = "text-success"
+    } else if (change > 0.01) {
+        glstr = "positive_weak"
+        glclass = "text-success"
+    } else if (change < -20.0) {
+        glstr = "negative_strong"
+        glclass = "text-danger"
+    } else if (change < -10) {
+        glstr = "negative_med"
+        glclass = "text-danger"
+    } else if (change < -0.01) {
+        glstr = "negative_weak"
+        glclass = "text-danger"
+    } else {
+        glstr = "nonsig"
+        glclass = "text-body"
+        gnum = "";
+    }
+    var changestr = gnum !== "" ? "&nbsp;"+ARROWS_1[glstr]+"&nbsp;&pound;"+gnum : "No Change";
+    return {"gnum":gnum, "glclass":glclass, "glstr":glstr, "changestr":changestr,"anum":anum };
+}
+
+/**
+ *
+ */
+function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
+    prestr = formatter(pre);
+    poststr = formatter(post);
+    change = 100*(delta/pre);
+    var gnum = formatter( delta ); // rely on the arrrow to point up or down for +-=
+    var anum = formatter( Math.abs(delta); // rely on the arrrow to point up or down for +-=
+    var glclass = "";
+    var glstr = ""
+    if( change > 20.0 ){
+        glstr = "positive_strong"
+        glclass = upIsGood ? "text-success" : "text-danger";
+    } else if (change > 10.0) {
+        glstr = "positive_med"
+        glclass = upIsGood ? "text-success" : "text-danger";
+    } else if (change > 0.01) {
+        glstr = "positive_weak"
+        glclass = upIsGood ? "text-success" : "text-danger";
+    } else if (change < -20.0) {
+        glstr = "negative_strong"
+        glclass = upIsGood ? "text-danger" : "text-success";
+    } else if (change < -10) {
+        glstr = "negative_med"
+        glclass = upIsGood ? "text-danger" : "text-success";
+    } else if (change < -0.01) {
+        glstr = "negative_weak"
+        glclass = upIsGood ? "text-danger" : "text-success";
+    } else {
+        glstr = "nonsig"
+        glclass = "text-body"
+        gnum = "-";
+    }
+    var arrow = ARROWS_1[glstr];
+    var changestr = gnum !== "" ? "&nbsp;"+ arrow +"&nbsp;<b>"+gnum+"</b>" : "No Change";
+    return {
+        "change":change,
+        "gnum":gnum,
+        "anum":anum,
+        "glclass":glclass,
+        "glstr":glstr,
+        "changestr":changestr,
+        'prestr':prestr,
+        'poststr':poststr,
+        'arrow':arrow };
+}
+
+
+function formatTable( id, caption, headerRow, tableBody ){
+    return `
+    <table id='${id}' name='${id}' class='table table-sm table-striped'>
+        <thead>
+            <caption>
+            ${caption}
+            </caption>            
+        </thead>
+        <tr>${headerRow}</tr>
+        <tbody>
+            ${tableBody}
+        </tbody>
+    </table>
+    `;
 }
 
 const OUT_SUBS = {
@@ -103,20 +194,22 @@ function formatJuliaDataframe( id, df, highlighter ){
     return t;
 }
 
-
 function costsHighlighter( value, row, col ){
     var vals = '';
     var classc = ''
     if(col == 0){
         vals = formatLabel( value );
     } else if(col < 3){
-        vals = fmt0( value );
+        fm = formatAmdClassSummary( value, 0.0, 0.0, upIsGood, fmt0 );
+        vals = fm.gnum;
     } else {
-
+        upIsGood = row > 10 ? false : true;
+        fm = formatAmdClassSummary( 10000.0, 10000.0, value, upIsGood, fmt0 );
+        vals = fm.gnum;
+        classc = fm.glclass;
     }
-    return {'class':classc, 'str':vals}
+    return {'class':class, 'str':vals}
 }
-
 
 
 function formatCosts(id, df ){
@@ -174,45 +267,6 @@ function parseOneGainLoseDF( id, glj ){
 
 const FAMDIR = "bisite" // old budget images; alternative is 'keiko' for VE images
 
-const ARROWS_1 = {
-    "nonsig"          : "",
-    "positive_strong" : "<i class='bi bi-arrow-up-circle-fill'></i>",
-    "positive_med"    : "<i class='bi bi-arrow-up-circle'></i>",
-    "positive_weak"   : "<i class='bi bi-arrow-up'></i>",
-    "negative_strong" : "<i class='bi bi-arrow-down-circle-fill'></i>",
-    "negative_med"    : "<i class='bi bi-arrow-down-circle'></i>",
-    "negative_weak"   : "<i class='bi bi-arrow-down'></i>" };
-
-function formatAndClass( change ){
-    var gnum = fmt2( Math.abs(change));
-    var glclass = "";
-    var glstr = ""
-    if( change > 20.0 ){
-        glstr = "positive_strong"
-        glclass = "text-success"
-    } else if (change > 10.0) {
-        glstr = "positive_med"
-        glclass = "text-success"
-    } else if (change > 0.01) {
-        glstr = "positive_weak"
-        glclass = "text-success"
-    } else if (change < -20.0) {
-        glstr = "negative_strong"
-        glclass = "text-danger"
-    } else if (change < -10) {
-        glstr = "negative_med"
-        glclass = "text-danger"
-    } else if (change < -0.01) {
-        glstr = "negative_weak"
-        glclass = "text-danger"
-    } else {
-        glstr = "nonsig"
-        glclass = "text-body"
-        gnum = "";
-    }
-    var changestr = gnum !== "" ? "&nbsp;"+ARROWS_1[glstr]+"&nbsp;&pound;"+gnum : "No Change";
-    return {"gnum":gnum, "glclass":glclass, "glstr":glstr, "changestr":changestr };
-}
 
 function make_example_card( res ){
     console.log( "make_example_card; res = ", res );
@@ -393,43 +447,6 @@ function make_examples( exampleResults ){
     return cards;
 }
 
-/**
- *
- */
-function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
-    prestr = formatter(pre);
-    poststr = formatter(post);
-    change = 100*(delta/pre);
-    var gnum = formatter( delta ); // rely on the arrrow to point up or down for +-=
-    var glclass = "";
-    var glstr = ""
-    if( change > 20.0 ){
-        glstr = "positive_strong"
-        glclass = upIsGood ? "text-success" : "text-danger";
-    } else if (change > 10.0) {
-        glstr = "positive_med"
-        glclass = upIsGood ? "text-success" : "text-danger";
-    } else if (change > 0.01) {
-        glstr = "positive_weak"
-        glclass = upIsGood ? "text-success" : "text-danger";
-    } else if (change < -20.0) {
-        glstr = "negative_strong"
-        glclass = upIsGood ? "text-danger" : "text-success";
-    } else if (change < -10) {
-        glstr = "negative_med"
-        glclass = upIsGood ? "text-danger" : "text-success";
-    } else if (change < -0.01) {
-        glstr = "negative_weak"
-        glclass = upIsGood ? "text-danger" : "text-success";
-    } else {
-        glstr = "nonsig"
-        glclass = "text-body"
-        gnum = "-";
-    }
-    var arrow = ARROWS_1[glstr];
-    var changestr = gnum !== "" ? "&nbsp;"+ arrow +"&nbsp;<b>"+gnum+"</b>" : "No Change";
-    return {"change":change, "gnum":gnum, "glclass":glclass, "glstr":glstr, "changestr":changestr, 'prestr':prestr, 'poststr':poststr,  'arrow':arrow };
-}
 
 
 function summarycard( label, description, pre, post, delta, upIsGood, formatter ){

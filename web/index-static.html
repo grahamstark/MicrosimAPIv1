@@ -176,6 +176,11 @@ async function processGainLose(){
 
 }
 
+async function processCosts(){
+    const summaryData = await d3.json("output-examples/very-short-income-summary.json");
+    const costsData = await d3.json("output-examples/short-income-summary.json");
+}
+
 async function processInequality(){
 
     const quantileData = await d3.json("output-examples/quantiles.json");
