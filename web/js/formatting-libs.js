@@ -482,7 +482,13 @@ function make_examples( exampleResults ){
 }
 
 function processOneHist( data ){
-    return { 'x': data.hist.edges, 'y':data.hist.weights, 'min': data.min, 'max': data.max, 'med':data.median, 'mean':data.mean }
+    return {
+        'x': data.hist.edges[0],
+        'y':data.hist.weights,
+        'min': data.min,
+        'max': data.max,
+        'med':data.median,
+        'mean':data.mean }
 }
 
 

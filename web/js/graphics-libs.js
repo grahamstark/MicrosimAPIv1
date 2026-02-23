@@ -238,9 +238,11 @@ function drawDecileBarChart( deciles1, deciles0 ){
 
 function drawMRHist( title, data1, data0 ){
     var width = Array.from( data1.x );
-    for( var i = 1; i < width.length; i++ ){
-        console.log( "i=",i,"length",width.length,"width[i-1]",width[i-1]);
-        width[i-1] = data1[i]-data1[i-1];
+    width = width.slice(1,width.length-1);
+    weights = data1.y.slice(1,data1.y.length);
+    for( var i = 1; i <= width.length; i++ ){
+        width[i-1] = data1.x[i]-data1.x[i-1];
     }
-    console.log( "width", width );
+    width[0] = Math.min( Math.abs(width[0]), width[1])
+    console.log( "widthx", width, "weights", weights );
 }
