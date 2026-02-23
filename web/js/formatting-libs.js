@@ -76,7 +76,7 @@ function formatAndClassSummary( pre, post, delta, upIsGood, formatter ){
     poststr = formatter(post);
     change = 100*(delta/pre);
     var gnum = formatter( delta ); // rely on the arrrow to point up or down for +-=
-    var anum = formatter( Math.abs(delta); // rely on the arrrow to point up or down for +-=
+    var anum = formatter( Math.abs(delta)); // rely on the arrrow to point up or down for +-=
     var glclass = "";
     var glstr = ""
     if( change > 20.0 ){
@@ -168,52 +168,86 @@ function formatRow( rowLabel, rowCells ){
     `;
 }
 
-function formatJuliaDataframe( id, df, highlighter ){
+
+
+const INCLUDED_SUMMARY_ROWS = new Set( [3,4,6,8,9])
+
+function dummyIncluder(row){
+    return true;
+}
+
+function summaryIncluder(row){
+    return INCLUDED_SUMMARY_ROWS.has(row);
+}
+
+function formatJuliaDataframe( id, df, highlighter, includer=dummyIncluder ){
     var rowLabels = df.columns[0];
     var colLabels = df.colindex.names;
-    var caption = ''
+    var caption = '';
     if(df["metadata"] != undefined){
         caption = df.metadata.caption[0];
     }
     var tableBody = '';
     var headerRow = '';
     for( var c = 0; c < colLabels.length; c++){
-        headerRow += `<th>${formatLabel(colLabels[c])}</th>`;
+        var label = '';
+        if(c > 0){
+            label = formatLabel(colLabels[c]);
+        }
+        headerRow += `<th>${label}</th>`;
     }
     for( var r = 0; r < rowLabels.length; r++){
-        var rowCells = "";
-        for( var c = 1; c < df.columns.length; c++){ // 1st col is row label
-            v = df.columns[c][r];
-            vs = highligher( v, r, c );
-            rowCells += `<td style='text-align:right' class='${vs.class}'>${vs.str}</td>`;
+        if(includer(r)){
+            var rowCells = "";
+            for( var c = 1; c < df.columns.length; c++){ // 1st col is row label
+                v = df.columns[c][r];
+                vs = highlighter( v, r, c );
+                rowCells += `<td style='text-align:right' class='${vs.class}'>${vs.str}</td>`;
+            }
+            tableBody += formatRow( formatLabel(rowLabels[r]), rowCells );
         }
-        tableBody += formatRow( formatLabel(rowLabels[r]), rowCells );
     }
     var t = formatTable( id, caption, headerRow, tableBody );
     // console.log( "created table as ", t )
     return t;
 }
 
-function costsHighlighter( value, row, col ){
+
+function summaryCostsHighlighter( value, row, col ){
     var vals = '';
     var classc = ''
+    const upIsGood = row > 3 ? false : true;
+    // skip boring rows
     if(col == 0){
         vals = formatLabel( value );
     } else if(col < 3){
-        fm = formatAmdClassSummary( value, 0.0, 0.0, upIsGood, fmt0 );
+        fm = formatAndClassSummary( 0.0, 0.0, value, upIsGood, fmt0 );
         vals = fm.gnum;
     } else {
-        upIsGood = row > 10 ? false : true;
-        fm = formatAmdClassSummary( 10000.0, 10000.0, value, upIsGood, fmt0 );
+        fm = formatAndClassSummary( 10000.0, 10000.0, value, upIsGood, fmt0 );
         vals = fm.gnum;
         classc = fm.glclass;
     }
-    return {'class':class, 'str':vals}
+    return {'class':classc, 'str':vals}
 }
 
 
-function formatCosts(id, df ){
-    return formatJuliaDataframe( id, df, costsHighlighter );
+function fullCostsHighlighter( value, row, col ){
+    var vals = '';
+    var classc = ''
+    const upIsGood = row > 3 ? false : true;
+    // skip boring rows
+    if(col == 0){
+        vals = formatLabel( value );
+    } else {
+        vals = fmt0(value);
+        if(col < 3){
+            classc = 'text-dark';
+        } else {
+            classc = 'text-primary';
+        }
+    }
+    return {'class':classc, 'str':vals}
 }
 
 /**
@@ -447,6 +481,9 @@ function make_examples( exampleResults ){
     return cards;
 }
 
+function processOneHist( data ){
+    return { 'x': data.hist.edges, 'y':data.hist.weights, 'min': data.min, 'max': data.max, 'med':data.median, 'mean':data.mean }
+}
 
 
 function summarycard( label, description, pre, post, delta, upIsGood, formatter ){

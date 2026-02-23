@@ -166,7 +166,7 @@ async function processGainLose(){
     draw_media_and_modal(
         "info",
         "gainlose",
-        "Gainlose Title",
+        "Gainers and losers",
         gl_summary,
         gl_content,
         'images/test-images/mental-health-canvas.png');
@@ -179,6 +179,24 @@ async function processGainLose(){
 async function processCosts(){
     const summaryData = await d3.json("output-examples/very-short-income-summary.json");
     const costsData = await d3.json("output-examples/short-income-summary.json");
+    console.log( "summaryData", summaryData.item );
+    console.log( "costsData", costsData.item );
+    const sumCostsShort = formatJuliaDataframe( "costs-summary-short", summaryData.item, summaryCostsHighlighter, summaryIncluder );
+    const sumCosts = formatJuliaDataframe( "costs-summary", summaryData.item, summaryCostsHighlighter );
+    const fullCosts = formatJuliaDataframe( "costs-data", costsData.item, fullCostsHighlighter );
+    var content = `
+        <h4>Costs Summary</h4>
+        ${sumCosts}
+        <h4>Full Costs and Incomes</h4>
+        ${fullCosts}
+        `;
+    draw_media_and_modal(
+        "secondary",
+        "costs",
+        "Costs",
+        sumCostsShort, // fullCosts,
+        content,
+        'images/test-images/mental-health-canvas.png');
 }
 
 async function processInequality(){
@@ -241,10 +259,28 @@ async function processInequality(){
     $("#inequality-image").append(lorcurve);
 }
 
+async function processMETRs(){
+    const metrData =  await d3.json("output-examples/metrs-histogram.json");
+    console.log( "metrData", metrData );
+    m0 = processOneHist( metrData.item[0])
+    m1 = processOneHist( metrData.item[1])
+    console.log( "m1", m1 );
+    h = drawMRHist("MRs", m1, m0)
+    draw_media_and_modal(
+        "primary",
+        "metrs",
+        "Work Incentives",
+        "Metrs Summary",
+        "Metrs Content.",
+        'images/test-images/mental-health-canvas.png');
+}
+
 $(document).ready(function(){
 
     processInequality();
     processGainLose();
+    processCosts();
+    processMETRs();
 
     var pre=11;
     var post=10;
@@ -267,20 +303,7 @@ $(document).ready(function(){
     $('#chclass-2').addClass( ch['glclass']);
     $('#popup-2').html( make_modal_data( "the-popup-2", "The Title", "The content."));
     $('#media-2').html( make_media_item( "the-popup-2", "The Title", "The content.", 'images/test-images/mental-health-canvas.png'));
-    draw_media_and_modal(
-        "secondary",
-        "costs",
-        "Costs Title",
-        "Costs Summary",
-        "Costs Content.",
-        'images/test-images/mental-health-canvas.png');
-    draw_media_and_modal(
-        "primary",
-        "metrs",
-        "Metrs Title",
-        "Metrs Summary",
-        "Metrs Content.",
-        'images/test-images/mental-health-canvas.png');
+
     draw_media_and_modal(
         "purple",
         "poverty",

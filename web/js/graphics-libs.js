@@ -215,6 +215,7 @@ function drawLorenz( quantileData ){
 
 function drawDecileBarChart( deciles1, deciles0 ){
     var decs = Array.from( deciles1 );
+    // drawing the differences between 1 and 0
     for( var i = 0; i < decs.length; i++ ){
         decs[i] -= deciles0[i];
     }
@@ -231,4 +232,15 @@ function drawDecileBarChart( deciles1, deciles0 ){
     })
     const thumbnail = make_thumb( [bars])
     return [decplot, thumbnail];
+}
+
+
+
+function drawMRHist( title, data1, data0 ){
+    var width = Array.from( data1.x );
+    for( var i = 1; i < width.length; i++ ){
+        console.log( "i=",i,"length",width.length,"width[i-1]",width[i-1]);
+        width[i-1] = data1[i]-data1[i-1];
+    }
+    console.log( "width", width );
 }
