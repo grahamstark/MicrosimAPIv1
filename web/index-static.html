@@ -265,14 +265,24 @@ async function processMETRs(){
     m0 = processOneHist( metrData.item[0])
     m1 = processOneHist( metrData.item[1])
     console.log( "m1", m1 );
-    h = drawMRHist("MRs", m1, m0)
+    [h0,t0,h1,t1] = drawMRHist("MRs", m1, m0)
+    var content = `
+    <h4>thing</h4>
+    <div>
+    <div id='metrs-image'></div>
+    </div>
+
+    `;
+
     draw_media_and_modal(
         "primary",
         "metrs",
         "Work Incentives",
         "Metrs Summary",
-        "Metrs Content.",
+        content,
         'images/test-images/mental-health-canvas.png');
+    $("#metrs-image-thumbnail").append(t0);
+    $("#metrs-image").append(h0);
 }
 
 $(document).ready(function(){

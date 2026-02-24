@@ -235,14 +235,48 @@ function drawDecileBarChart( deciles1, deciles0 ){
 }
 
 
+function draw1MR( title, xy, median, mean ){
+    console.log( "xy", xy );
+    bars = Plot.rectY(xy,{x:"width", y:"count", fill:"none",stroke:"black"});
+    medl = Plot.ruleX( [median], {stroke: "red"});
+    meanl = Plot.ruleX( [mean], {stroke: "blue"});
+
+    const plot =  Plot.plot(
+        { marks:
+            [bars, medl, meanl],
+          caption: title,
+          x: {label: "METR(%)", grid:true },
+          y: {label: "People.", grid:true }
+    });
+    const thumbnail = make_thumb( [bars]) //,medl, meanl])
+    return [plot, thumbnail];
+}
+
+function jsonify(x,y,nx,ny){
+    var o = [];
+    for( var i = 0; i < x.length; i++ ){
+        o.push( {"width":x[i], "count":y[i]})
+    }
+    return o;
+}
 
 function drawMRHist( title, data1, data0 ){
-    var width = Array.from( data1.x );
+    var width = Array.from( data0.x )
+    // chop off bottom zeros for negative MRs
     width = width.slice(1,width.length-1);
-    weights = data1.y.slice(1,data1.y.length);
+    weights0 = data0.y.slice(1,data0.y.length);
+    weights1 = data1.y.slice(1,data1.y.length);
+    // convert one width to gaps from top breaks - assume 0 1 same gaps
     for( var i = 1; i <= width.length; i++ ){
-        width[i-1] = data1.x[i]-data1.x[i-1];
+        // since data.x is 1 longer
+        width[i-1] = data0.x[i+1]-data0.x[i];
     }
-    width[0] = Math.min( Math.abs(width[0]), width[1])
-    console.log( "widthx", width, "weights", weights );
+    // over 100 one - just arnitrariy so it doesn't go to infinity
+    width[width.length-1] = 20; // Math.min( Math.abs(width[0]), width[1])
+    console.log( "width", width, "weights", weights0 );
+    xy0 = jsonify(width, weights0, "width", "count" );
+    xy1 = jsonify( width, weights1, "width", "count" );
+    draw0 = draw1MR( "Figure 3a: Effective Marginal Tax Rates (METRS), Pre", xy0, data0.median, data0.mean )
+    draw1 = draw1MR( "Figure 3a: Effective Marginal Tax Rates (METRS), Post", xy1, data1.median, data1.mean )
+    return draw0.concat( draw1 );
 }
