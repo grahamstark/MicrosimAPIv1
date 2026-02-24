@@ -487,7 +487,7 @@ function processOneHist( data ){
         'y':data.hist.weights,
         'min': data.min,
         'max': data.max,
-        'med':data.median,
+        'median':data.median,
         'mean':data.mean }
 }
 

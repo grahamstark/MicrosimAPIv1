@@ -235,32 +235,53 @@ function drawDecileBarChart( deciles1, deciles0 ){
 }
 
 
-function draw1MR( title, xy, median, mean ){
-    console.log( "xy", xy );
-    bars = Plot.rectY(xy,{x:"width", y:"count", fill:"none",stroke:"black"});
-    medl = Plot.ruleX( [median], {stroke: "red"});
-    meanl = Plot.ruleX( [mean], {stroke: "blue"});
-
+function draw1MR( title, xy, median, mean, colour ){
+    console.log( "xy", xy, "median", median, "mean", mean );
+    const bars = Plot.rectY( xy,
+        {
+            x1:"x1",
+            x2:"x2",
+            y:"y",
+            stroke:"grey",
+            fill:colour
+        });
+    const medl = Plot.ruleX( [median], {stroke: "darkblue"});
+    const meanl = Plot.ruleX( [mean], {stroke: "darkred"});
     const plot =  Plot.plot(
         { marks:
             [bars, medl, meanl],
-          caption: title,
-          x: {label: "METR(%)", grid:true },
-          y: {label: "People.", grid:true }
+            title: "",
+            x: {label: "METR(%)", grid:true },
+            y: {label: "People.", grid:true}
     });
-    const thumbnail = make_thumb( [bars]) //,medl, meanl])
+    const thumbnail = make_thumb( [bars,medl, meanl]) //,medl, meanl])
     return [plot, thumbnail];
 }
 
-function jsonify(x,y,nx,ny){
-    var o = [];
-    for( var i = 0; i < x.length; i++ ){
-        o.push( {"width":x[i], "count":y[i]})
-    }
-    return o;
-}
+/*
+caption: title,
+          x: {label: "METR(%)", grid:true, fill:'steelblue' },
+          y: {label: "People.", grid:true }
+*/
 
 function drawMRHist( title, data1, data0 ){
+    var xy0 = [];
+    var xy1 = [];
+    // convert one width to gaps from top breaks - assume 0 1 same gaps
+    for( var i = 1; i <= data0.x.length-2; i++ ){
+        var d1 = i == (data0.x.length-2) ? 120 : data0.x[i+1];
+        xy0.push( {x1:data0.x[i], x2:d1, y:data0.y[i]});
+        xy1.push( {x1:data0.x[i], x2:d1, y:data1.y[i]});
+    }
+    console.log( "xy0", xy0, "xy1", xy1 );
+    // over 100 one - just arnitrariy so it doesn't go to infinity
+    draw0 = draw1MR( "Figure 3a: Effective Marginal Tax Rates (METRS), Pre", xy0, data0.median, data0.mean, "#559" )
+    draw1 = draw1MR( "Figure 3a: Effective Marginal Tax Rates (METRS), Post", xy1, data1.median, data1.mean, "#595" )
+    return draw0.concat( draw1 );
+}
+
+/**
+function drawMRHistx( title, data1, data0 ){
     var width = Array.from( data0.x )
     // chop off bottom zeros for negative MRs
     width = width.slice(1,width.length-1);
@@ -280,3 +301,30 @@ function drawMRHist( title, data1, data0 ){
     draw1 = draw1MR( "Figure 3a: Effective Marginal Tax Rates (METRS), Post", xy1, data1.median, data1.mean )
     return draw0.concat( draw1 );
 }
+
+
+function draw1MRx( title, xy, median, mean ){
+    console.log( "xy", xy );
+    bars = Plot.rectY(xy,{x:"width", y:"count", fill:"none",stroke:"black"});
+    medl = Plot.ruleX( [median], {stroke: "red"});
+    meanl = Plot.ruleX( [mean], {stroke: "blue"});
+
+    const plot =  Plot.plot(
+        { marks:
+            [bars, medl, meanl],
+          caption: title,
+          x: {label: "METR(%)", grid:true, fill:'steelblue' },
+          y: {label: "People.", grid:true }
+    });
+    const thumbnail = make_thumb( [bars]) //,medl, meanl])
+    return [plot, thumbnail];
+}
+
+function jsonify(x,y,nx,ny){
+    var o = [];
+    for( var i = 0; i < x.length; i++ ){
+        o.push( {"x1":x[i], "y":y[i]})
+    }
+    return o;
+}
+*/

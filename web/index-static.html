@@ -269,7 +269,11 @@ async function processMETRs(){
     var content = `
     <h4>thing</h4>
     <div>
-    <div id='metrs-image'></div>
+
+    <p>Before</p>
+    <div id='metrs-image-0'></div>
+    <p>After</p>
+    <div id='metrs-image-1'></div>
     </div>
 
     `;
@@ -282,7 +286,8 @@ async function processMETRs(){
         content,
         'images/test-images/mental-health-canvas.png');
     $("#metrs-image-thumbnail").append(t0);
-    $("#metrs-image").append(h0);
+    $("#metrs-image-0").append(h0);
+    $("#metrs-image-1").append(h1);
 }
 
 $(document).ready(function(){
