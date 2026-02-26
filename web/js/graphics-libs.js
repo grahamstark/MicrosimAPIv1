@@ -251,6 +251,8 @@ function draw1MR( title, xy, median, mean, colour ){
         { marks:
             [bars, medl, meanl],
             title: "",
+            width: 500,
+            height: 500,
             x: {label: "METR(%)", grid:true },
             y: {label: "People.", grid:true}
     });
