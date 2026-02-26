@@ -41,6 +41,8 @@ using .STBOutput
 using .STBParameters
 using .Utils
 
+using MicroVisualisations
+
 include( "examples.jl")
 include( "scotben-api-constants.jl")
 include( "scotben-api-impl.jl")

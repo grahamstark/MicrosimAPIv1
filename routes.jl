@@ -245,9 +245,9 @@ route( "/scotben/output/phunpak", MSA.scotben_output_phunpak, method = GET  )
 route( "/scotben/output/labels", MSA.scotben_output_labels, method = GET  )
 
 @swagger"""
-/scotben/output/fetch/:item/:subitem:
+/scotben/output/fetch/:format/:item/:subitem:
   get:
-    description: return an output item `item` and optionally `subitem`. Should be in the list of outputs from `/scotben/settings/helppage`. Probably in json.
+    description: return an output item `item` and optionally `subitem`. Should be in the list of outputs from `/scotben/settings/helppage`. Probably in json. Format is one of 'json', 'html', 'svg'
     responses:
       '200':
         description: A json list of new parameters.

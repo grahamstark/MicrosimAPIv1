@@ -598,25 +598,32 @@ function scotben_output_fetch_item()
     prs = allfromsession( id )
     res = Base.get(CACHED_RESULTS, prs.hid, nothing )
     if ! isnothing( res )
+        format = payload(:format)
         item = payload(:item)
+        subitem = payload(:subitem)
         ns = Symbol( item )
-        if item == "examples"          
-            s = JSON3.write((;session_id=id, item=res.examples); allow_inf=true)
-            s = replace(s,"Infinity"=>"99999999")
-            return HTTP.Response(
-                200,
-                ["Content-Type" => "application/json"], s )
-        elseif item == "gain_lose"
-            subitem = payload(:subitem)
-            sns = Symbol( subitem )  
-            return json((; session_id=id, item=res.summary.gain_lose[2][sns]))
-        else 
-            # this just deals with INFs in the output, which json objects to: 
-            s = JSON3.write((;session_id=id, item=res.summary[ns]); allow_inf=true)
-            s = replace(s,"Infinity"=>"99999999")
-            return HTTP.Response(
-                200,
-                ["Content-Type" => "application/json"], s )
+        if format == "json"
+            if item == "examples"
+                s = JSON3.write((;session_id=id, item=res.examples); allow_inf=true)
+                s = replace(s,"Infinity"=>"99999999")
+                return HTTP.Response(
+                    200,
+                    ["Content-Type" => "application/json"], s )
+            elseif item == "gain_lose"
+                sns = Symbol( subitem )
+                return json((; session_id=id, item=res.summary.gain_lose[2][sns]))
+            else
+                # this just deals with INFs in the output, which json objects to:
+                s = JSON3.write((;session_id=id, item=res.summary[ns]); allow_inf=true)
+                s = replace(s,"Infinity"=>"99999999")
+                return HTTP.Response(
+                    200,
+                    ["Content-Type" => "application/json"], s )
+            end
+        elseif format == "svg"
+            # ..
+        elseif format == "html"
+            # ...
         end
     else
         return HTTP.Response(
