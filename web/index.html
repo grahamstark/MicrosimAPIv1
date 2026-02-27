@@ -551,7 +551,13 @@ function get_svg_image( item, subitem, session_id ){
       console.log( "svgText", svgText );
       const container = document.getElementById('summary-graph');
       container.innerHTML = svgText;
-
+      const blob = new Blob([svgText], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'summary-graph.svg';
+      a.click();
+      URL.revokeObjectURL(url);
       // Optional: Manipulate SVG elements after injection
       /*
       const svgElement = container.querySelector('svg');
