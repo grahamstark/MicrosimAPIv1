@@ -252,7 +252,9 @@ route( "/scotben/output/labels", MSA.scotben_output_labels, method = GET  )
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/output/fetch/:item/:subitem", MSA.scotben_output_fetch_item, method = GET  )
+route( "/scotben/output/fetch/:format/:item", MSA.scotben_output_fetch_item, method = GET  )
+route( "/scotben/output/fetch/:format/:item/:subitem", MSA.scotben_output_fetch_item, method = GET  )
+route( "/scotben/output/fetch/:format/:item/:subitem/:sub2", MSA.scotben_output_fetch_item, method = GET  )
 
 @swagger"""
 /get_session_id:

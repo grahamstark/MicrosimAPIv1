@@ -12,7 +12,7 @@ const TEXT_DESC = OrderedDict([
     "uc_taper" =>  " min 0 max 100 pct"])
 
 const OUTPUT_ITEMS = OrderedDict([
-    "headline_figures"=>"Headline Summary ",
+    "headline_figures"=>"Headline Summary",
     "quantiles_df"=>"Quantiles (50 rows serialised DF) ", 
     "deciles_df" => "Quantiles (10 rows serialised DF) ",
     "income_summary" => "Income Summary ", 

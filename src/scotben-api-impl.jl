@@ -218,11 +218,13 @@ end
 #
 mutable struct AllOutput
 	summary  :: NamedTuple
+	images   :: NamedTuple
+	html     :: NamedTuple
 	examples :: Vector
     progress :: Progress
 end
 
-const NULL_ALL_OUTPUT = AllOutput( (;), [], DEF_PROGRESS )
+const NULL_ALL_OUTPUT = AllOutput( (;), (;), (;), [], DEF_PROGRESS )
 
 #
 # 3 data structures
@@ -288,6 +290,9 @@ function update_progress( h :: UInt, p :: Progress )
     CACHED_RESULTS[h].progress = p
 end
 
+construct_html( settings, results, summaries ) = (;)
+construct_images( settings, results, summaries ) = (;)
+
 function do_run( prs :: ParamsAndSettings; do_dumps = false )
     settings = prs.settings
     @info "do_run entered"
@@ -309,7 +314,9 @@ function do_run( prs :: ParamsAndSettings; do_dumps = false )
     # short_summary = make_short_summary( summaries )
     exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys2, settings )
     endprog = Progress( settings.uuid, "completed", -99, -99, -99, -99 )
-    aout = AllOutput( summaries, exres, endprog )
+    images = construct_images( settings, results, summaries )
+    html = construct_html( settings, results, summaries )
+    aout = AllOutput( summaries, images, html, exres, endprog )
     cache_output( prs.hid, aout )
     if do_dumps
         dump_summaries( settings, summaries )
@@ -601,6 +608,7 @@ function scotben_output_fetch_item()
         format = payload(:format)
         item = payload(:item)
         subitem = payload(:subitem)
+        sub2 = payload(:sub2)
         ns = Symbol( item )
         if format == "json"
             if item == "examples"
@@ -621,8 +629,14 @@ function scotben_output_fetch_item()
                     ["Content-Type" => "application/json"], s )
             end
         elseif format == "svg"
+                return HTTP.Response(
+                    200,
+                    ["Content-Type" => "image/svg+xml"], s )
             # ..
         elseif format == "html"
+                return HTTP.Response(
+                    200,
+                    ["Content-Type" => "text/html"], s )
             # ...
         end
     else
