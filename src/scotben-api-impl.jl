@@ -290,8 +290,6 @@ function update_progress( h :: UInt, p :: Progress )
     CACHED_RESULTS[h].progress = p
 end
 
-construct_html( settings, results, summaries ) = (;)
-construct_images( settings, results, summaries ) = (;)
 
 function do_run( prs :: ParamsAndSettings; do_dumps = false )
     settings = prs.settings
@@ -314,7 +312,7 @@ function do_run( prs :: ParamsAndSettings; do_dumps = false )
     # short_summary = make_short_summary( summaries )
     exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys2, settings )
     endprog = Progress( settings.uuid, "completed", -99, -99, -99, -99 )
-    images = construct_images( settings, results, summaries )
+    images = construct_images( settings, results, summaries, [sys1,sys2] )
     html = construct_html( settings, results, summaries )
     aout = AllOutput( summaries, images, html, exres, endprog )
     cache_output( prs.hid, aout )
@@ -607,8 +605,8 @@ function scotben_output_fetch_item()
     if ! isnothing( res )
         format = payload(:format)
         item = payload(:item)
-        subitem = payload(:subitem)
-        sub2 = payload(:sub2)
+        subitem = payload(:subitem,nothing)
+        sub2 = payload(:sub2,nothing)
         ns = Symbol( item )
         if format == "json"
             if item == "examples"
@@ -628,15 +626,22 @@ function scotben_output_fetch_item()
                     200,
                     ["Content-Type" => "application/json"], s )
             end
-        elseif format == "svg"
-                return HTTP.Response(
-                    200,
-                    ["Content-Type" => "image/svg+xml"], s )
+        elseif format == "images"
+            keys = item
+            if subitem == "thumb"
+                keys *= "-thumb"
+            end
+            key = Symbol( keys )
+            s = fig_to_svg_string(res.images[key])
+            return HTTP.Response(
+                200,
+                ["Content-Type" => "image/svg+xml"], s )
             # ..
         elseif format == "html"
-                return HTTP.Response(
-                    200,
-                    ["Content-Type" => "text/html"], s )
+            s = res.html[ns]
+            return HTTP.Response(
+                200,
+                ["Content-Type" => "text/html"], s )
             # ...
         end
     else

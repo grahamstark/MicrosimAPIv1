@@ -6,19 +6,15 @@
     <title>A Budget for Scotland/Microsim API V1 Demo</title>
     <link rel="icon" href="images/favicon.ico?v=2.0.0" type="image/x-icon">
     <link rel="stylesheet" href="css/stb-bootstrap.css">
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@latest"></script>
     <script type='text/javascript' src='js/jquery.js'></script>
     <script type='text/javascript' src='js/jquery.periodicalupdater.js'></script>
     <script type='text/javascript' src='js/jquery.validate.js'></script>
     <script type='text/javascript' src='js/jquery.number.js'></script>
-    <!--
     <script type='text/javascript' src='js/formatting-libs.js'></script>
     <script type='text/javascript' src='js/graphics-libs.js'></script>
-    -->
     <!-- bootstrap -->
     <script src="js/bootstrap.bundle.js"></script>
     <!-- vega graphics -->
@@ -163,13 +159,7 @@
                         </ul>
                     </div>
                 </fieldset> <!-- submission row -->
-                                    <!--
-                    <svg id='summary-graph' viewBox="0 0 50 50"></svg>
-                    -->
-<svg id='summary-graph' height="1297" width='2100' viewBox="0 0 2100 1297"><svg/>
-
                 <div class="row  border rounded-2 m-1 p-2">
-
                     <div class='col'>
                             <div id='output-fields'>
                                 <div class='row'>
@@ -533,40 +523,8 @@ function makeExampleBlock( target, exampleResults ){
     return make_examples( exampleResults );
 }
 
-function get_svg_image( item, subitem, session_id ){
-    var target = '';
-    if(subitem === null){
-        target = item;
-    } else {
-        target = item+"/"+subitem;
-    }
-    const url = API+"output/fetch/images/"+ target + "?session_id="+session_id;
-    fetch(url).then( response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return response.text(); // Convert response to SVG text
-    }).then(svgText => {
-      // Inject SVG into the container
-      console.log( "svgText", svgText );
-      const container = document.getElementById('summary-graph');
-      container.innerHTML = svgText;
-
-      // Optional: Manipulate SVG elements after injection
-      /*
-      const svgElement = container.querySelector('svg');
-      svgElement.style.border = '2px solid #333'; // Add border
-      svgElement.querySelector('path').setAttribute('fill', '#FF5733'); // Change path color
-      */
-    })
-    .catch(error => {
-      console.error('Failed to load SVG:', error);
-      // Fallback: Show a placeholder
-      document.getElementById('svg-container').textContent = 'SVG failed to load.';
-    });
-
-    /*
-    )
+function get_svg_image( item, subitem, session_id, htmlifier, target ){
+    var url = API+"output/fetch/images/"+item+"/"+subitem +"?session_id="+session_id;
     console.log( "get_result; url=", url);
     var jqXHR = $.ajax({
         url: url,
@@ -574,15 +532,11 @@ function get_svg_image( item, subitem, session_id ){
         contentType: "image/svg+xml"});
     jqXHR.done(
         function( data ){
-            const id = target.replace( "/", "-").replace( "_", "-");
-            console.log( "writing svg to ", id, "data=", data );
-            document.getElementById(id).innerHTML = data; //appendChildNS(data);
-            //$( id ).html( data );
+            $( "#"+target ).append( data );
         });
-    */
 }
 
-function get_html( item, subitem, session_id, target ){
+function get_html( item, subitem, session_id, htmlifier, target ){
     var url = API+"output/fetch/html/"+item+"/"+subitem +"?session_id="+session_id;
     console.log( "get_result; url=", url);
     var jqXHR = $.ajax({
@@ -591,14 +545,82 @@ function get_html( item, subitem, session_id, target ){
         contentType: "text/html"});
     jqXHR.done(
         function( data ){
-            $( "#"+target ).innerHTML = data;
+            $( "#"+target ).html( data );
+        });
+}
+
+function get_result( item, subitem, session_id, htmlifier, target ){
+    var url = API+"output/fetch/json/"+item+"/"+subitem +"?session_id="+session_id;
+    console.log( "get_result; url=", url);
+    var jqXHR = $.ajax({ 
+        url: url,
+        method: 'get',
+        contentType: "application/json"});
+    jqXHR.done(  
+        function( data ){
+            var out = htmlifier( target, data.item );
+            $( "#"+target ).html( out );
+        });
+}
+
+function get_graphic( item, subitem, session_id, get_graphic2, target ){
+    var url = API+"output/fetch/"+item+"/"+subitem +"?session_id="+session_id;
+    console.log( "get_graphic; url=", url);
+    var jqXHR = $.ajax({ 
+        url: url,
+        method: 'get',
+        contentType: "application/json"});
+    jqXHR.done(  
+        function( data ){
+            var is_thumbnail = false;
+            var out = get_graphic2( target, data.item, is_thumbnail );
         });
 }
 
 function create_outputs( session_id ){
+    /*
+    "headline_figures"=>"Headline Summary ",
+    "quantiles_df"=>"Quantiles (50 rows serialsed DF) ", 
+    "deciles_df" => "Quantiles (10 rows serialsed DF) ",
+    "income_summary" => "Income Summary ", 
+    "poverty" => "Poverty Measures ", 
+    "inequality" => "Inequality Measures ", 
+    "metrs" => "Marginal Effective Tax Rates histogram ", 
+    "child_poverty" => "Child Poverty Count ",
+    "gain_lose/ten_gl" => "Gain Lose by Tenure ",
+    "gain_lose/dec_gl" => "Gain Lose by Decile ",
+    "gain_lose/children_gl" => "Gain Lose by Number of Children ",
+    "gain_lose/hhtype_gl" => "Gain Lose by Household Size ",
+    "poverty_lines" => "Computed Poverty Lines ",
+    "short_income_summary"=>"Short Income Summary",
+    "very_short_income_summary"=>"Income Summary - just a few key items.",
+    "income_hists"=>"Histogram of Incomes ",
+    "povtrans_matrix_df"=>"Movements in and out of poverty (as a labelled dataframe)",
+    "examples"=>"Simple Worked Examples "
+    */
 
-    get_svg_image( "summary_graphs", null, session_id  )
+    get_result( "income_hists_df", null, session_id, formatGainLose, "gain-lose-ten-gl");
+    get_result( "headline_figures", null, session_id, makeSummaryBlock, "headline_figures");
+    get_result( "examples", null, session_id, makeExampleBlock, "examples");
+    get_result( "gain_lose", 'ten_gl', session_id, formatGainLose, "gain-lose-ten-gl");
+    get_result( "gain_lose", 'dec_gl', session_id, formatGainLose, "gain-lose-dec-gl");
+    get_result( "gain_lose", 'hhtype_gl', session_id, formatGainLose, "gain-lose-hhtype-gl");
+    get_result( "gain_lose", 'children_gl', session_id, formatGainLose, "gain-lose-children-gl");
+    get_result( "very_short_income_summary", null, session_id, formatGainLose, "very_short_income_summary");
+    get_graphic( "quantiles_df", null, session_id, createLorenzCurve, "#lorenz");
+    
+    // #gain-lose-table-dec-gl
+    // #gain-lose-table-dec-gl
+}
 
+function format_df( df ){
+    body = `
+    <table class='table-sm table-striped'>
+
+    </table>
+    `;
+
+    return body;
 }
 
 function updateProgress( session_id, results ){
@@ -810,6 +832,58 @@ function run_submit(){
     }
 }
 
+function drawtmp(){
+
+
+    draw_media_and_modal(
+        "info",
+        "gainlose",
+        "Gainlose Title",
+        "Gainlose Summary",
+        "Gainlose Content.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "secondary",
+        "costs",
+        "Costs Title",
+        "Costs Summary",
+        "Costs Content.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "primary",
+        "metrs",
+        "Metrs Title",
+        "Metrs Summary",
+        "Metrs Content.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "orange",
+        "inequality",
+        "Inequality Title",
+        "Inequality Summary",
+        "Inequality Content.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "purple",
+        "poverty",
+        "Poverty Title",
+        "Poverty Summary",
+        "Poverty Content.",
+        'images/test-images/mental-health-canvas.png');
+
+    draw_media_and_modal(
+        "dark",
+        "incomes",
+        "Incomes Title",
+        "Incomes Summary",
+        "Incomes Content.",
+        'images/test-images/mental-health-canvas.png');
+
+}
 
 $(document).ready(function(){
     // load default params ..
@@ -817,7 +891,7 @@ $(document).ready(function(){
     // .. then load initial outputs
     var session_id = getSessionId();     
     create_outputs( session_id );
-
+    drawtmp();
 });
 
 </script>
