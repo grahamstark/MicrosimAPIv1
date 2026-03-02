@@ -174,7 +174,27 @@
 <svg id='metrs-hist' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
 <svg id='metrs-hist-thumb' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
 <svg id='summary-graphs-v2' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
-<svg id='hbai' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='hbai' height="2600" width='2100' viewBox="0 0 2100 2600"></svg>
+<svg id='taxable-graph' height="2600" width='2100' viewBox="0 0 2100 2600"></svg>
+
+
+<div id='overall-cost-table'></div>
+<div id='cost-table'></div>
+<div id='hhtype-gl'></div>
+<div id='ten-gl'></div>
+<div id='dec-gl'></div>
+<div id='children-gl'></div>
+<div id='reg-gl'></div>
+<div id='sfc'></div>
+<div id='gain-lose-summary'></div>
+<div id='inequality-summary'></div>
+<div id='metrs-table'></div>
+<div id='poverty-summary'></div>
+<div id='poverty-transitions'></div>
+<div id='run-settings-summary'></div>
+<div id='detailed_costs'></div>
+
+
 
 <div class="row  border rounded-2 m-1 p-2">
 
@@ -520,6 +540,36 @@ function makeExampleBlock( target, exampleResults ){
     return make_examples( exampleResults );
 }
 
+function get_html_chunk( item, subitem, sub2, session_id ){
+    var target = '';
+    if(subitem === null){
+        target = item;
+    } else if(sub2 === null ) {
+        target = item+"_"+subitem;
+    } else {
+        target = item+"_"+subitem + "_" + sub2;
+    }
+    const url = API+"output/fetch/html/"+ target + "?session_id="+session_id;
+    const target_id = target.replaceAll( "_", "-");
+    console.log( "writing svg to ", target_id, " url = ", url );
+    fetch(url).then( response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.text(); // Convert response to html text
+    }).then(htmlText => {
+      // Inject SVG into the container
+      console.log( "htmlText", htmlText );
+      const container = document.getElementById(target_id);
+      container.innerHTML = htmlText;
+    })
+    .catch(error => {
+      console.error('Failed to load HTML:', target, "url=", url, "to id ", target_id, "error=", error);
+      // Fallback: Show a placeholder
+      document.getElementById( target_id ).textContent = 'HTML failed to load.';
+    });
+}
+
 function get_svg_image( item, subitem, session_id ){
     var target = '';
     if(subitem === null){
@@ -529,7 +579,7 @@ function get_svg_image( item, subitem, session_id ){
     }
     const url = API+"output/fetch/images/"+ target + "?session_id="+session_id;
     const target_id = target.replaceAll( "_", "-");
-    console.log( "writing svg to ", target_id  );
+    console.log( "writing svg to ", target_id, " url = ", url );
 
     fetch(url).then( response => {
       if (!response.ok) {
@@ -541,19 +591,6 @@ function get_svg_image( item, subitem, session_id ){
       console.log( "svgText", svgText );
       const container = document.getElementById(target_id);
       container.innerHTML = svgText;
-      /* example of auto download
-      const blob = new Blob([svgText], { type: 'image/svg+xml' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'summary-graph.svg';
-      a.click();
-      URL.revokeObjectURL(url);
-      // Optional: Manipulate SVG elements after injection
-      const svgElement = container.querySelector('svg');
-      svgElement.style.border = '2px solid #333'; // Add border
-      svgElement.querySelector('path').setAttribute('fill', '#FF5733'); // Change path color
-      */
     })
     .catch(error => {
       console.error('Failed to load SVG:', target, "url=", url, "to id ", target_id, "error=", error);
@@ -561,6 +598,21 @@ function get_svg_image( item, subitem, session_id ){
       document.getElementById( target_id ).textContent = 'SVG failed to load.';
     });
 }
+
+/* example of auto download
+const blob = new Blob([svgText], { type: 'image/svg+xml' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'summary-graph.svg';
+a.click();
+URL.revokeObjectURL(url);
+// Optional: Manipulate SVG elements after injection
+const svgElement = container.querySelector('svg');
+svgElement.style.border = '2px solid #333'; // Add border
+svgElement.querySelector('path').setAttribute('fill', '#FF5733'); // Change path color
+*/
+
 
 function get_html( item, subitem, session_id, target ){
     var url = API+"output/fetch/html/"+item+"/"+subitem +"?session_id="+session_id;
@@ -575,19 +627,38 @@ function get_html( item, subitem, session_id, target ){
         });
 }
 
+// get_html_chunk( item, subitem, sub2, session_id )
 
 function create_outputs( session_id ){
 
-    get_svg_image( "summary_graphs", null, session_id  )
-    get_svg_image( "summary_graphs_v2", null, session_id  )
-    get_svg_image( "hbai", null, session_id  )
-    get_svg_image( "lorenz_curve", null, session_id  )
-    get_svg_image( "lorenz_curve", "thumb", session_id  )
-    get_svg_image( "deciles", null, session_id  )
-    get_svg_image( "deciles", "thumb", session_id  )
-    get_svg_image( "metrs_hist", null, session_id  )
-    get_svg_image( "metrs_hist", "thumb", session_id  )
+    get_svg_image( "summary_graphs", null, session_id  );
+    get_svg_image( "summary_graphs_v2", null, session_id  );
+    get_svg_image( "hbai", null, session_id  );
+    get_svg_image( "lorenz_curve", null, session_id  );
+    get_svg_image( "lorenz_curve", "thumb", session_id  );
+    get_svg_image( "deciles", null, session_id  );
+    get_svg_image( "deciles", "thumb", session_id  );
+    get_svg_image( "metrs_hist", null, session_id  );
+    get_svg_image( "metrs_hist", "thumb", session_id  );
+    get_svg_image( "taxable_graph", null, session_id );
+
+    get_html_chunk( "overall_cost_table", null, null, session_id );
+    get_html_chunk( "cost_table", null, null, session_id );
+    get_html_chunk( "hhtype_gl", null, null, session_id );
+    get_html_chunk( "ten_gl", null, null, session_id );
+    get_html_chunk( "dec_gl", null, null, session_id );
+    get_html_chunk( "children_gl", null, null, session_id );
+    get_html_chunk( "reg_gl", null, null, session_id );
+    get_html_chunk( "sfc", null, null, session_id );
+    get_html_chunk( "gain_lose_summary", null, null, session_id );
+    get_html_chunk( "inequality_summary", null, null, session_id );
+    get_html_chunk( "metrs_table", null, null, session_id );
+    get_html_chunk( "poverty_summary", null, null, session_id );
+    get_html_chunk( "poverty_transitions", null, null, session_id );
+    get_html_chunk( "run_settings_summary", null, null, session_id );
+    get_html_chunk( "detailed_costs", null, null, session_id );
 }
+
 
 function updateProgress( session_id, results ){
     console.log( "updateSTB results = ", results );
