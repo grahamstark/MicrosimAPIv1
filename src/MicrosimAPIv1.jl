@@ -60,6 +60,7 @@ function __init__()
         @info "starting handler $i" 
         errormonitor(t)
     end
+    do_default_run()
 end
 
 #=

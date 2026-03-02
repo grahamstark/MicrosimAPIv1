@@ -270,7 +270,7 @@ end
 #
 # this many simultaneous (sp) runs
 #
-const NUM_HANDLERS = 4
+const NUM_HANDLERS = 8
 # configure logger; see: https://docs.julialang.org/en/v1/stdlib/Logging/index.html
 # and: https://github.com/oxinabox/LoggingExtras.jl
 logdir = mktempdir()
@@ -291,10 +291,14 @@ function update_progress( h :: UInt, p :: Progress )
 end
 
 
-function do_run( prs :: ParamsAndSettings; do_dumps = false )
+
+
+function do_run( prs :: ParamsAndSettings; do_dumps = false, show_progress=true )
     settings = prs.settings
     @info "do_run entered"
-    update_progress( prs.hid, Progress( settings.uuid, "starting", 0, 0, 0, 0 ))
+    if show_progress
+        update_progress( prs.hid, Progress( settings.uuid, "starting", 0, 0, 0, 0 ))
+    end
     sys1 = deepcopy( DEFAULT_PARAMS )
     sys2 = deepcopy( DEFAULT_PARAMS)
     map_simple_to_full!( sys2, prs.params[2] )
@@ -305,7 +309,11 @@ function do_run( prs :: ParamsAndSettings; do_dumps = false )
     of = on(obs) do p
         tot += p.step
         @info "monitor tot=$tot p = $(p)"
-        update_progress( prs.hid, p )
+        if show_progress
+            update_progress( prs.hid, p )
+        else
+            println( tot )
+        end
     end
     results = do_one_run( settings, [sys1,sys2], obs )
     summaries = summarise_frames!( results, settings )
@@ -319,6 +327,11 @@ function do_run( prs :: ParamsAndSettings; do_dumps = false )
     if do_dumps
         dump_summaries( settings, summaries )
     end
+end
+
+function do_default_run()
+    prs = ParamsAndSettings()
+    do_run( prs; show_progress=false )
 end
 
 function submit_job( prs :: ParamsAndSettings )
@@ -601,7 +614,7 @@ end
 function scotben_output_fetch_item()
     id = get_session_id()
     prs = allfromsession( id )
-    res = Base.get(CACHED_RESULTS, prs.hid, nothing )
+    res = Base.get( CACHED_RESULTS, prs.hid, nothing )
     if ! isnothing( res )
         format = payload(:format)
         item = payload(:item)
