@@ -166,9 +166,17 @@
                                     <!--
                     <svg id='summary-graph' viewBox="0 0 50 50"></svg>
                     -->
-<svg id='summary-graph' height="1297" width='2100' viewBox="0 0 2100 1297"><svg/>
+<svg id='summary-graphs' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='lorenz-curve' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='lorenz-curve-thumb' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='deciles' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='deciles-thumb' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='metrs-hist' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='metrs-hist-thumb' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='summary-graphs-v2' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='hbai' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
 
-                <div class="row  border rounded-2 m-1 p-2">
+<div class="row  border rounded-2 m-1 p-2">
 
                     <div class='col'>
                             <div id='output-fields'>
@@ -508,27 +516,6 @@ function drawRunProgress( result ){
     $("#progress-indicator").html( prog );
 }
 
-
-function createMainOutputs( result ){
-    console.log( result.inequality );
-    console.log( result.examples );
-    console.log( result.overall_costs )
-    $("#examples").html( result.examples );
-    $("#gain-lose-table").html( result.gain_lose );
-    createDecileBarChart( 
-        "#deciles-graph", 
-        result, 
-        false );
-    $("#costs-table").html( result.costs );
-    $("#overall-costs").html( result.overall_costs )
-    $("#mr-table").html( result.mrs );
-    $("#pov-table").html( result.poverty );
-    $("#ineq-table").html( result.inequality );
-    $("#big-costs-table").html( result.big_costs_table );
-    $("#endnotes").html( result.endnotes );
-
-}
-
 function makeExampleBlock( target, exampleResults ){
     return make_examples( exampleResults );
 }
@@ -538,9 +525,12 @@ function get_svg_image( item, subitem, session_id ){
     if(subitem === null){
         target = item;
     } else {
-        target = item+"/"+subitem;
+        target = item+"_"+subitem;
     }
     const url = API+"output/fetch/images/"+ target + "?session_id="+session_id;
+    const target_id = target.replaceAll( "_", "-");
+    console.log( "writing svg to ", target_id  );
+
     fetch(url).then( response => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -549,8 +539,9 @@ function get_svg_image( item, subitem, session_id ){
     }).then(svgText => {
       // Inject SVG into the container
       console.log( "svgText", svgText );
-      const container = document.getElementById('summary-graph');
+      const container = document.getElementById(target_id);
       container.innerHTML = svgText;
+      /* example of auto download
       const blob = new Blob([svgText], { type: 'image/svg+xml' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -559,33 +550,16 @@ function get_svg_image( item, subitem, session_id ){
       a.click();
       URL.revokeObjectURL(url);
       // Optional: Manipulate SVG elements after injection
-      /*
       const svgElement = container.querySelector('svg');
       svgElement.style.border = '2px solid #333'; // Add border
       svgElement.querySelector('path').setAttribute('fill', '#FF5733'); // Change path color
       */
     })
     .catch(error => {
-      console.error('Failed to load SVG:', error);
+      console.error('Failed to load SVG:', target, "url=", url, "to id ", target_id, "error=", error);
       // Fallback: Show a placeholder
-      document.getElementById('svg-container').textContent = 'SVG failed to load.';
+      document.getElementById( target_id ).textContent = 'SVG failed to load.';
     });
-
-    /*
-    )
-    console.log( "get_result; url=", url);
-    var jqXHR = $.ajax({
-        url: url,
-        method: 'get',
-        contentType: "image/svg+xml"});
-    jqXHR.done(
-        function( data ){
-            const id = target.replace( "/", "-").replace( "_", "-");
-            console.log( "writing svg to ", id, "data=", data );
-            document.getElementById(id).innerHTML = data; //appendChildNS(data);
-            //$( id ).html( data );
-        });
-    */
 }
 
 function get_html( item, subitem, session_id, target ){
@@ -601,10 +575,18 @@ function get_html( item, subitem, session_id, target ){
         });
 }
 
+
 function create_outputs( session_id ){
 
     get_svg_image( "summary_graphs", null, session_id  )
-
+    get_svg_image( "summary_graphs_v2", null, session_id  )
+    get_svg_image( "hbai", null, session_id  )
+    get_svg_image( "lorenz_curve", null, session_id  )
+    get_svg_image( "lorenz_curve", "thumb", session_id  )
+    get_svg_image( "deciles", null, session_id  )
+    get_svg_image( "deciles", "thumb", session_id  )
+    get_svg_image( "metrs_hist", null, session_id  )
+    get_svg_image( "metrs_hist", "thumb", session_id  )
 }
 
 function updateProgress( session_id, results ){

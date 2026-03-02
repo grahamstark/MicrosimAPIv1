@@ -629,7 +629,7 @@ function scotben_output_fetch_item()
         elseif format == "images"
             keys = item
             if subitem == "thumb"
-                keys *= "-thumb"
+                keys *= "_thumb"
             end
             key = Symbol( keys )
             s = fig_to_svg_string(res.images[key])
