@@ -1,3 +1,10 @@
+module ScotbenAPIImpl
+
+include( "hash.jl") # fixed (???) has function
+include( "examples.jl")
+include( "scotben-api-constants.jl")
+
+
 const BIG_A = 9999999999
 
 struct SimpleParams{T}
@@ -204,13 +211,13 @@ const DEF_PROGRESS = Progress( BASE_UUID, "na", 0, 0, 0, 0 )
 @with_kw mutable struct ParamsAndSettings
 	settings = RunSettings.DEFAULT_SETTINGS # use thing declared in Scottis..RunSettings to avoid weird precompilation error
 	params = [DEFAULT_SIMPLE_PARAMS, DEFAULT_SIMPLE_PARAMS]
-    hid = riskyhash( [RunSettings.DEFAULT_SETTINGS, DEFAULT_SIMPLE_PARAMS])
+    hid = struct_hash( [RunSettings.DEFAULT_SETTINGS, DEFAULT_SIMPLE_PARAMS])
     last_accessed :: Date = now()
     created :: Date  = now()
 end
 
 function hid( prs :: ParamsAndSettings )::UInt
-    return riskyhash( [prs.settings, prs.params[2]])
+    return struct_hash( [prs.settings, prs.params[2]])
 end
 
 #
@@ -226,6 +233,7 @@ end
 
 const NULL_ALL_OUTPUT = AllOutput( (;), (;), (;), [], DEF_PROGRESS )
 
+make_default_settings = Settings()
 #
 # 3 data structures
 # - SESSION - Dict of user data, keyed by session_id
@@ -235,6 +243,8 @@ const NULL_ALL_OUTPUT = AllOutput( (;), (;), (;), [], DEF_PROGRESS )
 const QSIZE = 32
 const SESSIONS = Dict{String, ParamsAndSettings}()
 const CACHED_RESULTS = Dict{UInt, AllOutput}()
+# const DEFAULT_SETTINGS = make_default_settings()
+
 JOB_QUEUE = Channel{ParamsAndSettings}(QSIZE)
 
 
@@ -266,7 +276,6 @@ function destroy_session()
     return json((;id=id,result=0))
 end
 
-
 #
 # this many simultaneous (sp) runs
 #
@@ -289,9 +298,6 @@ end
 function update_progress( h :: UInt, p :: Progress )
     CACHED_RESULTS[h].progress = p
 end
-
-
-
 
 function do_run( prs :: ParamsAndSettings; do_dumps = false, show_progress=true )::Integer
     settings = prs.settings
@@ -332,7 +338,7 @@ end
 
 function do_default_run()::Integer
     ps = ParamsAndSettings()
-    @info "do_default_run caching output for ps" ps.hid
+    @info "do_default_run caching output for ps" ps.hid "Settings UUID = " ps.settings.uuid
     hid = do_run( ps; show_progress=false )
     @assert ps.hid == hid
     @assert ps.hid ∈ Base.keys(CACHED_RESULTS)
@@ -669,3 +675,10 @@ function scotben_output_fetch_item()
                 404, body="No such output yet for hid $(prs.hid)" )
     end
 end
+
+function __init__()
+    hid = do_default_run()
+    @show "default hid" hid
+end
+
+end # module

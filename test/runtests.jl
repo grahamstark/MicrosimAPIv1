@@ -44,9 +44,10 @@ end
 @testset "RiskyHash" begin
     p1 = MicrosimAPIv1.ParamsAndSettings()
     p2 = MicrosimAPIv1.ParamsAndSettings()
+    println( "p2.hid= $(p2.hid)")
+    println( "p1.settings.uuid $(p1.settings.uuid)")
     @test p2.hid == p1.hid == MicrosimAPIv1.hid( p1 )
     @test p1.hid ∈ keys(MicrosimAPIv1.CACHED_RESULTS)
-    println( "p2.hid= $(p2.hid)")
 end
 
 @testset "Default Run" begin

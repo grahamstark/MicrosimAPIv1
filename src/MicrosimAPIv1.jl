@@ -43,24 +43,22 @@ using .Utils
 
 using MicroVisualisations
 
-include( "examples.jl")
-include( "scotben-api-constants.jl")
-include( "scotben-api-impl.jl")
+include( "ScotbenAPIImpl.jl")
+export ScotbenAPImpl
 
 const up = Genie.up
 export up
 
 function main()
-     Genie.genie(; context = @__MODULE__)
+    Genie.genie(; context = @__MODULE__)
 end
 
 function __init__()
     global t
-    do_default_run()
-    t = @async calc_one()
+    t = @async ScotbenAPTIImpl.calc_one()
     for i in 1:NUM_HANDLERS # start n tasks to process requests in parallel
         @info "starting handler $i" 
-        errormonitor(t)
+        ScotbenAPTIImpl.errormonitor(t)
     end
 end
 
