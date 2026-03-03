@@ -62,6 +62,9 @@ julia = "1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+TestSetExtensions = "98d24dd4-01ad-11ea-1b02-c9a08f80db04"
+
 
 [preferences.ScottishTaxBenefitModel]
 aa_payment_rate = 1.0
@@ -90,6 +93,7 @@ poverty_line_source = "pl_first_sys"
 public-artifact_server_upload = "vw@virtual-worlds.biz:public_html/artifacts/"
 public-artifact_server_url = "https://virtual-worlds.biz/artifacts/"
 replacement_rate_hours = 30
+requested_threads = 6
 target_nation = "N_Scotland"
 to_q = 1
 to_y = 2026

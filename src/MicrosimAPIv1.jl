@@ -53,14 +53,15 @@ export up
 function main()
      Genie.genie(; context = @__MODULE__)
 end
+
 function __init__()
     global t
+    do_default_run()
     t = @async calc_one()
     for i in 1:NUM_HANDLERS # start n tasks to process requests in parallel
         @info "starting handler $i" 
         errormonitor(t)
     end
-    do_default_run()
 end
 
 #=

@@ -293,7 +293,7 @@ end
 
 
 
-function do_run( prs :: ParamsAndSettings; do_dumps = false, show_progress=true )
+function do_run( prs :: ParamsAndSettings; do_dumps = false, show_progress=true )::Integer
     settings = prs.settings
     @info "do_run entered"
     if show_progress
@@ -319,19 +319,24 @@ function do_run( prs :: ParamsAndSettings; do_dumps = false, show_progress=true 
     summaries = summarise_frames!( results, settings )
     # short_summary = make_short_summary( summaries )
     exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys2, settings )
-    endprog = Progress( settings.uuid, "completed", -99, -99, -99, -99 )
     images = construct_images( settings, results, summaries, [sys1,sys2] )
     html = construct_html( settings, results, summaries )
-    aout = AllOutput( summaries, images, html, exres, endprog )
-    cache_output( prs.hid, aout )
     if do_dumps
         dump_summaries( settings, summaries )
     end
+    endprog = Progress( settings.uuid, "completed", -99, -99, -99, -99 )
+    aout = AllOutput( summaries, images, html, exres, endprog )
+    cache_output( prs.hid, aout )
+    return prs.hid
 end
 
-function do_default_run()
-    prs = ParamsAndSettings()
-    do_run( prs; show_progress=false )
+function do_default_run()::Integer
+    ps = ParamsAndSettings()
+    @info "do_default_run caching output for ps" ps.hid
+    hid = do_run( ps; show_progress=false )
+    @assert ps.hid == hid
+    @assert ps.hid ∈ Base.keys(CACHED_RESULTS)
+    return hid
 end
 
 function submit_job( prs :: ParamsAndSettings )
@@ -614,6 +619,8 @@ end
 function scotben_output_fetch_item()
     id = get_session_id()
     prs = allfromsession( id )
+    @info "scotben_output_fetch_item getting results for id/hid" id prs.hid
+    @info "available cached results are " Base.keys( CACHED_RESULTS )
     res = Base.get( CACHED_RESULTS, prs.hid, nothing )
     if ! isnothing( res )
         format = payload(:format)
@@ -659,6 +666,6 @@ function scotben_output_fetch_item()
         end
     else
         return HTTP.Response(
-                404, body="No such output yet" )
+                404, body="No such output yet for hid $(prs.hid)" )
     end
 end
