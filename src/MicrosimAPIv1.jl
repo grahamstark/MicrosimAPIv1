@@ -8,43 +8,9 @@ using Genie.Requests
 import Genie.Renderer.Json: json
 using Jedis
 
-using DataFrames
-using DataStructures
-using Dates
-using HTTP
-using JSON3
-using Markdown 
-using LoggingExtras
-using Observables
-using Parameters
-using Random
-using StructTypes
-using SwaggerMarkdown
-using SwagUI
-using UUIDs
-
-using ScottishTaxBenefitModel
-using .BCCalcs
-using .Definitions
-using .ExampleHelpers
-using .FRSHouseholdGetter
-using .GeneralTaxComponents
-using .LocalLevelCalculations
-using .ModelHousehold
-using .Monitor
-using .Runner
-using .RunSettings
-using .SimplePovertyCounts: GroupPoverty
-using .SingleHouseholdCalculations
-using .STBIncomes
-using .STBOutput
-using .STBParameters
-using .Utils
-
-using MicroVisualisations
 
 include( "ScotbenAPIImpl.jl")
-export ScotbenAPImpl
+export ScotbenAPIImpl
 
 const up = Genie.up
 export up
@@ -55,26 +21,11 @@ end
 
 function __init__()
     global t
-    t = @async ScotbenAPTIImpl.calc_one()
-    for i in 1:NUM_HANDLERS # start n tasks to process requests in parallel
+    t = @async ScotbenAPIImpl.calc_one()
+    for i in 1:ScotbenAPIImpl.NUM_HANDLERS # start n tasks to process requests in parallel
         @info "starting handler $i" 
-        ScotbenAPTIImpl.errormonitor(t)
+        ScotbenAPIImpl.errormonitor(t)
     end
 end
-
-#=
-Genie.config.cors_allowed_origins=["*"]
-Genie.config.cors_headers["Access-Control-Allow-Credentials"]="true"
-Genie.config.cors_headers["Access-Control-Allow-Headers"]="*"
-=# 
-
-#=
-    to start from repl: 
-    ENV["GENIE_ENV"]="dev" # or "windows" # or "prod" or "dev" or "debug"
-    using Genie
-    using MicrosimAPIv1
-    Genie.loadapp()
-    up()
-=#
 
 end

@@ -2,15 +2,12 @@ using Genie.Router
 using SwagUI
 using SwaggerMarkdown
 
-import MicrosimAPIv1 as MSA
+import MicrosimAPIv1
+import .ScotbenAPIImpl
 
 route("/") do
   serve_static_file("welcome.html")
 end
-
-
-
-
 
 
 @swagger"""
@@ -21,7 +18,7 @@ end
       '200':
         description: A json list of parameter systems.
 """
-route( "/scotben/params/list-available", MSA.scotben_params_list_available, method = GET  )
+route( "/scotben/params/list-available", MicrosimAPIv1.ScotbenAPIImpl.params_list_available, method = GET  )
 
 @swagger"""
 /scotben/params/initialise:
@@ -31,7 +28,7 @@ route( "/scotben/params/list-available", MSA.scotben_params_list_available, meth
       '200':
         description: A json list of default parameters.
 """
-route( "/scotben/params/initialise", MSA.scotben_params_initialise, method = POST  )
+route( "/scotben/params/initialise", MicrosimAPIv1.ScotbenAPIImpl.params_initialise, method = POST  )
 
 @swagger"""
 /scotben/params/get:
@@ -41,7 +38,7 @@ route( "/scotben/params/initialise", MSA.scotben_params_initialise, method = POS
       '200':
         description: A json list of current parameters.
 """
-route( "/scotben/params/get", MSA.scotben_params_get, method = POST  )
+route( "/scotben/params/get", MicrosimAPIv1.ScotbenAPIImpl.params_get, method = POST  )
 
 @swagger"""
 /scotben/params/set:
@@ -51,7 +48,7 @@ route( "/scotben/params/get", MSA.scotben_params_get, method = POST  )
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/set", MSA.scotben_params_set, method = POST  )
+route( "/scotben/params/set", MicrosimAPIv1.ScotbenAPIImpl.params_set, method = POST  )
 
 @swagger"""
 /scotben/params/helppage:
@@ -61,7 +58,7 @@ route( "/scotben/params/set", MSA.scotben_params_set, method = POST  )
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/helppage", MSA.scotben_params_helppage, method = GET  )
+route( "/scotben/params/helppage", MicrosimAPIv1.ScotbenAPIImpl.params_helppage, method = GET  )
 
 @swagger"""
 /scotben/params/set:
@@ -71,7 +68,7 @@ route( "/scotben/params/helppage", MSA.scotben_params_helppage, method = GET  )
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/set", MSA.scotben_params_set, method = GET  )
+route( "/scotben/params/set", MicrosimAPIv1.ScotbenAPIImpl.params_set, method = GET  )
 
 @swagger"""
 /scotben/params/validate:
@@ -81,7 +78,7 @@ route( "/scotben/params/set", MSA.scotben_params_set, method = GET  )
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/validate", MSA.scotben_params_validate, method = POST  )
+route( "/scotben/params/validate", MicrosimAPIv1.ScotbenAPIImpl.params_validate, method = POST  )
 
 @swagger"""
 /scotben/params/describe:
@@ -91,7 +88,7 @@ route( "/scotben/params/validate", MSA.scotben_params_validate, method = POST  )
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/describe", MSA.scotben_params_describe, method = GET  )
+route( "/scotben/params/describe", MicrosimAPIv1.ScotbenAPIImpl.params_describe, method = GET  )
 
 @swagger"""
 /scotben/params/subsys:
@@ -101,7 +98,7 @@ route( "/scotben/params/describe", MSA.scotben_params_describe, method = GET  )
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/subsys", MSA.scotben_params_subsys, method = GET)
+route( "/scotben/params/subsys", MicrosimAPIv1.ScotbenAPIImpl.params_subsys, method = GET)
 
 
 @swagger"""
@@ -112,7 +109,7 @@ route( "/scotben/params/subsys", MSA.scotben_params_subsys, method = GET)
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/labels", MSA.scotben_params_labels, method = GET  )
+route( "/scotben/params/labels", MicrosimAPIv1.ScotbenAPIImpl.params_labels, method = GET  )
 
 @swagger"""
 /scotben/settings/initialise:
@@ -122,7 +119,7 @@ route( "/scotben/params/labels", MSA.scotben_params_labels, method = GET  )
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/settings/initialise", MSA.scotben_settings_initialise, method = GET  )
+route( "/scotben/settings/initialise", MicrosimAPIv1.ScotbenAPIImpl.settings_initialise, method = GET  )
 
 @swagger"""
 /scotben/settings/set:
@@ -132,7 +129,7 @@ route( "/scotben/settings/initialise", MSA.scotben_settings_initialise, method =
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/settings/set", MSA.scotben_settings_set, method = POST  )
+route( "/scotben/settings/set", MicrosimAPIv1.ScotbenAPIImpl.settings_set, method = POST  )
 
 @swagger"""
 /scotben/settings/validate:
@@ -142,7 +139,7 @@ route( "/scotben/settings/set", MSA.scotben_settings_set, method = POST  )
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/settings/validate", MSA.scotben_settings_validate, method = POST  )
+route( "/scotben/settings/validate", MicrosimAPIv1.ScotbenAPIImpl.settings_validate, method = POST  )
 
 @swagger"""
 /scotben/settings/describe:
@@ -152,7 +149,7 @@ route( "/scotben/settings/validate", MSA.scotben_settings_validate, method = POS
       '200':
         description:  a dict of key/description for each setting variable.
 """
-route( "/scotben/settings/describe", MSA.scotben_settings_describe, method = GET  )
+route( "/scotben/settings/describe", MicrosimAPIv1.ScotbenAPIImpl.settings_describe, method = GET  )
 
 @swagger"""
 /scotben/settings/helppage:
@@ -162,7 +159,7 @@ route( "/scotben/settings/describe", MSA.scotben_settings_describe, method = GET
       '200':
         description: A help page (probably in markdown) for the run settings.
 """
-route( "/scotben/settings/helppage", MSA.scotben_settings_helppage, method = GET  )
+route( "/scotben/settings/helppage", MicrosimAPIv1.ScotbenAPIImpl.settings_helppage, method = GET  )
 
 @swagger"""
 /scotben/settings/labels:
@@ -172,7 +169,7 @@ route( "/scotben/settings/helppage", MSA.scotben_settings_helppage, method = GET
       '200':
         description: Key/value dict of labels for each settings option.
 """
-route( "/scotben/settings/labels", MSA.scotben_settings_labels, method = GET  )
+route( "/scotben/settings/labels", MicrosimAPIv1.ScotbenAPIImpl.settings_labels, method = GET  )
 
 @swagger"""
 /scotben/run/status:
@@ -182,7 +179,7 @@ route( "/scotben/settings/labels", MSA.scotben_settings_labels, method = GET  )
       '200':
         description: A json dict with one of the keys from `/scotben/run/statuses` and optional counts.
 """
-route( "/scotben/run/status", MSA.scotben_run_status, method = GET )
+route( "/scotben/run/status", MicrosimAPIv1.ScotbenAPIImpl.run_status, method = GET )
 
 @swagger"""
 /scotben/run/statuses:
@@ -192,7 +189,7 @@ route( "/scotben/run/status", MSA.scotben_run_status, method = GET )
       '200':
         description: an ordered dict of key/label values for possible run statuses (queued/executing/output, etc.)..
 """
-route( "/scotben/run/statuses", MSA.scotben_run_statuses, method = GET  )
+route( "/scotben/run/statuses", MicrosimAPIv1.ScotbenAPIImpl.run_statuses, method = GET  )
 
 @swagger"""
 /scotben/run/submit:
@@ -202,7 +199,7 @@ route( "/scotben/run/statuses", MSA.scotben_run_statuses, method = GET  )
       '200':
         description: xxx.
 """
-route( "/scotben/run/submit", MSA.scotben_run_submit, method = POST )
+route( "/scotben/run/submit", MicrosimAPIv1.ScotbenAPIImpl.run_submit, method = POST )
 
 @swagger"""
 /scotben/run/abort:
@@ -212,7 +209,7 @@ route( "/scotben/run/submit", MSA.scotben_run_submit, method = POST )
       '200':
         description: if aborted OK.
 """
-route( "/scotben/run/abort", MSA.scotben_run_abort, method = GET  )
+route( "/scotben/run/abort", MicrosimAPIv1.ScotbenAPIImpl.run_abort, method = GET  )
 
 @swagger"""
 /scotben/output/items:
@@ -222,7 +219,7 @@ route( "/scotben/run/abort", MSA.scotben_run_abort, method = GET  )
       '200':
         description: A name/description dict of items created by a run, in json.
 """
-route( "/scotben/output/items", MSA.scotben_output_items, method = GET  )
+route( "/scotben/output/items", MicrosimAPIv1.ScotbenAPIImpl.output_items, method = GET  )
 
 @swagger"""
 /scotben/output/phunpa:
@@ -232,7 +229,7 @@ route( "/scotben/output/items", MSA.scotben_output_items, method = GET  )
       '200':
         description: downloadable zipfile.
 """
-route( "/scotben/output/phunpak", MSA.scotben_output_phunpak, method = GET  )
+route( "/scotben/output/phunpak", MicrosimAPIv1.ScotbenAPIImpl.output_phunpak, method = GET  )
 
 @swagger"""
 /scotben/output/labels:
@@ -242,7 +239,7 @@ route( "/scotben/output/phunpak", MSA.scotben_output_phunpak, method = GET  )
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/output/labels", MSA.scotben_output_labels, method = GET  )
+route( "/scotben/output/labels", MicrosimAPIv1.ScotbenAPIImpl.output_labels, method = GET  )
 
 @swagger"""
 /scotben/output/fetch/:format/:item/:subitem:
@@ -252,9 +249,9 @@ route( "/scotben/output/labels", MSA.scotben_output_labels, method = GET  )
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/output/fetch/:format/:item", MSA.scotben_output_fetch_item, method = GET  )
-route( "/scotben/output/fetch/:format/:item/:subitem", MSA.scotben_output_fetch_item, method = GET  )
-route( "/scotben/output/fetch/:format/:item/:subitem/:sub2", MSA.scotben_output_fetch_item, method = GET  )
+route( "/scotben/output/fetch/:format/:item", MicrosimAPIv1.ScotbenAPIImpl.output_fetch_item, method = GET  )
+route( "/scotben/output/fetch/:format/:item/:subitem", MicrosimAPIv1.ScotbenAPIImpl.output_fetch_item, method = GET  )
+route( "/scotben/output/fetch/:format/:item/:subitem/:sub2", MicrosimAPIv1.ScotbenAPIImpl.output_fetch_item, method = GET  )
 
 @swagger"""
 /get_session_id:
@@ -264,7 +261,7 @@ route( "/scotben/output/fetch/:format/:item/:subitem/:sub2", MSA.scotben_output_
       '200':
         description: id of session
 """
-route( "/get_session_id", MSA.get_session_id, method=GET )
+route( "/get_session_id", MicrosimAPIv1.ScotbenAPIImpl.get_session_id, method=GET )
 
 @swagger"""
 /destroy_session:
@@ -274,7 +271,7 @@ route( "/get_session_id", MSA.get_session_id, method=GET )
       '200':
         description: the old id and 'result=0' if OK.
 """
-route( "/destroy_session", MSA.destroy_session, method=GET )
+route( "/destroy_session", MicrosimAPIv1.ScotbenAPIImpl.destroy_session, method=GET )
 
 @swagger"""
 /scotben/settings/helppage:
@@ -284,7 +281,7 @@ route( "/destroy_session", MSA.destroy_session, method=GET )
       '200':
         description: A json list of new parameters.
 """
-route( "/get_session_id", MSA.get_session_id, method=GET )
+route( "/get_session_id", MicrosimAPIv1.ScotbenAPIImpl.get_session_id, method=GET )
 
 route("/docs") do 
     info = Dict{String, Any}()
