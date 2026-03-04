@@ -695,6 +695,11 @@ function output_fetch_item()
             elseif item == "gain_lose"
                 sns = Symbol( subitem )
                 return json((; session_id=id, item=res.summary.gain_lose[2][sns]))
+            elseif item == "headlines"
+                headlines = format_headline_numbers(res.summary.headline_figures[2])
+                return json((;
+                    session_id=id,
+                    item=headlines ))
             else
                 # this just deals with INFs in the output, which json objects to:
                 s = JSON3.write((;session_id=id, item=res.summary[ns]); allow_inf=true)
