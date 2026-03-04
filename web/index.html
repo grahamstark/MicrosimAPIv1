@@ -550,7 +550,7 @@ function get_html_chunk( item, subitem, sub2, session_id ){
     }
     const url = API+"output/fetch/html/"+ target + "?session_id="+session_id;
     const target_id = target.replaceAll( "_", "-");
-    console.log( "writing svg to ", target_id, " url = ", url );
+    console.log( "writing html to ", target_id, " url = ", url );
     fetch(url).then( response => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -558,7 +558,7 @@ function get_html_chunk( item, subitem, sub2, session_id ){
       return response.text(); // Convert response to html text
     }).then(htmlText => {
       // Inject SVG into the container
-      console.log( "htmlText", htmlText );
+      // console.log( "htmlText", htmlText );
       const container = document.getElementById(target_id);
       container.innerHTML = htmlText;
     })
@@ -587,7 +587,7 @@ function get_svg_image( item, subitem, session_id ){
       return response.text(); // Convert response to SVG text
     }).then(svgText => {
       // Inject SVG into the container
-      console.log( "svgText", svgText );
+      // console.log( "svgText", svgText );
       const container = document.getElementById(target_id);
       container.innerHTML = svgText;
     })
@@ -626,10 +626,20 @@ function get_html( item, subitem, session_id, target ){
         });
 }
 
+
+async function drawHeadlines(){
+    session_id = getSessionId();
+    const jheadlines = await d3.json(API+"output/fetch/json/headlines?session_id="+session_id );
+    const headlines = jheadlines.item;
+    console.log( "headlines", headlines );
+}
+
+
+
 // get_html_chunk( item, subitem, sub2, session_id )
 
 function create_outputs( session_id ){
-
+    drawHeadlines();
     get_svg_image( "summary_graphs", null, session_id  );
     get_svg_image( "summary_graphs_v2", null, session_id  );
     get_svg_image( "hbai", null, session_id  );
@@ -857,20 +867,11 @@ function run_submit(){
     }
 }
 
-async function drawHeadlines(){
-    session_id = getSessionId();
-    const jheadlines = await d3.json(API+"output/fetch/json/headlines?session_id="+session_id );
-    const headlines = jheadlines.item;
-    console.log( "headlines", headlines );
-}
-
-
 $(document).ready(function(){
     // load default params ..
     params_get("get");
     // .. then load initial outputs
     var session_id = getSessionId();
-    drawHeadlines();
     create_outputs( session_id );
 
 });
