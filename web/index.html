@@ -514,10 +514,18 @@ function populateForm( session_id, pars, defaults ){
 
 var updater;
 
+var minpct = 0.0;
+
 function drawRunProgress( result ){
     // https://getbootstrap.com/docs/5.0/components/progress/
     console.log( "result.count" + result.count + "result.size" + result.size );
     var pct = Math.trunc(100 * result.count / result.size);
+    // hack for inconsistent progress numbers with multiprocessing.
+    if(pct > minpct){
+        minpct = pct
+    } else {
+        pct = minpct;
+    }
     var prog = 
         "<p>Model Running</p>"+
         "<div class='progress'>"+
@@ -818,6 +826,7 @@ function params_validate(){
 }
 
 function startMonitor( data, textStatus, jqXHR ){
+    minpct = 0.0; // reset global progress count
     console.log( "starting run and timer");               
     console.log( "startMonitor; data.session_id=" + data.session_id );
     var session_id = getSessionId();
