@@ -162,9 +162,9 @@
 
 
 
-<div class="row  border rounded-2 m-1 p-2">
+                <div class="row  border rounded-2 m-1 p-2">
 
-                    <div class='col'>
+                    <div class='col'>scotben
                             <div id='output-fields'>
                                 <div class='row'>
                                     <div class='col-4'></div>
@@ -227,28 +227,37 @@
                                              data-bs-toggle='modal'
                                              data-bs-target='#costs-popup'>
                                             <ul class='list-group'>
-                                                <li class='list-group-item'>Net Cost of Your Changes: <span class='fw-bold' id='headlines-net-cost'></span></li>
-                                                <li class='list-group-item'>Change in Tax Revenues <span class='fw-bold' id='headlines-tax'></span></li>
-                                                <li class='list-group-item'>Change In Benefit Spending: <span class='text-body fw-bold' id='headlines-benefits'></span></li>
+                                                <li class='list-group-item'>Net Cost of Your Changes:&nbsp; <span class='fw-bold' id='headlines-net-cost'></span></li>
+                                                <li class='list-group-item'>Change in Tax Revenues:&nbsp; <span class='fw-bold' id='headlines-tax'></span></li>
+                                                <li class='list-group-item'>Change In Benefit Spending:&nbsp; <span class='text-body fw-bold' id='headlines-benefits'></span></li>
                                             </ul>
                                             <p class='text-secondary fs-sm'></p>
                                         </div>
                                     </div>
-
-
-                                    <div class='col'>
-                                        <div
-                                            data-bs-toggle='modal' 
-                                            data-bs-target='#short_income_summary'>
-                                            <div id="short_income_summary"></div>
+                                    <div class='col justify-content-center text-primary pt-3 pb-3'>
+                                        <h4>Incentives to Work</h4>
+                                        <div class='row'
+                                             data-bs-toggle='modal'
+                                             data-bs-target='#metrs-popup'>
+                                            <ul class='list-group'>
+                                                <li class='list-group-item'>Median Effective Tax Rate:&nbsp; <span class='fw-bold' id='headlines-median-metrs'></span></li>
+                                                <li class='list-group-item'>Mean Effective Tax Rate:&nbsp;<span class='fw-bold' id='headlines-mean-metrs'></span></li>
+                                            </ul>
+                                            <p class='text-secondary fs-sm'>Marginal Effective Tax Rate (METR) is ... </p>
                                         </div>
-                                        <div id="very_short_income_summary"></div>
-                                    </div>                            
-                                    <div class='col'>
-                                        <h4>Incentives - Marginal Effective Tax Rates</h4>
-                                        <div id="metrs"></div>
-                                    </div>                            
-                                </div><!-- row -->
+                                    </div>
+                                    <div class='col justify-content-center text-primary pt-3 pb-3'>
+                                        <h4>Poverty</h4>
+                                        <div class='row'
+                                             data-bs-toggle='modal'
+                                             data-bs-target='#poverty-popup'>
+                                            <ul class='list-group'>
+                                                <li class='list-group-item'>Headline Poverty Rate:&nbsp; <span class='fw-bold' id='headlines-pov-headcount'></span></li>
+                                                <li class='list-group-item'>Child Poverty Rate:&nbsp;<span class='fw-bold' id='headlines-child-poverty'></span></li>
+                                            </ul>
+                                            <p class='text-secondary fs-sm'>Marginal Effective Tax Rate (METR) is ... </p>
+                                        </div>
+                                    </div>
                                 <div class='row'>
                                     <div class='col'>
                                         <h4>Poverty</h4>
@@ -280,7 +289,6 @@
 <svg id='lorenz-curve' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
 <svg id='lorenz-curve-thumb' height="260" width='420' viewBox="0 0 400 250"></svg>
 <!-- <svg id='deciles' height="1297" width='2100' viewBox="0 0 2100 1297"></svg> -->
-<svg id='metrs-hist' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
 <svg id='metrs-hist-thumb' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
 <svg id='summary-graphs-v2' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
 <svg id='hbai' height="2600" width='2100' viewBox="0 0 2100 2600"></svg>
@@ -290,9 +298,6 @@
 
 <div id='gain-lose-summary'></div>
 <div id='inequality-summary'></div>
-<div id='metrs-table'></div>
-<div id='poverty-summary'></div>
-<div id='poverty-transitions'></div>
 <div id='run-settings-summary'></div>
 
 
@@ -335,7 +340,7 @@
     </div> <!-- model content -->
 </div><!-- hidden div -->
 
-<!-- popups: 1) gain lose -->
+<!-- popups: 2) costs -->
 <div class='modal fade' id='costs-popup' tabindex='-1' role='dialog' aria-labelledby='crosstab-label' aria-hidden='true'>
     <div class='modal-content modal-dialog modal-xl'  role='document'>
         <div class='modal-header'>
@@ -358,6 +363,50 @@
     </div> <!-- model content -->
 </div><!-- hidden div -->
 
+<!-- popups: 3) METRS -->
+<div class='modal fade' id='metrs-popup' tabindex='-1' role='dialog' aria-labelledby='crosstab-label' aria-hidden='true'>
+    <div class='modal-content modal-dialog modal-xl'  role='document'>
+        <div class='modal-header'>
+            <h3  class='modal-title' >Incentives To Work - Marginal Effective Tax Rates (METRS)</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class='modal-body'>
+            <div>
+                <svg id='metrs-hist' height="625" width='1008' viewBox="0 0 2100 1297"></svg>
+                <h4></h4>
+                <div id='metrs-table'></div>
+                <p class='text-secondary fs-sm'>Thing.</p>
+                <h4>SFC Behavioural Corrections</h4>
+                <div id='sfc'></div>
+                <p class='text-secondary fs-sm'>Thing.</p>
+                <div id='detailed-costs'></div>
+                <p class='text-secondary fs-sm'>Thing.</p>
+            </div>
+
+        </div> <!-- modal body -->
+    </div> <!-- model content -->
+</div><!-- hidden div -->
+
+<!-- popups: 4) Poverty -->
+<div class='modal fade' id='poverty-popup' tabindex='-1' role='dialog' aria-labelledby='crosstab-label' aria-hidden='true'>
+    <div class='modal-content modal-dialog modal-xl'  role='document'>
+        <div class='modal-header'>
+            <h3  class='modal-title' >Poverty</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class='modal-body'>
+            <div>
+                <h4>Summary</h4>
+                <div id='poverty-summary'></div>
+                <p class='text-secondary fs-sm'>Thing.</p>
+                <h4>Transitions</h4>
+                <div id='poverty-transitions'></div>
+                <p class='text-secondary fs-sm'>Thing.</p>
+            </div>
+
+        </div> <!-- modal body -->
+    </div> <!-- model content -->
+</div><!-- hidden div -->
 
 </body>
 
@@ -695,6 +744,15 @@ async function drawHeadlines(){
     $('#headlines-benefits').text(headlines.benefits.change_str);
     $('#headlines-benefits').addClass(headlines.benefits.glclass);
 
+    $('#headlines-mean-metrs').text(headlines.mean_metrs.change_str);
+    $('#headlines-mean-metrs').addClass(headlines.mean_metrs.glclass);
+    $('#headlines-median-metrs').text(headlines.median_metrs.change_str);
+    $('#headlines-median-metrs').addClass(headlines.median_metrs.glclass);
+
+    $('#headlines-pov-headcount').text(headlines.pov_headcount.change_str);
+    $('#headlines-pov-headcount').addClass(headlines.pov_headcount.glclass);
+    $('#headlines-child-poverty').text("TODO");
+    $('#headlines-median-metrs').addClass("");
 
 }
 
