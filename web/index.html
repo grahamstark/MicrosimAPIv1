@@ -258,6 +258,19 @@
                                             <p class='text-secondary fs-sm'>Marginal Effective Tax Rate (METR) is ... </p>
                                         </div>
                                     </div>
+                                    <div class='col justify-content-center text-primary pt-3 pb-3'>
+                                        <h4>Inequality</h4>
+                                        <div class='row'
+                                             data-bs-toggle='modal'
+                                             data-bs-target='#inequality-popup'>
+                                            <ul class='list-group'>
+                                                <li class='list-group-item'>Standard Inequality Measure (GINI):&nbsp; <span class='fw-bold' id='headlines-gini'></span></li>
+                                                <li class='list-group-item'>Alternative Inequality Measure (Palma):&nbsp;<span class='fw-bold' id='headlines-palma'></span></li>
+                                            </ul>
+                                            <p class='text-secondary fs-sm'>Marginal Effective Tax Rate (METR) is ... </p>
+                                        </div>
+                                    </div>
+
                                 <div class='row'>
                                     <div class='col'>
                                         <h4>Poverty</h4>
@@ -286,7 +299,6 @@
 
         <svg id='summary-graphs' height="520" width='840' viewBox="0 0 2100 1297"></svg>
 
-<svg id='lorenz-curve' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
 <svg id='lorenz-curve-thumb' height="260" width='420' viewBox="0 0 400 250"></svg>
 <!-- <svg id='deciles' height="1297" width='2100' viewBox="0 0 2100 1297"></svg> -->
 <svg id='metrs-hist-thumb' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
@@ -297,7 +309,6 @@
 
 
 <div id='gain-lose-summary'></div>
-<div id='inequality-summary'></div>
 <div id='run-settings-summary'></div>
 
 
@@ -408,6 +419,23 @@
     </div> <!-- model content -->
 </div><!-- hidden div -->
 
+<!-- popups: 5) Inequality -->
+<div class='modal fade' id='inequality-popup' tabindex='-1' role='dialog' aria-labelledby='crosstab-label' aria-hidden='true'>
+    <div class='modal-content modal-dialog modal-xl'  role='document'>
+        <div class='modal-header'>
+            <h3  class='modal-title' >Inequality</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class='modal-body'>
+            <div>
+            <svg id='lorenz-curve' height="625" width='1008' viewBox="0 0 2100 1297"></svg>
+            <div id='inequality-summary'></div>
+                <p class='text-secondary fs-sm'>Thing.</p>
+            </div>
+
+        </div> <!-- modal body -->
+    </div> <!-- model content -->
+</div><!-- hidden div -->
 </body>
 
 <script type='text/javascript'>
@@ -754,6 +782,10 @@ async function drawHeadlines(){
     $('#headlines-child-poverty').text("TODO");
     $('#headlines-median-metrs').addClass("");
 
+    $('#headlines-gini').text(headlines.gini.change_str);
+    $('#headlines-gini').addClass(headlines.gini.glclass);
+    $('#headlines-palma').text(headlines.palma.change_str);
+    $('#headlines-palma').addClass(headlines.palma.glclass);
 }
 
 
