@@ -159,37 +159,6 @@
                         </ul>
                     </div>
                 </fieldset> <!-- submission row -->
-                                    <!--
-                    <svg id='summary-graph' viewBox="0 0 50 50"></svg>
-                    -->
-<svg id='summary-graphs' height="520" width='840' viewBox="0 0 2100 1297"></svg>
-
-<svg id='lorenz-curve' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
-<svg id='lorenz-curve-thumb' height="260" width='420' viewBox="0 0 400 250"></svg>
-<svg id='deciles' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
-<svg id='deciles-thumb' height="260" width='420' viewBox="0 0 400 250"></svg>
-<svg id='metrs-hist' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
-<svg id='metrs-hist-thumb' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
-<svg id='summary-graphs-v2' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
-<svg id='hbai' height="2600" width='2100' viewBox="0 0 2100 2600"></svg>
-<svg id='taxable-graph' height="2600" width='2100' viewBox="0 0 2100 2600"></svg>
-
-
-<div id='overall-cost-table'></div>
-<div id='costs-table'></div>
-<div id='hhtype-gl'></div>
-<div id='ten-gl'></div>
-<div id='dec-gl'></div>
-<div id='children-gl'></div>
-<div id='reg-gl'></div>
-<div id='sfc'></div>
-<div id='gain-lose-summary'></div>
-<div id='inequality-summary'></div>
-<div id='metrs-table'></div>
-<div id='poverty-summary'></div>
-<div id='poverty-transitions'></div>
-<div id='run-settings-summary'></div>
-<div id='detailed-costs'></div>
 
 
 
@@ -209,7 +178,7 @@
                                        
                                     </div>
                                 </div>
-
+                                <!-- take examples out until the API is more stable.
                                 <div class='row'>
                                     <div class='col-4'></div>
                                     <div class='col-4'>
@@ -219,10 +188,10 @@
                                 </div>
                                 <div class='row'>
                                     <div class='col-12' id='examples'>
-                                       
+
                                     </div>
                                 </div>
-
+                                -->
 
 
                                 <div class="row">
@@ -253,16 +222,20 @@
                                     <div class='col-4'></div>
                                 </div>
                                 <div class='row'>
-                                    <div class='col'>
+                                    <div class='col justify-content-center text-primary pt-3 pb-3'>
                                         <h4>Gainers and Losers</h4>
-                                        <div class='row'>
-                                            <div class='col' id="gain-lose-ten-gl">,</div>
-                                            <div class='col' id="gain-lose-dec-gl">,</div>
-                                            <div class='col' id="gain-lose-hhtype-gl">,</div>
-                                            <div class='col' id="gain-lose-children-gl">,</div>
-                                            <div class='col' id="deciles-graph">,</div>
+                                        <div class='row'
+                                             data-bs-toggle='modal'
+                                             data-bs-target='#gainlose-popup'>
+                                            <ul class='list-group'>
+                                                <li class='list-group-item'>Gaining: <span class='text-success fw-bold' id='headlines-gainers'></span></li>
+                                                <li class='list-group-item'>Losing: <span class='text-danger fw-bold' id='headlines-losers'></span></li>
+                                                <li class='list-group-item'>Unchanged: <span class='text-body fw-bold' id='headlines-nochange'></span></li>
+                                            </ul>
                                         </div>
                                     </div>
+
+
                                     <div class='col'>
                                         <h4>Revenues and Costs</h4>
                                         <div
@@ -302,6 +275,34 @@
                 </div>
             </div> <!-- main container -->
         </form>
+
+        <svg id='summary-graphs' height="520" width='840' viewBox="0 0 2100 1297"></svg>
+
+<svg id='lorenz-curve' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='lorenz-curve-thumb' height="260" width='420' viewBox="0 0 400 250"></svg>
+<svg id='deciles' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='metrs-hist' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='metrs-hist-thumb' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='summary-graphs-v2' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
+<svg id='hbai' height="2600" width='2100' viewBox="0 0 2100 2600"></svg>
+<svg id='taxable-graph' height="2600" width='2100' viewBox="0 0 2100 2600"></svg>
+
+
+<div id='overall-cost-table'></div>
+<div id='costs-table'></div>
+
+<div id='reg-gl'></div>
+<div id='sfc'></div>
+<div id='gain-lose-summary'></div>
+<div id='inequality-summary'></div>
+<div id='metrs-table'></div>
+<div id='poverty-summary'></div>
+<div id='poverty-transitions'></div>
+<div id='run-settings-summary'></div>
+<div id='detailed-costs'></div>
+
+
+
 <footer class='footer'>
     <p>
         This is a demo of running a microsimulation model using a Julia implementation of our proposed API.
@@ -314,6 +315,30 @@
         <li><a href='docs/microsimapi-v1.pdf'>Draft Documentation</a></li>
     </ul>
 </footer>
+
+<!-- popups: 1) gain lose -->
+<div class='modal fade' id='gainlose-popup' tabindex='-1' role='dialog' aria-labelledby='crosstab-label' aria-hidden='true'>
+    <div class='modal-content modal-dialog modal-xl'  role='document'>
+        <div class='modal-header'>
+            <h3  class='modal-title' >Gainers and Losers</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class='modal-body'>
+            <div>
+                <h4>Gains By Income Decile</h4>
+                <svg id='deciles-thumb' height="520" width='840' viewBox="0 0 400 250"></svg>
+                <h4>Tables of Gainers and Losers</h4>
+                <div id='hhtype-gl'></div>
+                <div id='ten-gl'></div>
+                <div id='dec-gl'></div>
+                <div id='children-gl'></div>
+            </div>
+
+        </div> <!-- modal body -->
+    </div> <!-- model content -->
+</div><!-- hidden div -->
+
+
 
 </body>
 
@@ -639,7 +664,10 @@ async function drawHeadlines(){
     session_id = getSessionId();
     const jheadlines = await d3.json(API+"output/fetch/json/headlines?session_id="+session_id );
     const headlines = jheadlines.item;
-    console.log( "headlines", headlines );
+    console.log( "headlines", headlines, 'headlines.losers', headlines.losers );
+    $('#headlines-gainers').text(headlines.gainers);
+    $('#headlines-losers').text(headlines.losers);
+    $('#headlines-nochange').text(headlines.no_change);
 }
 
 
