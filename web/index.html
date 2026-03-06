@@ -207,14 +207,20 @@
                                 </div>
                                 -->
 
-                                <div class='row'>
+                                <div class='row fs-5'>
                                     <div class='col justify-content-center text-primary pt-3 pb-3'>
                                         <h4>Gainers and Losers</h4>
                                         <div class='row'
                                              data-bs-toggle='modal'
                                              data-bs-target='#gainlose-popup'>
                                             <ul class='list-group'>
-                                                <li class='list-group-item'>Gaining: <span class='text-success fw-bold' id='headlines-gainers'></span></li>
+                                                <li class='list-group-item'>Gaining:
+                                                <i class="bi bi-arrow-down-square-fill text-danger"></i>&nbsp;
+                                                <i class="bi bi-arrow-up-square-fill text-success"></i>&nbsp;
+                                                <i class="bi bi-arrow-down-square text-danger"></i>&nbsp;
+                                                <i class="bi bi-arrow-up-square text-success"></i>&nbsp;
+                                                <i class="bi bi-arrows"></i>&nbsp;
+                                                <span class='text-success fw-bold' id='headlines-gainers'></span></li>
                                                 <li class='list-group-item'>Losing: <span class='text-danger fw-bold' id='headlines-losers'></span></li>
                                                 <li class='list-group-item'>Unchanged: <span class='text-body fw-bold' id='headlines-nochange'></span></li>
                                             </ul>
@@ -227,7 +233,7 @@
                                              data-bs-toggle='modal'
                                              data-bs-target='#costs-popup'>
                                             <ul class='list-group'>
-                                                <li class='list-group-item'>Net Cost of Your Changes:&nbsp; <span class='fw-bold' id='headlines-net-cost'></span></li>
+                                                <li class='list-group-item'>Net Cost of Your Changes:&nbsp; <span class='fw-bold' id='headlines-net-direct'></span></li>
                                                 <li class='list-group-item'>Change in Tax Revenues:&nbsp; <span class='fw-bold' id='headlines-tax'></span></li>
                                                 <li class='list-group-item'>Change In Benefit Spending:&nbsp; <span class='text-body fw-bold' id='headlines-benefits'></span></li>
                                             </ul>
@@ -786,8 +792,8 @@ async function drawHeadlines(){
     $('#headlines-losers').text(headlines.losers);
     $('#headlines-nochange').text(headlines.no_change);
 
-    $('#headlines-net-cost').text(headlines.net_cost.num_str);
-    $('#headlines-net-cost').addClass(headlines.net_cost.glclass);
+    $('#headlines-net-direct').text(headlines.net_direct.num_str);
+    $('#headlines-net-direct').addClass(headlines.net_direct.glclass);
     $('#headlines-tax').text(headlines.tax.change_str);
     $('#headlines-tax').addClass(headlines.tax.glclass);
     $('#headlines-benefits').text(headlines.benefits.change_str);
