@@ -207,86 +207,78 @@
                                 </div>
                                 -->
 
-                                <div class='row fs-5'>
-                                    <div class='col justify-content-center text-primary pt-3 pb-3'>
+                                <div class='row fs-5 justify-content-center text-primary pt-3 pb-3'>
+                                    <div class='col'
+                                        data-bs-toggle='modal'
+                                        data-bs-target='#gainlose-popup'>
+
                                         <h4>Gainers and Losers</h4>
-                                        <div class='row'
-                                             data-bs-toggle='modal'
-                                             data-bs-target='#gainlose-popup'>
-                                            <ul class='list-group'>
-                                                <li class='list-group-item'>Gaining:
-                                                <i class="bi bi-arrow-down-square-fill text-danger"></i>&nbsp;
-                                                <i class="bi bi-arrow-up-square-fill text-success"></i>&nbsp;
-                                                <i class="bi bi-arrow-down-square text-danger"></i>&nbsp;
-                                                <i class="bi bi-arrow-up-square text-success"></i>&nbsp;
-                                                <i class="bi bi-arrows"></i>&nbsp;
-                                                <span class='text-success fw-bold' id='headlines-gainers'></span></li>
-                                                <li class='list-group-item'>Losing: <span class='text-danger fw-bold' id='headlines-losers'></span></li>
-                                                <li class='list-group-item'>Unchanged: <span class='text-body fw-bold' id='headlines-nochange'></span></li>
-                                            </ul>
-                                            <p class='text-secondary fs-sm'>Counts of people living in households whose net income has increased, decreased, or stayed the same.</p>
-                                        </div>
+                                        <table class='table table-sm align-middle'>
+                                            <tr>
+                                                <th>Gaining:</th><td class='text-success fw-bold' id='headlines-gainers'></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Losing:</th><td class='text-danger fw-bold' id='headlines-losers'></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Unchanged:</th><td class='fw-bold' id='headlines-nochange'></td>
+                                            </tr>
+                                        </table>
+                                        <p class='text-secondary fs-sm'>Counts of people living in households whose net income has increased, decreased, or stayed the same.</p>
                                     </div>
-                                    <div class='col justify-content-center text-primary pt-3 pb-3'>
+                                    <div class='col'
+                                        data-bs-toggle='modal'
+                                        data-bs-target='#costs-popup'>
                                         <h4>Revenues and Costs</h4>
-                                        <div class='row'
-                                             data-bs-toggle='modal'
-                                             data-bs-target='#costs-popup'>
-                                            <ul class='list-group'>
-                                                <li class='list-group-item'>Net Cost of Your Changes:&nbsp; <span class='fw-bold' id='headlines-net-direct'></span></li>
-                                                <li class='list-group-item'>Change in Tax Revenues:&nbsp; <span class='fw-bold' id='headlines-tax'></span></li>
-                                                <li class='list-group-item'>Change In Benefit Spending:&nbsp; <span class='text-body fw-bold' id='headlines-benefits'></span></li>
-                                            </ul>
-                                            <p class='text-secondary fs-sm'></p>
-                                        </div>
+                                        <table class='table table-sm'>
+                                            <tr><th>Tax Revenues:</th><td id='headlines-tax'></td></tr>
+                                            <tr><th>Benefit Spending:</th><td id='headlines-benefits'></td></tr>
+                                            <tr><th>Overall Cost:</th><td id='headlines-net-direct'></td></tr>
+                                        </table>
+                                        <p class='text-secondary fs-sm'></p>
                                     </div>
-                                    <div class='col justify-content-center text-primary pt-3 pb-3'>
+                                    <div class='col'
+                                            data-bs-toggle='modal'
+                                            data-bs-target='#metrs-popup'>
                                         <h4>Incentives to Work</h4>
-                                        <div class='row'
-                                             data-bs-toggle='modal'
-                                             data-bs-target='#metrs-popup'>
-                                            <ul class='list-group'>
-                                                <li class='list-group-item'>Median Effective Tax Rate:&nbsp; <span class='fw-bold' id='headlines-median-metrs'></span></li>
-                                                <li class='list-group-item'>Mean Effective Tax Rate:&nbsp;<span class='fw-bold' id='headlines-mean-metrs'></span></li>
-                                            </ul>
-                                            <p class='text-secondary fs-sm'>Marginal Effective Tax Rate (METR) is ... </p>
-                                        </div>
+                                        <h5>Marginal Effective Tax Rates</h5>
+                                        <table class='table table-sm'>
+                                            <tr><th>Median :</th><td id='headlines-median-metrs'></td></tr>
+                                            <tr><th>Mean:</th><td id='headlines-mean-metrs'></td></tr>
+                                        </table>
+                                        <p class='text-secondary fs-sm'>Marginal Effective Tax Rate (METR) is ... </p>
                                     </div>
-                                    <div class='col justify-content-center text-primary pt-3 pb-3'>
-                                        <h4>Poverty</h4>
-                                        <div class='row'
+                                <div> <!-- row -->
+                                <div class='row fs-5 justify-content-center text-primary pt-3 pb-3'>
+                                    <div class='col'
                                              data-bs-toggle='modal'
                                              data-bs-target='#poverty-popup'>
-                                            <ul class='list-group'>
-                                                <li class='list-group-item'>Headline Poverty Rate:&nbsp; <span class='fw-bold' id='headlines-pov-headcount'></span></li>
-                                                <li class='list-group-item'>Child Poverty Rate:&nbsp;<span class='fw-bold' id='headlines-child-poverty'></span></li>
-                                            </ul>
-                                            <p class='text-secondary fs-sm'>Marginal Effective Tax Rate (METR) is ... </p>
-                                        </div>
+                                        <h4>Poverty</h4>
+                                        <table class='table table-sm'>
+                                            <tr><th>Headline Poverty Rate :</th><td id='headlines-pov-headcount'></td></tr>
+                                            <tr><th>Child Poverty Rate:</th><td id='headlines-child-poverty'></td></tr>
+                                        </table>
+                                            <p class='text-secondary fs-sm'>Proportion of .. Numbers of ... </p>
                                     </div>
-                                    <div class='col justify-content-center text-primary pt-3 pb-3'>
-                                        <h4>Inequality</h4>
-                                        <div class='row'
+                                    <div class='col'
                                              data-bs-toggle='modal'
                                              data-bs-target='#inequality-popup'>
-                                            <ul class='list-group'>
-                                                <li class='list-group-item'>Standard Inequality Measure (GINI):&nbsp; <span class='fw-bold' id='headlines-gini'></span></li>
-                                                <li class='list-group-item'>Alternative Inequality Measure (Palma):&nbsp;<span class='fw-bold' id='headlines-palma'></span></li>
-                                            </ul>
-                                            <p class='text-secondary fs-sm'>Marginal Effective Tax Rate (METR) is ... </p>
-                                        </div>
+                                        <h4>Inequality</h4>
+                                        <table class='table table-sm'>
+                                            <tr><th>Standard Measure (GINI):</th><td id='headlines-gini'></td></tr>
+                                            <tr><th>Alternative Measure (Palma):</th><td id='headlines-palma'></td></tr>
+                                        </table>
+                                        <p class='text-secondary fs-sm'>Palma is ... </p>
                                     </div>
-                                    <div class='col justify-content-center text-primary pt-3 pb-3'>
-                                        <h4>Incomes</h4>
-                                        <div class='row'
+                                    <div class='col'
                                              data-bs-toggle='modal'
                                              data-bs-target='#incomes-popup'>
-                                            <ul class='list-group'>
-                                                <li class='list-group-item'>Standard Inequality Measure (GINI):&nbsp; <span class='fw-bold' id='headlines-gini'></span></li>
-                                                <li class='list-group-item'>Alternative Inequality Measure (Palma):&nbsp;<span class='fw-bold' id='headlines-palma'></span></li>
-                                            </ul>
-                                            <p class='text-secondary fs-sm'>Marginal Effective Tax Rate (METR) is ... </p>
-                                        </div>
+                                        <h4>Incomes</h4>
+                                        <table class='table table-sm'>
+                                            <tr><th>Mean Income:</th><td id='headlines-gini'></td></tr>
+                                            <tr><th>Median Income:</th><td id='headlines-palma'></td></tr>
+                                        </table>
+                                        <p class='text-secondary fs-sm'>Palma is ... </p>
                                     </div>
 
                             </div>
@@ -782,6 +774,21 @@ function get_html( item, subitem, session_id, target ){
         });
 }
 
+const ARROWS_2 = {
+    "nonsig"          : "",
+    "positive_strong" : "<i class='bi bi-arrow-up-square-fill fs-3'></i>",
+    "positive_med"    : "<i class='bi bi-arrow-up-square fs-3'></i>",
+    "positive_weak"   : "<i class='bi bi-arrow-up-square fs-3'></i>",
+    "negative_strong" : "<i class='bi bi-arrow-down-square-fill fs-3'></i>",
+    "negative_med"    : "<i class='bi bi-arrow-down-square fs-3'></i>",
+    "negative_weak"   : "<i class='bi bi-arrow-down-square fs-3'></i>" };
+
+
+
+function summaryHeadline( val, direction, glclass ){
+    const arrow = ARROWS_2[direction];
+    return `<span class='${glclass} align-middle'><i class="bi ${arrow}"></i>&nbsp;${val}</span>`;
+}
 
 async function drawHeadlines(){
     session_id = getSessionId();
@@ -792,27 +799,39 @@ async function drawHeadlines(){
     $('#headlines-losers').text(headlines.losers);
     $('#headlines-nochange').text(headlines.no_change);
 
-    $('#headlines-net-direct').text(headlines.net_direct.num_str);
-    $('#headlines-net-direct').addClass(headlines.net_direct.glclass);
-    $('#headlines-tax').text(headlines.tax.change_str);
-    $('#headlines-tax').addClass(headlines.tax.glclass);
-    $('#headlines-benefits').text(headlines.benefits.change_str);
-    $('#headlines-benefits').addClass(headlines.benefits.glclass);
-
-    $('#headlines-mean-metrs').text(headlines.mean_metrs.change_str);
-    $('#headlines-mean-metrs').addClass(headlines.mean_metrs.glclass);
-    $('#headlines-median-metrs').text(headlines.median_metrs.change_str);
-    $('#headlines-median-metrs').addClass(headlines.median_metrs.glclass);
-
-    $('#headlines-pov-headcount').text(headlines.pov_headcount.change_str);
-    $('#headlines-pov-headcount').addClass(headlines.pov_headcount.glclass);
-    $('#headlines-child-poverty').text("TODO");
-    $('#headlines-median-metrs').addClass("");
-
-    $('#headlines-gini').text(headlines.gini.change_str);
-    $('#headlines-gini').addClass(headlines.gini.glclass);
-    $('#headlines-palma').text(headlines.palma.change_str);
-    $('#headlines-palma').addClass(headlines.palma.glclass);
+    $('#headlines-net-direct').html(summaryHeadline(
+        headlines.net_direct.abs_num_str,
+        headlines.net_direct.arrow,
+        headlines.net_direct.glclass ));
+    $('#headlines-tax').html(summaryHeadline(
+        headlines.tax.unsigned_change_str,
+        headlines.tax.arrow,
+        headlines.tax.glclass ));
+    $('#headlines-benefits').html(summaryHeadline(
+        headlines.benefits.unsigned_change_str,
+        headlines.benefits.arrow,
+        headlines.benefits.glclass ));
+    $('#headlines-mean-metrs').html(summaryHeadline(
+        headlines.mean_metrs.unsigned_change_str,
+        headlines.mean_metrs.arrow,
+        headlines.mean_metrs.glclass ));
+    $('#headlines-median-metrs').html(summaryHeadline(
+        headlines.median_metrs.unsigned_change_str,
+        headlines.median_metrs.arrow,
+        headlines.median_metrs.glclass ));
+    $('#headlines-pov-headcount').html(summaryHeadline(
+        headlines.pov_headcount.unsigned_change_str,
+        headlines.pov_headcount.arrow,
+        headlines.pov_headcount.glclass ));
+    $('#headlines-child-poverty').html("TODO");
+    $('#headlines-gini').html(summaryHeadline(
+        headlines.gini.unsigned_change_str,
+        headlines.gini.arrow,
+        headlines.gini.glclass ));
+    $('#headlines-palma').html(summaryHeadline(
+        headlines.palma.unsigned_change_str,
+        headlines.palma.arrow,
+        headlines.palma.glclass ));
 }
 
 
