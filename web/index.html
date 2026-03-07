@@ -27,7 +27,7 @@
     <style type="text/css">
         .bg-purple {background:#cdf;}
         .bg-orange {background:#fec;}
-        .modcon:hover {filter:brightness(0.6);}
+        .hover-highlight:hover {background: #eee}
     </style>
 
 </head>
@@ -164,7 +164,7 @@
 
                 <div class="row  border rounded-2 m-1 p-2">
 
-                    <div class='col'>scotben
+                    <div class='col'>
                             <div id='output-fields'>
                                 <div class='row'>
                                     <div class='col-4'></div>
@@ -176,68 +176,40 @@
                                 </div>
                                 <div class='row'>
                                     <div class='col-12' id='headline_figures'>
-                                        <div class='text-center' id='overall-cost-table'></div>
-                                    </div>
-                                </div>
-                                <!-- take examples out until the API is more stable.
-                                <div class='row'>
-                                    <div class='col-4'></div>
-                                    <div class='col-4'>
-                                        <h2>Results for some Example Families</h2>
-                                    </div>
-                                    <div class='col-4'></div>
-                                </div>
-                                <div class='row'>
-                                    <div class='col-12' id='examples'>
 
                                     </div>
                                 </div>
-
-
-                                <div class="row">
-                                    <div class="col bg-info bg-opacity-10 modcon" id='gainlose-modal-container'></div>
-                                    <div class="col bg-secondary bg-opacity-10 modcon" id='costs-modal-container'></div>
-                                    <div class="col bg-primary bg-opacity-10 modcon" id='metrs-modal-container'></div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col bg-orange bg-opacity-10  modcon" id='inequality-modal-container'></div>
-                                    <div class="col bg-purple bg-opacity-10  modcon" id='poverty-modal-container'></div>
-                                    <div class="col bg-dark bg-opacity-10 modcon" id='incomes-modal-container'></div>
-                                </div>
-                                -->
-
                                 <div class='row fs-5 justify-content-center text-primary pt-3 pb-3'>
-                                    <div class='col'
+                                    <div class='col hover-highlight'
                                         data-bs-toggle='modal'
                                         data-bs-target='#gainlose-popup'>
 
                                         <h4>Gainers and Losers</h4>
                                         <table class='table table-sm align-middle'>
                                             <tr>
-                                                <th>Gaining:</th><td class='text-success fw-bold' id='headlines-gainers'></td>
+                                                <th>Gaining:</th><td class='text-success' id='headlines-gainers'></td>
                                             </tr>
                                             <tr>
-                                                <th>Losing:</th><td class='text-danger fw-bold' id='headlines-losers'></td>
+                                                <th>Losing:</th><td class='text-danger' id='headlines-losers'></td>
                                             </tr>
                                             <tr>
-                                                <th>Unchanged:</th><td class='fw-bold' id='headlines-nochange'></td>
+                                                <th>Unchanged:</th><td class='' id='headlines-nochange'></td>
                                             </tr>
                                         </table>
                                         <p class='text-secondary fs-sm'>Counts of people living in households whose net income has increased, decreased, or stayed the same.</p>
                                     </div>
-                                    <div class='col'
+                                    <div class='col hover-highlight'
                                         data-bs-toggle='modal'
                                         data-bs-target='#costs-popup'>
                                         <h4>Revenues and Costs</h4>
+                                        <div class='text-center' id='overall-cost-table'></div>
                                         <table class='table table-sm'>
                                             <tr><th>Tax Revenues:</th><td id='headlines-tax'></td></tr>
                                             <tr><th>Benefit Spending:</th><td id='headlines-benefits'></td></tr>
-                                            <tr><th>Overall Cost:</th><td id='headlines-net-direct'></td></tr>
                                         </table>
                                         <p class='text-secondary fs-sm'></p>
                                     </div>
-                                    <div class='col'
+                                    <div class='col hover-highlight'
                                             data-bs-toggle='modal'
                                             data-bs-target='#metrs-popup'>
                                         <h4>Incentives to Work</h4>
@@ -250,7 +222,7 @@
                                     </div>
                                 <div> <!-- row -->
                                 <div class='row fs-5 justify-content-center text-primary pt-3 pb-3'>
-                                    <div class='col'
+                                    <div class='col hover-highlight'
                                              data-bs-toggle='modal'
                                              data-bs-target='#poverty-popup'>
                                         <h4>Poverty</h4>
@@ -260,7 +232,7 @@
                                         </table>
                                             <p class='text-secondary fs-sm'>Proportion of .. Numbers of ... </p>
                                     </div>
-                                    <div class='col'
+                                    <div class='col hover-highlight'
                                              data-bs-toggle='modal'
                                              data-bs-target='#inequality-popup'>
                                         <h4>Inequality</h4>
@@ -270,7 +242,7 @@
                                         </table>
                                         <p class='text-secondary fs-sm'>Palma is ... </p>
                                     </div>
-                                    <div class='col'
+                                    <div class='col hover-highlight'
                                              data-bs-toggle='modal'
                                              data-bs-target='#incomes-popup'>
                                         <h4>Incomes</h4>
@@ -280,7 +252,6 @@
                                         </table>
                                         <p class='text-secondary fs-sm'>Palma is ... </p>
                                     </div>
-
                             </div>
                         </div>
                     </div>
@@ -303,7 +274,6 @@
 
 
 
-<div id='gain-lose-summary'></div>
 <div id='run-settings-summary'></div>
 
 
@@ -330,6 +300,7 @@
         </div>
         <div class='modal-body'>
             <div>
+                <div id='gain-lose-summary'></div>
                 <h4>Gains By Income Decile</h4>
                 <svg id='deciles' height="625" width='1008' viewBox="0 0 2100 1297"></svg>
                 <p class='text-secondary fs-sm'>The household population of Scotland grouped into tenths by income, from poorest to richest, and the average change in £s per week for each group.</p>
