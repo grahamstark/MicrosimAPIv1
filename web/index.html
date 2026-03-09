@@ -766,7 +766,7 @@ async function drawHeadlines(){
     $('#headlines-nochange').text(headlines.no_change);
 
     $('#headlines-net-direct').html(summaryHeadline(
-        headlines.net_direct.abs_num_str,
+        headlines.net_direct.unsigned_num_str,
         headlines.net_direct.arrow,
         headlines.net_direct.glclass ));
     $('#headlines-tax').html(summaryHeadline(
@@ -813,8 +813,8 @@ function create_outputs( session_id ){
     get_svg_image( "lorenz_curve", "thumb", session_id  );
     get_svg_image( "deciles", null, session_id  );
     get_svg_image( "deciles", "thumb", session_id  );
-    get_svg_image( "metrs_hist", null, session_id  );
-    get_svg_image( "metrs_hist", "thumb", session_id  );
+    get_svg_image( "metrs2", null, session_id  );
+    // get_svg_image( "metrs_hist", "thumb", session_id  );
     get_svg_image( "taxable_graph", null, session_id );
 
     get_html_chunk( "overall_cost_table", null, null, session_id );
