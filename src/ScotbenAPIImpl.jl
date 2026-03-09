@@ -603,17 +603,19 @@ end
 
 """
 function run_status()
-    id = get_session_id()
-    @info "scotben_run_status got id = " id
-    prs = allfromsession(id)
-    @info "getting hid " prs.hid
-    res = Base.get(CACHED_RESULTS, prs.hid, nothing )
-    if isnothing( res )
-        return json((;session_id=id, error="no_run", info="" ))
-    else
-        @info "got progress as " res.progress
-        return json((;session_id=id, error="ok", info=res.progress ))
+    for t in 1:5
+        id = get_session_id()
+        @info "scotben_run_status got id = " id
+        prs = allfromsession(id)
+        @info "getting hid try # $tries" prs.hid
+        res = Base.get(CACHED_RESULTS, prs.hid, nothing )
+        if ! isnothing( res )
+            @info "got progress as " res.progress
+            return json((;session_id=id, error="ok", info=res.progress ))
+        end
+        sleep(1)
     end
+    return json((;session_id=id, error="no_run", info="retried 5 times." ))
     return "Status"
 end
 
