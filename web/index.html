@@ -247,8 +247,8 @@
                                              data-bs-target='#incomes-popup'>
                                         <h4>Incomes</h4>
                                         <table class='table table-sm'>
-                                            <tr><th>Mean Income:</th><td id='headlines-gini'></td></tr>
-                                            <tr><th>Median Income:</th><td id='headlines-palma'></td></tr>
+                                            <tr><th>Mean Income:</th><td id='headlines-mean-income'></td></tr>
+                                            <tr><th>Median Income:</th><td id='headlines-median-income'></td></tr>
                                         </table>
                                         <p class='text-secondary fs-sm'>Palma is ... </p>
                                     </div>
@@ -789,7 +789,10 @@ async function drawHeadlines(){
         headlines.pov_headcount.unsigned_change_str,
         headlines.pov_headcount.arrow,
         headlines.pov_headcount.glclass ));
-    $('#headlines-child-poverty').html("TODO");
+    $('#headlines-child-poverty').html(summaryHeadline(
+        headlines.child_poverty.unsigned_change_str,
+        headlines.child_poverty.arrow,
+        headlines.child_poverty.glclass ));
     $('#headlines-gini').html(summaryHeadline(
         headlines.gini.unsigned_change_str,
         headlines.gini.arrow,
@@ -798,6 +801,14 @@ async function drawHeadlines(){
         headlines.palma.unsigned_change_str,
         headlines.palma.arrow,
         headlines.palma.glclass ));
+    $('#headlines-mean-income').html(summaryHeadline(
+        headlines.mean_income.unsigned_change_str,
+        headlines.mean_income.arrow,
+        headlines.mean_income.glclass ));
+    $('#headlines-median-income').html(summaryHeadline(
+        headlines.median_income.unsigned_change_str,
+        headlines.median_income.arrow,
+        headlines.median_income.glclass ));
 }
 
 
