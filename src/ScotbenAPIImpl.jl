@@ -605,8 +605,8 @@ end
 
 """
 function run_status()
+    id = get_session_id()
     for t in 1:5
-        id = get_session_id()
         @info "scotben_run_status got id = " id
         prs = allfromsession(id)
         @info "getting hid try # $tries" prs.hid
