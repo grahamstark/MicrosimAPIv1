@@ -820,13 +820,13 @@ async function drawHeadlines(){
 
 function create_outputs( session_id ){
     drawHeadlines();
-    get_svg_image( "summary_graphs", null, session_id  );
-    get_svg_image( "summary_graphs_v2", null, session_id  );
+    // get_svg_image( "summary_graphs", null, session_id  );
+    // get_svg_image( "summary_graphs_v2", null, session_id  );
     get_svg_image( "hbai", null, session_id  );
     get_svg_image( "lorenz_curve", null, session_id  );
-    get_svg_image( "lorenz_curve", "thumb", session_id  );
+    // get_svg_image( "lorenz_curve", "thumb", session_id  );
     get_svg_image( "deciles", null, session_id  );
-    get_svg_image( "deciles", "thumb", session_id  );
+    // get_svg_image( "deciles", "thumb", session_id  );
     get_svg_image( "metrs2", null, session_id  );
     // get_svg_image( "metrs_hist", "thumb", session_id  );
     get_svg_image( "taxable_graph", null, session_id );
@@ -837,7 +837,7 @@ function create_outputs( session_id ){
     get_html_chunk( "ten_gl", null, null, session_id );
     get_html_chunk( "dec_gl", null, null, session_id );
     get_html_chunk( "children_gl", null, null, session_id );
-    get_html_chunk( "reg_gl", null, null, session_id );
+    // get_html_chunk( "reg_gl", null, null, session_id );
     get_html_chunk( "sfc", null, null, session_id );
     get_html_chunk( "gain_lose_summary", null, null, session_id );
     get_html_chunk( "inequality_summary", null, null, session_id );
@@ -1053,8 +1053,9 @@ function run_submit(){
 function reset_all(){
     session_id = getSessionId();
     params_get("initialise");
-    run_submit();
-    create_outputs( session_id );
+    // params_set();
+    // run_submit();
+    // create_outputs( session_id );
 }
 
 $(document).ready(function(){
