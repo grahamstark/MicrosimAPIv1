@@ -260,22 +260,15 @@
                <div class="row">
                    
                     <div class='col' id='endnotes'></div>
-                    
+                    <div class='col hover-highlight'
+                        data-bs-toggle='modal'
+                        data-bs-target='#run-settings-popup'>
+                        Run Settings
+                    </div>
+
                 </div>
             </div> <!-- main container -->
         </form>
-
-        <svg id='summary-graphs' height="520" width='840' viewBox="0 0 2100 1297"></svg>
-
-<svg id='lorenz-curve-thumb' height="260" width='420' viewBox="0 0 400 250"></svg>
-<!-- <svg id='deciles' height="1297" width='2100' viewBox="0 0 2100 1297"></svg> -->
-<svg id='metrs-hist-thumb' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
-<svg id='summary-graphs-v2' height="1297" width='2100' viewBox="0 0 2100 1297"></svg>
-
-
-
-<div id='run-settings-summary'></div>
-
 
 
 <footer class='footer'>
@@ -290,6 +283,16 @@
         <li><a href='docs/microsimapi-v1.pdf'>Draft Documentation</a></li>
     </ul>
 </footer>
+
+
+<div class='modal fade' id='run-settings-popup' tabindex='-1' role='dialog' aria-labelledby='crosstab-label' aria-hidden='true'>
+    <div class='modal-content modal-dialog modal-xl'  role='document'>
+
+        <div id='run-settings-summary'></div>
+    </div>
+</div>
+
+
 
 <!-- popups: 1) gain lose -->
 <div class='modal fade' id='gainlose-popup' tabindex='-1' role='dialog' aria-labelledby='crosstab-label' aria-hidden='true'>
