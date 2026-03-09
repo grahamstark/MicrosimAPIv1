@@ -377,11 +377,13 @@ function do_default_run()::Integer
     settings = Settings()
     ps.settings = settings
     ps.hid = hid( ps )
-    @info "do_default_run caching output for ps" ps.hid "Settings UUID = " ps.settings.uuid
-    lhid = do_run( ps; show_progress=false )
-    @assert ps.hid == lhid
-    @assert ps.hid ∈ Base.keys(CACHED_RESULTS)
-    return lhid
+    if ! (ps.hid ∈ Base.keys(CACHED_RESULTS))
+        @info "do_default_run caching output for ps" ps.hid "Settings UUID = " ps.settings.uuid
+        lhid = do_run( ps; show_progress=false )
+        @assert ps.hid == lhid
+        @assert ps.hid ∈ Base.keys(CACHED_RESULTS)
+    end
+    return ps.hid
 end
 
 function submit_job( prs :: ParamsAndSettings )
