@@ -27,7 +27,8 @@
     <style type="text/css">
         .bg-purple {background:#cdf;}
         .bg-orange {background:#fec;}
-        .hover-highlight:hover {background: #eee}
+        .hover-highlight:hover {background: #eee},
+        .error: {background:pink;}
     </style>
 
 </head>
@@ -70,7 +71,7 @@
                                 </table>
                                 <div class="col ukreserved p-2 rounded-2">
                                     <label for='taxallowance' class='form-label'>Personal Allowance £pa</label>
-                                    <input id='taxallowance' type='number' name="taxallowance" min='0' max='100000' value='' step='1' size="12" class='form-control w-50'/>
+                                    <input id='taxallowance' type='number' name="taxallowance" min='0' max='100000' value='' step='1' size="12" class='form-control w-50 '/>
                                 </div>                                
                     </fieldset>
                     <fieldset class='col border rounded-2 m-1 p-2 ukreserved'>
@@ -95,13 +96,13 @@
                         <div class="row">                                        
                             <div class="col">                                                    
                                 <label for='scottish_child_payment' class='form-label'>Scottish Child Payment £pw</label>
-                                <input id='scottish_child_payment' type='number' name="scottish_child_payment" min='0' max='400' value='' step='0.01' size="10" class='form-control w-50'/>
+                                <input id='scottish_child_payment' type='number' name="scottish_child_payment" min='0' max='400' value='' step='0.01' size="10" class='form-control w-50  '/>
                             </div>
                         </div>
                         <div class="row">                                        
                             <div class="col">                                                    
                                 <label for='scp_age' class='form-label'>Scottish Child Payment: maximum age (years)</label>
-                                <input id='scp_age' type='number' name="scp_age" min='0' max='18' value='' step='1' size="4" class='form-control w-50'/>
+                                <input id='scp_age' type='number' name="scp_age" min='0' max='18' value='' step='1' size="4" class='form-control w-50  '/>
                             </div>
                         </div>
                     </fieldset>
@@ -110,25 +111,25 @@
                             <div class="row">                                        
                                 <div class="col">                                                    
                                     <label for='uc_single' class='form-label'>Universal Credit: Single over 25 (£pm)</label>
-                                    <input id='uc_single' type='number' name="uc_single" min='0' max='2000' value='' step='0.01' size="10" class='form-control w-50'/>
+                                    <input id='uc_single' type='number' name="uc_single" min='0' max='2000' value='' step='0.01' size="10" class='form-control w-50  '/>
                                 </div>
                             </div>
                             <div class="row">                                                                                    
                                 <div class="col">                                                    
                                     <label for='uc_taper' class='form-label'>Universal Credit Taper (%)</label>
-                                    <input id='uc_taper' type='number' name="uc_taper" min='1' max='100' value='' step='1' size="10" class='form-control w-50'/>
+                                    <input id='uc_taper' type='number' name="uc_taper" min='1' max='100' value='' step='1' size="10" class='form-control w-50  '/>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col">                                                    
                                     <label for='child_benefit' class='form-label'>Child Benefit (1st child) £pw</label>
-                                    <input id='child_benefit' type='number' name="child_benefit" min='0' max='1000' value='' step='0.01' size="10" class='form-control w-50'/>
+                                    <input id='child_benefit' type='number' name="child_benefit" min='0' max='1000' value='' step='0.01' size="10" class='form-control w-50  '/>
                                 </div>
                             </div>
                             <div class="row">
                                     <div class="col">                                                    
                                         <label for='pension' class='form-label'>New State Pension £pw</label>
-                                        <input id='pension' type='number' name="pension" min='0' max='1000' value='' step='0.01' size="10" class='form-control w-50'/>
+                                        <input id='pension' type='number' name="pension" min='0' max='1000' value='' step='0.01' size="10" class='form-control w-50  '/>
                                     </div>                                                
                             </div>
                     </fieldset>
@@ -445,7 +446,7 @@ function makeInput( n, name, type ){
         step=0.01;
     }
     var id = makeId( n, name, type );
-    return "<input id='"+id+"' name='"+id+"' type='number' min='"+min+"' max='"+max+"' step='"+step+"' value='' class=' w-75' />";
+    return "<input id='"+id+"' name='"+id+"' type='number' min='"+min+"' max='"+max+"' step='"+step+"' value='' class=' w-75  ' />";
 }
 
 /**
@@ -935,7 +936,7 @@ function setSessionId( session_id ){
 
 function params_set(){
     // num_validation_errors = params_validate()
-    num_validation_errors = 0
+    num_validation_errors = 0;
     var session_id = getSessionId();
     console.log( "params_set; valid=", num_validation_errors )
     var params = scrapeData();    
@@ -965,6 +966,11 @@ function params_set(){
 }
 
 function params_validate(){
+    $("#mainform").validate();
+    //{
+    //    errorClass: "invalid"
+    //});
+
     var params = scrapeData();
     var session_id = getSessionId(); // ( "#session_id" ).val();
     // var dataset = JSON.stringify({'params':params,'session_id':session_id});    
@@ -1056,7 +1062,7 @@ $(document).ready(function(){
     // .. then load initial outputs
     var session_id = getSessionId();
     create_outputs( session_id );
-
+    $("#mainform").validate();
 });
 
 </script>
