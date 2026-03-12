@@ -1,4 +1,5 @@
 -- psql -h /var/run/postgresql/ -U postgres
+-- pg_lsclusters
 
 drop database microapi;
 create database microapi;
@@ -6,10 +7,10 @@ create database microapi;
 
 
 create table users(
-    username char(20) not null,
-    email text,
-    password text,
-    creation timestamp,
+    username char(30) not null,
+    email text default '',
+    password text default '',
+    created timestamp,
     is_temp boolean default true,
     primary key(username));
 insert into users values
@@ -30,14 +31,14 @@ create table model_versions(
 insert into model_versions values('scotben', '0.10','');
 
 create table sessions(
-    username char(20) not null default 'default',
+    username char(30) not null default 'default',
     session_id int not null default 1,
     creation_time timestamp,
     primary key( username, session_id),
     foreign key( username ) references users on delete cascade);
 
 create table runs(
-    username char(20) not null default 'default',
+    username char(30) not null default 'default',
     model_name char(20) not null default 'scotben',
     model_version char(12) not null default '0.10',
     session_id integer not null default 1,
@@ -51,7 +52,7 @@ create table runs(
     foreign key( model_name, model_version) references model_versions );
 
 create table run_params(
-    username char(20) not null default 'default',
+    username char(30) not null default 'default',
     model_name char(20) not null default 'scotben',
     model_version char(12) not null default '0.10',
     session_id integer not null default 1,
@@ -63,7 +64,7 @@ create table run_params(
     foreign key( model_name, model_version) references model_versions );
 
 create table run_results(
-    username char(20) not null default 'default',
+    username char(30) not null default 'default',
     model_name char(20) not null default 'scotben',
     model_version char(12) not null default '0.10',
     session_id integer not null default 1,
