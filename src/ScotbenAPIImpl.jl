@@ -81,6 +81,15 @@ struct User
     created :: DateTime
 end
 
+function submit_run()
+
+end
+
+function finalise_run()
+
+
+end
+
 struct Run
 
 
@@ -333,7 +342,19 @@ const CACHED_RESULTS = Dict{UInt, AllOutput}()
 
 JOB_QUEUE = Channel{ParamsAndSettings}(QSIZE)
 
+function get_user_and_run_id()::Tuple
+    conn =
+    user_id =  payload(:user_id,"Missing")
+    if user_id  == "Missing"
 
+    end
+    run_id =  payload(:run_id,"Missing")
+    if run_id  == "Missing"
+
+
+    end
+    return user_id, run_id
+end
 
 function get_session_id()
     id = payload(:session_id,"Missing")
