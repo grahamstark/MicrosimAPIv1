@@ -88,11 +88,34 @@ end
 
 user_create = makeps(
     """
-    insert into users( user_id, email, password, description, created, expiry, is_temp ) values( \$1, \$2, \$3, \$4, now(), now()+'interval 1 day', \$5 )
+    insert into users( user_id, email, password, description, created, expiry, is_temp ) values( \$1, \$2, \$3, \$4, now(), now()+ interval '1 day', \$5 )
     """
     )
 
+user_retrieve = makeps(
+    """
+    select user_id, email, password, description, created, expiry, is_temp from users where user_id = \$1
+    """
+)
 
+function get_user2( user_id :: Integer )
+    rs = DataFrame( execute( user_retrieve, [user_id]))[1,:]
+    return User( rs.user_id, rs.email, rs.description, rs.password, rs.is_temp, rs.created, rs.expiry  )
+end
+
+function create_temp_user_faster()::Union{Nothing,User}
+    user_id = rand(50_000:typemax(Int))
+    user_data = [user_id, "email-$user_id.thing.some", hash("user_id$user_id"), "user number $user_id",true]
+    try
+        execute( user_create, user_data )
+    catch e
+        @show "create_temp_user errored with " e
+        close(conn)
+        return nothing
+    end
+    u = get_user2( user_id)
+    return u
+end
 
 function create_temp_user()::Union{Nothing,User}
     user_id = rand(50_000:typemax(Int))
@@ -108,6 +131,7 @@ function create_temp_user()::Union{Nothing,User}
     close(conn)
     return u
 end
+
 run_insert = makeps(
     """
        insert into runs( user_id, model_name, model_version, run_id, run_name, submission, qstatus, is_displayed, is_edited ) values
@@ -155,8 +179,8 @@ values(1,'scotben','0.17',1,'some name', now(), 'E', false, true ) on conflict( 
         timer timestamp,
 
 
-function t50k()
-    @time for i in 1:50_00
+function t10k()
+    @time for i in 1:50_000
         u=create_temp_user()
         if (i % 2000)==0
             println(u.user_id)
@@ -164,12 +188,11 @@ function t50k()
     end
 end
 
-function create_run()
-
-    conn = makeconn()
-    try
-    select max(run_id)+1 from runs where user_id=? and model_name=? and model_version=?;
-
+function t10k2()
+    @time for i in 1:50_000
+        u=create_temp_user_faster()
+        if (i % 2000)==0
+            println(u.user_id)
+        end
+    end
 end
-
-

@@ -1,8 +1,8 @@
 -- psql -h /var/run/postgresql/ -U postgres
 -- pg_lsclusters
 
-drop database microapi;
-create database microapi;
+-- drop database microapi;
+-- create database microapi;
 \c microapi
 
 create table users(
@@ -15,8 +15,8 @@ create table users(
     is_temp boolean default true,
     primary key(user_id));
 insert into users values
-( '1', '', md5('anything'), 'admin', now(), null, false ),
-( '2', '', md5('anything'), 'default', now(), null, false );
+( '1', '', md5('anything'), 'admin', now(), now() + interval '1000 years', false ),
+( '2', '', md5('anything'), 'default', now(), now() + interval '1000 years', false );
 
 create table models(
     model_name char(20) not null primary key,
