@@ -6,15 +6,17 @@ create database microapi;
 \c microapi
 
 create table users(
-    username char(30) not null,
+    user_id bigint not null,
     email text default '',
     password text default '',
+    description text,
     created timestamp,
+    expiry timestamp,
     is_temp boolean default true,
-    primary key(username));
+    primary key(user_id));
 insert into users values
-( 'default', '', md5('anything'), now(), false ),
-( 'archive', '', md5('anything'), now(), false );
+( '1', '', md5('anything'), 'admin', now(), null, false ),
+( '2', '', md5('anything'), 'default', now(), null, false );
 
 create table models(
     model_name char(20) not null primary key,
@@ -41,30 +43,32 @@ insert into q_statuses values
 ('Z', 'Errored');
 
 create table runs(
-    username char(30) not null default 'default',
+    user_id bigint not null,
     model_name char(20) not null default 'scotben',
     model_version char(12) not null default '0.17',
-    run_id char(32) not null, -- actually, a uuid
+    run_id integer not null,
+    run_name char(32), -- actually, a uuid
     submission timestamp,
     qstatus char(1) not null default 'E', -- E, Q,X,C
     is_displayed boolean default false,
     is_edited boolean default false,
-    primary key( username, run_id, model_name, model_version ),
-    foreign key( username ) references users on delete cascade,
+    primary key( user_id, run_id, model_name, model_version ),
+    foreign key( user_id ) references users on delete cascade,
     foreign key( qstatus ) references q_statuses,
     foreign key( model_name, model_version) references model_versions );
 
 create table run_state(
-    username char(30) not null default 'default',
+    user_id bigint not null,
     model_name char(20) not null default 'scotben',
     model_version char(12) not null default '0.17',
-    run_id char(32) not null, -- actually, a uuid
+    run_id integer not null,
     thread_no int default 1,
     phase text not null,
     completed integer default 0,
     todo integer,
-    primary key( username, run_id, model_name, model_version, thread_no ),
-    foreign key( username, run_id, model_name, model_version) references runs );
+    timer timestamp,
+    primary key( user_id, run_id, model_name, model_version, thread_no ),
+    foreign key( user_id, run_id, model_name, model_version) references runs );
 
 create table param_page_description(
     model_name char(20) not null default 'scotben',
@@ -78,14 +82,14 @@ insert into param_page_description values
 ('scotben', '0.17', 'SimpleParams', 'Basic Set of SB Parameters' );
 
 create table run_params(
-    username char(30) not null default 'default',
+    user_id bigint not null,
     model_name char(20) not null default 'scotben',
     model_version char(12) not null default '0.17',
-    run_id char(32) not null,
+    run_id integer not null,
     name char(30) not null,
     data text,
-    primary key( username, run_id, model_name, model_version, name ),
-    foreign key( username, run_id, model_name, model_version ) references runs on delete cascade on update cascade,
+    primary key( user_id, run_id, model_name, model_version, name ),
+    foreign key( user_id, run_id, model_name, model_version ) references runs on delete cascade on update cascade,
     foreign key( model_name, model_version, name) references param_page_description );
 
 create table result_description(
@@ -136,7 +140,10 @@ insert into result_description( model_name, model_version, datatype, item, info 
 ('scotben', '0.17', 'metrs', 'json', 'Desciption Goes Here'),
 ('scotben', '0.17', 'metrs_df', 'json', 'Desciption Goes Here'),
 ('scotben', '0.17', 'child_poverty', 'json', 'Desciption Goes Here'),
-('scotben', '0.17', 'gain_lose', 'json', 'Desciption Goes Here'),
+('scotben', '0.17', 'ten_gl', 'json', 'Desciption Goes Here'),
+('scotben', '0.17', 'dec_gl', 'json', 'Desciption Goes Here'),
+('scotben', '0.17', 'reg_gl', 'json', 'Desciption Goes Here'),
+('scotben', '0.17', 'children_gl', 'json', 'Desciption Goes Here'),
 ('scotben', '0.17', 'poverty_lines', 'json', 'Desciption Goes Here'),
 ('scotben', '0.17', 'short_income_summary', 'json', 'Desciption Goes Here'),
 ('scotben', '0.17', 'very_short_income_summary', 'json', 'Desciption Goes Here'),
@@ -148,14 +155,13 @@ insert into result_description( model_name, model_version, datatype, item, info 
 
 
 create table run_results(
-    username char(30) not null default 'default',
+    user_id bigint not null,
     model_name char(20) not null default 'scotben',
     model_version char(12) not null default '0.17',
-    run_id char(32) not null,
+    run_id integer not null,
     item char(30) not null,
     datatype char(30) not null default 'json',
     data text,
-    primary key( username, run_id, model_name, model_version, item, datatype ),
-    foreign key( username, run_id, model_name, model_version ) references runs on delete cascade on update cascade,
+    primary key( user_id, run_id, model_name, model_version, item, datatype ),
+    foreign key( user_id, run_id, model_name, model_version ) references runs on delete cascade on update cascade,
     foreign key( model_name, model_version, item, datatype ) references result_description );
-

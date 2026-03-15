@@ -43,8 +43,6 @@ using .STBParameters
 using .Utils
 
 using MicroVisualisations
-
-include( "hash.jl") # fixed (???) has function
 include( "examples.jl")
 include( "scotben-api-constants.jl")
 
