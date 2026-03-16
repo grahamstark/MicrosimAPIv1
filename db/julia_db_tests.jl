@@ -103,6 +103,17 @@ function get_user2( user_id :: Integer )
     return User( rs.user_id, rs.email, rs.description, rs.password, rs.is_temp, rs.created, rs.expiry  )
 end
 
+struct Model
+   name :: String
+   description :: String
+   version :: VersionNumber
+end
+
+function create_run( user::User, model :: Model )::Integer
+
+
+end
+
 function create_temp_user_faster()::Union{Nothing,User}
     user_id = rand(50_000:typemax(Int))
     user_data = [user_id, "email-$user_id.thing.some", hash("user_id$user_id"), "user number $user_id",true]
