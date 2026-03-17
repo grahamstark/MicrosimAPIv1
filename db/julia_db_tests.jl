@@ -98,9 +98,49 @@ user_retrieve = makeps(
     """
 )
 
+update_user_expiry = makeps(
+    """
+    update user set expiry = now() + interval '1 day' where user_id = \$1
+    """ )
+
+
+
 function get_user2( user_id :: Integer )
+end
+
+
+function create_temp_user_faster()::Union{Nothing,User}
+    u = get_user2( user_id)
+    return u
+end
+
+mutable struct Run
+    run_id :: Int
+    run_name :: String
+    submission :: Timestamp
+    qstatus :: Char
+    is_displayed Bool
+    is_edited Bool
+    params :: Map{String,String}
+end
+
+function get_user( user_id ::  user_id ::Union{Int,Nothing} )::User
+    if isnothing(user_id)
+        user_id = rand(50_000:typemax(Int))
+        user_data = [user_id, "no-email", hash("user_id$user_id"), "user number $user_id",true]
+        execute( user_create, user_data )
+    else
+        execute( update_user_expiry, [user_id])
+    end
     rs = DataFrame( execute( user_retrieve, [user_id]))[1,:]
     return User( rs.user_id, rs.email, rs.description, rs.password, rs.is_temp, rs.created, rs.expiry  )
+end
+
+function get_run( user_id::Int, run_id::Union{Int,Nothing}, model_name :: String, version :: VersionNumber )
+    if isnothing( run_id )
+        # create_run
+    end
+
 end
 
 struct Model
@@ -109,24 +149,17 @@ struct Model
    version :: VersionNumber
 end
 
-function create_run( user::User, model :: Model )::Integer
+function handle_middle( user_id ::Union{Int,Nothing}, run_id :: Union{Int,Nothing}, model_name::String,  version :: VersionNumber )::Integer
+    user = get_user( user_id )
+    run = get_run( user.user_id, run_id, model_name, version )
+    run = if isnothing(run_id)
+
+    else
 
 
-end
-
-function create_temp_user_faster()::Union{Nothing,User}
-    user_id = rand(50_000:typemax(Int))
-    user_data = [user_id, "email-$user_id.thing.some", hash("user_id$user_id"), "user number $user_id",true]
-    try
-        execute( user_create, user_data )
-    catch e
-        @show "create_temp_user errored with " e
-        close(conn)
-        return nothing
     end
-    u = get_user2( user_id)
-    return u
 end
+
 
 function create_temp_user()::Union{Nothing,User}
     user_id = rand(50_000:typemax(Int))
@@ -143,7 +176,7 @@ function create_temp_user()::Union{Nothing,User}
     return u
 end
 
-run_insert = makeps(
+run_upsert = makeps(
     """
        insert into runs( user_id, model_name, model_version, run_id, run_name, submission, qstatus, is_displayed, is_edited ) values
            ( \$1, \$2 ,\$3 ,\$4, \$5, now(), \$6, \$7, \$8 )
@@ -152,17 +185,22 @@ run_insert = makeps(
            set qstatus=\$9, is_displayed=\$10, is_edited=\$11
        """)
 
-run_state_insert = makeps(
+run_state_upsert = makeps(
     """
     insert into run_state( user_id, model_name, model_version, run_id, thread_no, phase, completed, todo, timer )
     values(\$1, \$2,\$3, \$4, \$5, \$6, \$7, \$8, now() ) on conflict( user_id, model_name, model_version, run_id, thread_no ) do
         update set phase=\$9, completed=\$10, todo=\$11, timer=now();
     """)
 
+function create_session()
+    user =
+
+end
+
 run_params = [2,"scotben","0.17",1, "some uuid","E",false,true,"X",false,true]
-execute( run_insert, run_params )
+execute( run_upsert, run_params )
 run_state_params = [2,"scotben","0.17",1, 2,"running",999,10_000,"running",2000,10_000]
-execute( run_state_insert, run_state_params )
+execute( run_state_upsert, run_state_params )
 
 
 insert into runs( user_id, model_name, model_version, run_id, run_name, submission, qstatus, is_displayed, is_edited )
