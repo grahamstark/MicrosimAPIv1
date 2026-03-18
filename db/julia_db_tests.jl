@@ -1,4 +1,4 @@
-using LibPQ, DataFrames,ConcurrentUtilities.Pools,Dates,Random
+using LibPQ, DataFrames,ConcurrentUtilities.Pools,Dates,Random,Tables
 
 function makeconn()::LibPQ.Connection
     return LibPQ.Connection("dbname=microapi user=postgres host=/var/run/postgresql")
@@ -80,6 +80,25 @@ struct User
     expiry  :: DateTime
 end
 
+struct RunState
+    thread_no Int
+    phase String
+    completed Int
+    todo Int
+    timer DateTime
+end
+
+mutable struct Run
+    run_id :: Int
+    run_name :: String
+    submission :: Timestamp
+    qstatus :: Char
+    is_displayed Bool
+    is_edited Bool
+    state :: Vector{RunState}
+    params :: Map{String,String}
+end
+
 function get_user( conn, user_id :: Integer )
     rs = DataFrame( execute( conn, "select user_id, email, password, description, created, expiry, is_temp from users where user_id='$user_id'"))[1,:]
     return User( rs.user_id, rs.email, rs.description, rs.password, rs.is_temp, rs.created, rs.expiry  )
@@ -88,7 +107,9 @@ end
 
 user_create = makeps(
     """
-    insert into users( user_id, email, password, description, created, expiry, is_temp ) values( \$1, \$2, \$3, \$4, now(), now()+ interval '1 day', \$5 )
+    insert into users( user_id, email, password, description, created, expiry, is_temp ) values
+        ( \$1, \$2, \$3, \$4, now(), now()+ interval '1 day', \$5 )
+    returning user_id, email, password, description, created, expiry, is_temp
     """
     )
 
@@ -100,9 +121,13 @@ user_retrieve = makeps(
 
 update_user_expiry = makeps(
     """
-    update user set expiry = now() + interval '1 day' where user_id = \$1
+    update users set expiry = greatest( expiry, now() + interval '1 day') where user_id = \$1 returning *
     """ )
 
+user_exists= makeps(
+    """
+    select count(*) as nusers from users where user_id = \$1*
+    """ )
 
 
 function get_user2( user_id :: Integer )
@@ -114,31 +139,36 @@ function create_temp_user_faster()::Union{Nothing,User}
     return u
 end
 
-mutable struct Run
-    run_id :: Int
-    run_name :: String
-    submission :: Timestamp
-    qstatus :: Char
-    is_displayed Bool
-    is_edited Bool
-    params :: Map{String,String}
-end
 
-function get_user( user_id ::  user_id ::Union{Int,Nothing} )::User
-    if isnothing(user_id)
+function get_user( user_id ::Union{Int,Nothing} )::User
+
+    function create_user()
         user_id = rand(50_000:typemax(Int))
         user_data = [user_id, "no-email", hash("user_id$user_id"), "user number $user_id",true]
-        execute( user_create, user_data )
-    else
-        execute( update_user_expiry, [user_id])
+        rs_to_user(execute( user_create, user_data ))
     end
-    rs = DataFrame( execute( user_retrieve, [user_id]))[1,:]
-    return User( rs.user_id, rs.email, rs.description, rs.password, rs.is_temp, rs.created, rs.expiry  )
+
+    function rs_to_user( r )
+        rs = rowtabler)[1,:]
+        User( rs.user_id, rs.email, rs.description, rs.password, rs.is_temp, rs.created, rs.expiry )
+    end
+
+    function user_doesnt_exist()
+        rs = execute( user_exists, [user_id])
+        return columntable(rs).nusers[1] != 1
+    end
+
+    return if isnothing(user_id) || user_doesnt_exist()
+        create_user()
+    else
+        rs_to_user(execute( update_user_expiry, [user_id]))
+    end
 end
 
 function get_run( user_id::Int, run_id::Union{Int,Nothing}, model_name :: String, version :: VersionNumber )
     if isnothing( run_id )
         # create_run
+
     end
 
 end
@@ -183,13 +213,16 @@ run_upsert = makeps(
        on conflict( user_id, model_name, model_version, run_id )
        do update
            set qstatus=\$9, is_displayed=\$10, is_edited=\$11
+        returning user_id, model_name, model_version, run_id, run_name, submission, qstatus, is_displayed, is_edited
        """)
 
 run_state_upsert = makeps(
     """
     insert into run_state( user_id, model_name, model_version, run_id, thread_no, phase, completed, todo, timer )
     values(\$1, \$2,\$3, \$4, \$5, \$6, \$7, \$8, now() ) on conflict( user_id, model_name, model_version, run_id, thread_no ) do
-        update set phase=\$9, completed=\$10, todo=\$11, timer=now();
+        update set phase=\$9, completed=\$10, todo=\$11, timer=now()
+    returning
+        user_id, model_name, model_version, run_id, thread_no, phase, completed, todo, timer
     """)
 
 function create_session()
