@@ -52,6 +52,7 @@ create table runs(
     qstatus char(1) not null default 'E', -- E, Q,X,C
     is_displayed boolean default false,
     is_edited boolean default false,
+    working_dir text,
     primary key( user_id, run_id, model_name, model_version ),
     foreign key( user_id ) references users on delete cascade,
     foreign key( qstatus ) references q_statuses,
