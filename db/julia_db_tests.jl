@@ -1,10 +1,36 @@
 using LibPQ, DataFrames,ConcurrentUtilities.Pools,Dates,Random,Tables
+using ScottishTaxBenefitModel
+using .STBParameters
 
 function makeconn()::LibPQ.Connection
     return LibPQ.Connection("dbname=microapi user=postgres host=/var/run/postgresql")
 end
 
 const CON_POOL = Pool{LibPQ.Connection}(10)
+
+function makeps( query :: AbstractString ) :: LibPQ.Statement
+    conn = acquire( makeconn, CON_POOL )
+    ps = prepare( conn, query )
+    release(CON_POOL,conn)
+    return ps
+end
+
+
+struct SimpleParams{T}
+    taxrates :: Vector{T}
+    taxbands :: Vector{T}
+    nirates :: Vector{T}
+    nibands :: Vector{T}
+    taxallowance :: T
+    child_benefit :: T
+    pension :: T
+    scottish_child_payment :: T
+    scp_age :: Int
+    uc_single :: T
+    uc_taper :: T
+end
+
+const
 
 struct User
     user_id :: Int
@@ -35,20 +61,14 @@ mutable struct Run
     run_name :: String
     submission :: DateTime
     qstatus :: Char
-    is_displayed :: Bool
-    is_edited :: Bool
+    output_in_sync :: Bool
     working_dir :: String
     state :: Vector{RunState}
     params :: Dict{String,String}
+    output :: Dict{String,String}
 end
 
-function get_user( conn, user_id :: Integer )
-    rs = DataFrame( execute( conn, "select user_id, email, password, description, created, expiry, is_temp from users where user_id='$user_id'"))[1,:]
-    return User( rs.user_id, rs.email, rs.description, rs.password, rs.is_temp, rs.created, rs.expiry  )
-end
-
-
-user_create = makeps(
+const user_create = makeps(
     """
     insert into users( user_id, email, password, description, created, expiry, is_temp ) values
         ( \$1, \$2, \$3, \$4, now(), now()+ interval '1 day', \$5 )
@@ -56,53 +76,53 @@ user_create = makeps(
     """
     )
 
-update_user_expiry = makeps(
+const update_user_expiry = makeps(
     """
     update users set expiry = greatest( expiry, now() + interval '1 day') where user_id = \$1 returning *
     """ )
 
-user_exists= makeps(
+const user_exists= makeps(
     """
     select count(*) as nusers from users where user_id = \$1
     """ )
 
-run_exists= makeps(
+const run_exists= makeps(
     """
     select count(*) as nruns from runs where user_id = \$1 and run_id = \$2
     """ )
 
-run_upsert = makeps(
+const run_upsert = makeps(
     """
-       insert into runs( user_id, model_name, model_version, run_id, run_name, submission, qstatus, is_displayed, is_edited ) values
-           ( \$1, \$2 ,\$3 ,\$4, \$5, now(), \$6, \$7, \$8 )
+       insert into runs( user_id, model_name, model_version, run_id, run_name, submission, qstatus, output_in_sync ) values
+           ( \$1, \$2 ,\$3 ,\$4, \$5, now(), \$6, \$7 )
        on conflict( user_id, model_name, model_version, run_id )
        do update
-           set qstatus=\$9, is_displayed=\$10, is_edited=\$11
+           set qstatus=\$8, output_in_sync=\$9
         returning *
     """)
 
-next_free_run_id = make_ps(
+const next_free_run_id = makeps(
     """
-        select max( run_id ) + 1 as next_free_run_id  runs where user_id=\$1 and model_name=\$2, and model_version=\$3
+        select max( run_id ) + 1 as next_free_run_id from runs where user_id=\$1 and model_name=\$2 and model_version=\$3
     """ )
 
-switch_run_state = make_ps(
+const switch_run_state = makeps(
     """
-        update runs set qstatus = \$1 where qstatus = \$2 and user_id=\$3 and model_name=\$4, and model_version=\$5
+        update runs set qstatus = \$1 where qstatus = \$2 and user_id=\$3 and model_name=\$4 and model_version=\$5
     """)
 
-change_run_state = make_ps(
+const change_run_state = makeps(
     """
-        update runs set qstatus = \$1 where user_id=\$2 and model_name=\$3, and model_version=\$4 and run_id=\$5
+        update runs set qstatus = \$1 where user_id=\$2 and model_name=\$3 and model_version=\$4 and run_id=\$5
     """)
 
-add_parameters = make_ps(
+const add_parameters = makeps(
     """
     insert into run_params values(
-            \$1, \$2, \$3, \$4, \$5, select name, data from run_params where user_id=2 and model_name=\$2 and model_version=\$3 )
+            \$1, \$2, \$3, \$4, \$5, (select data from run_params where user_id=2 and model_name=\$2 and model_version=\$3 ))
     """)
 
-run_state_upsert = makeps(
+const run_state_upsert = makeps(
     """
     insert into run_state( user_id, model_name, model_version, run_id, thread_no, phase, completed, todo, timer )
     values(\$1, \$2,\$3, \$4, \$5, \$6, \$7, \$8, now() ) on conflict( user_id, model_name, model_version, run_id, thread_no ) do
@@ -138,11 +158,11 @@ function get_user( user_id ::Union{Int,Nothing} )::User
     end
 end
 
-function get_edited_run( user_id::Int, run_id::Union{Int,Nothing}, model_name :: String, version :: VersionNumber )::Run
+function get_run( user_id::Int, run_id::Union{Int,Nothing}, model_name :: String, version :: VersionNumber )::Run
 
         function rs_to_run( r )
             rs = rowtable(r)[1]
-            return Run( rs.run_id, rs.submission, rs.qstatus, rs.is_displayed, rs.is_edited, rs.working_dir, rs.state, State[], Dict{String,String}())
+            return Run( rs.run_id, rs.submission, rs.qstatus, rs.output_in_sync, rs.working_dir, rs.state, State[], Dict{String,String}())
         end
 
         function run_doesnt_exist()
@@ -164,10 +184,9 @@ function get_edited_run( user_id::Int, run_id::Union{Int,Nothing}, model_name ::
 
         function create_run()
             run_id = get_next_free_run_id()
-
             d = joinpath( tmpdir(), "$(user_id)", "$(model_name)", "$(version)", "$(run_id)")
             path = mkpath(d)
-            run_params = [user_id, model_name, version, run_id, "", "E", false, true, "E", false, true]
+            run_params = [user_id, model_name, version, run_id, "", "E", false, true, "E", true]
             rs = execute( run_upsert, run_params )
             rs_to_run( rs )
         end
@@ -182,7 +201,7 @@ end
 
 function handle_middle( user_id ::Union{Int,Nothing}, run_id :: Union{Int,Nothing}, model_name::String,  version :: VersionNumber )::Integer
     user = get_user( user_id )
-    run = get_edited_run( user.user_id, run_id, model_name, version )
+    run = get_run( user_id, run_id, model_name, version )
 
 end
 
@@ -329,6 +348,12 @@ result = execute( vins, ["lanman", Decimal(0.1), "Howards Model"])
     execute( vins, ["scotben",v,"version $v"])
     close(conn3)
 
+end
+
+
+function get_user( conn, user_id :: Integer )
+    rs = DataFrame( execute( conn, "select user_id, email, password, description, created, expiry, is_temp from users where user_id='$user_id'"))[1,:]
+    return User( rs.user_id, rs.email, rs.description, rs.password, rs.is_temp, rs.created, rs.expiry  )
 end
 
 
