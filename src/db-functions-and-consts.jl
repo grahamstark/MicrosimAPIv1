@@ -1,6 +1,4 @@
 using LibPQ, DataFrames,ConcurrentUtilities.Pools,Dates,Random,Tables
-using ScottishTaxBenefitModel
-using .STBParameters
 
 function makeconn()::LibPQ.Connection
     return LibPQ.Connection("dbname=microapi user=postgres host=/var/run/postgresql")
