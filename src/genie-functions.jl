@@ -90,3 +90,45 @@ function validate( sp :: SimpleParams )::Dict
     return errs
 end
 
+
+function get_user_and_run_id()::Tuple
+    conn =
+    user_id =  payload(:user_id,"Missing")
+    if user_id  == "Missing"
+
+    end
+    run_id =  payload(:run_id,"Missing")
+    if run_id  == "Missing"
+
+
+    end
+    return user_id, run_id
+end
+
+function get_session_id()
+    id = payload(:session_id,"Missing")
+    @info "get_session_id; initial id " id
+    if id == "Missing"
+        jp = jsonpayload()
+        if !isnothing(jp)
+            id = get(jp,"session_id","Missing")
+        end
+        @info "trying id from jsonpayload id=" id
+    end
+    prs = get(SESSIONS, id, nothing )
+    @info "getting session for id " id
+    if(id == "Missing") || isnothing( prs )
+        id = randstring(40)
+        @info "creating new session " id
+        SESSIONS[id] = ParamsAndSettings()
+    end
+    SESSIONS[id].last_accessed = now()
+    return id;
+end
+
+function destroy_session()
+    id = payload(:session_id,"Missing")
+    delete!(SESSIONS,id)
+    return json((;id=id,result=0))
+end
+

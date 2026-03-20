@@ -9,9 +9,6 @@ using Genie.Requests
 import Genie.Renderer.Json: json
 using Jedis
 
-# DB Stuff
-using LibPQ, ConcurrentUtilities.Pools, Random
-
 using DataFrames
 using DataStructures
 using Dates
@@ -52,11 +49,6 @@ include( "examples.jl")
 include( "scotben-api-constants.jl")
 
 
-function makeconn()::LibPQ.Connection
-    return LibPQ.Connection("dbname=microapi user=postgres host=/var/run/postgresql")
-end
-
-
 const BIG_A = 9999999999
 
 struct SimpleParams{T}
@@ -72,50 +64,6 @@ struct SimpleParams{T}
     uc_single :: T
     uc_taper :: T
 end
-
-struct User
-    username :: String
-    email    :: String
-    password :: String
-    is_temp  :: Bool
-    created :: DateTime
-end
-
-function submit_run()
-
-end
-
-function finalise_run()
-
-
-end
-
-struct Run
-
-
-end
-
-function get_user( conn, username :: String )
-    rs = DataFrame( execute( conn, "select username, email, password, created, is_temp from users where username='$username'"))[1,:]
-    return User( rs.username, rs.email, rs.password, rs.is_temp, rs.created )
-end
-
-function save_parameters( user :: User, params :: SimpleParams )
-
-
-end
-
-function create_temp_user()::User
-    conn = makeconn()
-    username = randstring(30)
-    execute( conn, "insert into users( username, email, password, created, is_temp ) values( '$username', '', '', now(), true )" )
-    rs = DataFrame( execute( conn, "select username, email, password, created, is_temp from users where username='$username'"))[1,:]
-    u = get_user( conn, username )
-    close(conn)
-    return u
-end
-
-
 
 struct ParamsAndId{T}
     params :: SimpleParams{T}
@@ -342,19 +290,7 @@ const CACHED_RESULTS = Dict{UInt, AllOutput}()
 
 JOB_QUEUE = Channel{ParamsAndSettings}(QSIZE)
 
-function get_user_and_run_id()::Tuple
-    conn =
-    user_id =  payload(:user_id,"Missing")
-    if user_id  == "Missing"
 
-    end
-    run_id =  payload(:run_id,"Missing")
-    if run_id  == "Missing"
-
-
-    end
-    return user_id, run_id
-end
 
 function get_session_id()
     id = payload(:session_id,"Missing")
