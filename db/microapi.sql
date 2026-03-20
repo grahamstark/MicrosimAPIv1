@@ -80,7 +80,8 @@ create table param_page_description(
     foreign key( model_name, model_version) references model_versions );
 
 insert into param_page_description values
-('scotben', '0.17.0', 'SimpleParams', 'Basic Set of SB Parameters' );
+('scotben', '0.17.0', 'SimpleParams', 'Basic Set of SB Parameters' ),
+('scotben', '0.17.0', 'RunSettings',  'Default Run Settings' );
 
 create table run_params(
     user_id bigint not null,
@@ -103,18 +104,18 @@ create table result_description(
     foreign key( model_name, model_version) references model_versions );
 
 insert into result_description( model_name, model_version, datatype, item, info ) values
-('scotben', '0.17.0', 'summmary_graphs', 'svg', 'draw_summary_graphs( settings, results, summary ),'),
-('scotben', '0.17.0', 'summary_graphs_v2 ', 'svg', 'draw_summary_graphs_v2( settings, results, summary ),'),
-('scotben', '0.17.0', 'taxable_graph', 'svg', 'draw_taxable_graph( settings, results, summary, sys ),'),
-('scotben', '0.17.0', 'hbai', 'svg', 'draw_hbai_graphs( settings, results, summary ),'),
-('scotben', '0.17.0', 'lorenz_curve', 'svg', 'draw_lorenz_curve( '),
-('scotben', '0.17.0', 'lorenz_curve_thumb','svg', 'draw_lorenz_cu'),
-('scotben', '0.17.0', 'deciles','svg', 'draw_deciles_barplot( summary; '),
-('scotben', '0.17.0', 'deciles_thumb', 'svg', 'draw_deciles_barplot( '),
-('scotben', '0.17.0', 'metrs_hist', 'svg', 'draw_metrs_hist( '),
-('scotben', '0.17.0', 'metrs', 'svg', 'draw_metrs( settings, results ),'),
-('scotben', '0.17.0', 'metrs2', 'svg', 'draw_metrs2( settings, results ),'),
-('scotben', '0.17.0', 'metrs_hist_thumb', 'svg', 'draw_metrs_hist( '),
+('scotben', '0.17.0', 'summmary_graphs', 'svg', 'A set of four summary graphs'),
+('scotben', '0.17.0', 'summary_graphs_v2 ', 'svg', 'A set of four summary graphs'),
+('scotben', '0.17.0', 'taxable_graph', 'svg', 'Chart of taxable income, in bands, with marginal tax rates.'),
+('scotben', '0.17.0', 'hbai', 'svg', 'Reproduction of the standard HBAI diagram, with income in bands and deciles.'),
+('scotben', '0.17.0', 'lorenz_curve', 'svg', 'A standard Lorenz Curve'),
+('scotben', '0.17.0', 'lorenz_curve_thumb','svg', 'Thumbnail verison of a standard Lorenz Curve'),
+('scotben', '0.17.0', 'deciles','svg', 'Average Gains by income decile.'),
+('scotben', '0.17.0', 'deciles_thumb', 'svg', 'Average Gains by income decile, Thumbnail version.'),
+('scotben', '0.17.0', 'metrs_hist', 'svg', 'Histogram of Marginal Effective Tax Rates (METRs)'),
+('scotben', '0.17.0', 'metrs', 'svg', 'Bar Chart of Marginal Effective Tax Rates (METRs)'),
+('scotben', '0.17.0', 'metrs2', 'svg', 'Bar Chart of Marginal Effective Tax Rates (METRs)'),
+('scotben', '0.17.0', 'metrs_hist_thumb', 'svg', 'Bar Chart of Marginal Effective Tax Rates (METRs), thumbnail'),
 ('scotben', '0.17.0', 'overall_cost_table', 'html', 'format_overall_cost('),
 ('scotben', '0.17.0', 'costs_table', 'html', 'format_costs_table('),
 ('scotben', '0.17.0', 'hhtype_gl', 'html', 'format_gainlose("By Household Size",summary.gain_lose[2].hhtype_gl ),'),

@@ -6,6 +6,9 @@ function makeconn()::LibPQ.Connection
     return LibPQ.Connection("dbname=microapi user=postgres host=/var/run/postgresql")
 end
 
+const DEFAULT_USER = 2
+const DEFAULT_RUN = 1
+
 const CON_POOL = Pool{LibPQ.Connection}(10)
 
 function makeps( query :: AbstractString ) :: LibPQ.Statement
@@ -14,7 +17,6 @@ function makeps( query :: AbstractString ) :: LibPQ.Statement
     release(CON_POOL,conn)
     return ps
 end
-
 
 struct SimpleParams{T}
     taxrates :: Vector{T}
@@ -29,8 +31,6 @@ struct SimpleParams{T}
     uc_single :: T
     uc_taper :: T
 end
-
-const
 
 struct User
     user_id :: Int
