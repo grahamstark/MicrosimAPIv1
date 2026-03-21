@@ -57,6 +57,8 @@ create table runs(
     foreign key( user_id ) references users on delete cascade,
     foreign key( qstatus ) references q_statuses,
     foreign key( model_name, model_version) references model_versions );
+-- a dummy test run
+insert into runs values( 2, 'scotben', '0.17.0', 1234567890, 'default test run', now(), 'E', true , 'dummy dir');
 
 create table run_state(
     user_id bigint not null,
@@ -166,4 +168,15 @@ create table run_results(
     data text,
     primary key( user_id, run_id, model_name, model_version, item, datatype ),
     foreign key( user_id, run_id, model_name, model_version ) references runs on delete cascade on update cascade,
+    foreign key( model_name, model_version, item, datatype ) references result_description );
+
+
+create table run_results_cache(
+    model_name char(20) not null default 'scotben',
+    model_version char(12) not null default '0.17.0',
+    param_hash bigint not null,
+    datatype char(30) not null default 'json',
+    item char(30) not null,
+    data text,
+    primary key( model_name, model_version, param_hash, item, datatype ),
     foreign key( model_name, model_version, item, datatype ) references result_description );

@@ -77,16 +77,16 @@ mutable struct Run
     working_dir :: String
     state :: Vector{RunState}
     params :: Dict{String,String}
-    output :: Dict{OutputKey,OutputItem}
+    output :: Dict{OutputKey,String}
 end
 
 const output_upsert = makeps(
     """
-    insert into run_results( user_id, model_name, model_version, run_id, item, datatype, data ) values
-           ( \$1, \$2 ,\$3 ,\$4, \$5, \$6, \$7 )
-       on conflict( user_id, model_name, model_version, run_id, item, datatype )
+    insert into run_results_cache( model_name, model_version, param_hash, datatype, item, data ) values
+           ( \$1, \$2 ,\$3 ,\$4, \$5, \$6 )
+       on conflict( model_name, model_version, param_hash, datatype, item )
        do update
-           set data = \$7
+           set data = \$6
         returning *
     """)
 
@@ -198,6 +198,54 @@ const retrieve_output = makeps(
         result_description.datatype = run_results.datatype;
     """)
 
+const retrieve_cached_output_item = makeps(
+    """
+    select data from run_results_cache where
+        model_name=\$1 and
+        model_version=\$2 and
+        param_hash=\$3 and
+        datatype=\$4 and
+        item=\$5
+    """)
+
+const retrieve_cached_output = makeps(
+    """
+    select run_results.item,
+        run_results.datatype,
+        result_description.info,
+        run_results.data from run_results_cache, result_description where
+        model_name=\$1 and
+        model_version=\$2 and
+        param_hash=\$3 and
+        run_results.datatype = results_description.datatype and
+        run_results.item = results_description.item
+
+    """)
+
+
+const hash_params = makeps(
+    """
+    select hashtextextended(string_agg(data,'' ORDER BY name),999) as param_hash from
+        run_params, result_description where
+            user_id=\$1 and
+            model_name=\$2 and
+            model_version=\$3
+            and run_id=\$4
+    """ )
+
+const run_is_cached = makeps(
+    """
+    select count(*) > 0 from run_results_cache where
+    model_name=\$1 and
+    model_version=\$2 and
+    param_hash=\$3
+    """ )
+
+function make_param_hash( user_id :: Int, model_name::String, model_version::VersionNumber, run_id::Int)::BigInt
+    rc = rowtable( execute( hash_params, [user_id, model_name, string(model_version), run_id]))[1]
+    return rc.param_hash
+end
+
 function get_user( user_id ::Union{Int,Nothing} )::User
 
     function rs_to_user( r )
@@ -239,12 +287,15 @@ function load_params_and_output!( run :: Run )
     end
 end
 
+# !!! microapi=# select hashtextextended(string_agg(data,'' ORDER BY name),999) from run_params where user_id=2 and run_id=1234567890;
+
+
 function initialise_params_and_output!( run::Run)
 
 
 end
 
-function get_run(; user_id::Int, model_name :: String, version :: VersionNumber, run_id::Union{Int,Nothing}, copy_from = Union{Run,nothing} )::Run
+function get_run(; user_id::Int, model_name :: String, version :: VersionNumber, run_id::Union{Int,Nothing} )::Run #, copy_from_id::Union{Int,Nothing} )::Run
 
     function rs_to_run( r )
         rs = rowtable(r)[1]
@@ -286,7 +337,8 @@ function get_run(; user_id::Int, model_name :: String, version :: VersionNumber,
         path = mkpath(d)
         run_params = [user_id, model_name, version, run_id, "", "E", false, path]
         rs = execute( run_upsert, run_params )
-        rs_to_run( rs )
+        run = rs_to_run( rs )
+        #=
         copy = if isnothing(copy_from)
             r = execute( retrieve_run, [DEFAULT_USER, model_name, version, DEFAULT_RUN])
             rs_to_run( r )
@@ -299,6 +351,8 @@ function get_run(; user_id::Int, model_name :: String, version :: VersionNumber,
         for (pk,pv) in copy.params
 
         end
+        =#
+        return run
     end
 
     run = if run_doesnt_exist()
