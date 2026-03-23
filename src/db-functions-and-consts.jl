@@ -77,7 +77,7 @@ mutable struct Run
     working_dir :: String
     state :: Vector{RunState}
     params :: Dict{String,String}
-    output :: Dict{OutputKey,String}
+    output :: Dict{OutputKey,OutputItem}
 end
 
 const output_upsert = makeps(
@@ -137,16 +137,12 @@ const change_run_state = makeps(
         update runs set qstatus = \$1 where user_id=\$2 and model_name=\$3 and model_version=\$4 and run_id=\$5
     """)
 
-const copy_parameters = makeps(
-    """
-    insert into run_params select \$1, \$2, \$3, \$4, name, data from run_params where
-        user_id=\$5 and model_name=\$2 and model_version=\$3 and run_id=\$6
-    """)
-
+#=
 const copy_output = makeps(
     """
     insert into run_results select \$1, \$2, \$3, \$4, item, datatype, data from run_results where user_id=\$5 and model_name=\$2 and model_version=\$3 and run_id=\$6
     """)
+=#
 
 const params_upsert = makeps(
     """
@@ -156,23 +152,13 @@ const params_upsert = makeps(
        do update
            set data=\$6
         returning *
-    """
-    )
+    """ )
+
 const retrieve_params = makeps(
     """
     select name, data from run_params where user_id=\$1 and model_name=\$2 and model_version=\$3 and run_id=\$4
     """)
-#=
-const output_upsert = makeps(
-    """
-       insert into run_results( user_id, model_name, model_version, run_id, datatype, item, data ) values
-           ( \$1, \$2 ,\$3 ,\$4, \$5, \$6, \$7 )
-       on conflict( user_id, model_name, model_version, run_id, item, datatype )
-       do update
-           set data=\$7
-        returning *
-    """)
-=#
+
 const run_state_upsert = makeps(
     """
     insert into run_state( user_id, model_name, model_version, run_id, thread_no, phase, completed, todo, timer )
@@ -184,20 +170,7 @@ const run_state_upsert = makeps(
 const retrieve_run = makeps(
     """
     select * from runs where user_id = \$1 and model_name=\$2 and model_version=\$3 and run_id=\$4
-    """)
-#=
-const retrieve_output = makeps(
-    """
-    select run_results.datatype, run_results.item, result_description.info, data from run_results, result_description where
-        run_results.user_id=\$1 and
-        run_results.model_name=\$2 and
-        run_results.model_version=\$3 and
-        run_results.run_id=\$4 and
-        result_description.model_name = run_results.model_name and
-        result_description.model_version = run_results.model_version and
-        result_description.datatype = run_results.datatype;
-    """)
-=#
+    """)`
 
 const retrieve_cached_output_item = makeps(
     """
@@ -211,23 +184,23 @@ const retrieve_cached_output_item = makeps(
 
 const retrieve_cached_output = makeps(
     """
-    select run_results.item,
-        run_results.datatype,
+    select run_results_cache.item,
+        run_results_cache.datatype,
         result_description.info,
-        run_results.data from run_results_cache, result_description where
-        model_name=\$1 and
-        model_version=\$2 and
-        param_hash=\$3 and
-        run_results.datatype = results_description.datatype and
-        run_results.item = results_description.item
-
+        run_results_cache.data from
+        run_results_cache, result_description where
+        run_results_cache.model_name=\$1 and
+        run_results_cache.model_version=\$2 and
+        run_results_cache.param_hash=\$3 and
+        run_results_cache.datatype = result_description.datatype and
+        run_results_cache.item = result_description.item
     """)
 
 
 const hash_params = makeps(
     """
     select hashtextextended(string_agg(data,'' ORDER BY name),999) as param_hash from
-        run_params, result_description where
+        run_params where
             user_id=\$1 and
             model_name=\$2 and
             model_version=\$3
@@ -236,7 +209,7 @@ const hash_params = makeps(
 
 const run_is_cached = makeps(
     """
-    select count(*) > 0 from run_results_cache where
+    select count(*) >= 1 as is_cached from run_results_cache where
     model_name=\$1 and
     model_version=\$2 and
     param_hash=\$3
@@ -275,28 +248,39 @@ function get_user( user_id ::Union{Int,Nothing} )::User
     end
 end
 
-function load_params_and_output!( run :: Run )
-    p = rowtable(execute( retrieve_output, [run.user_id, run.model_name, run.model_version, run.run_id]))
-    for r in p
-        k = OutputKey( r.item, r.datatype )
-        v = OutputItem( r.info, r.data )
-        run.output[k] = v
-    end
-    p = rowtable(execute( retrieve_params, [run.user_id, run.model_name, run.model_version, run.run_id]))
+function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
+    user_id = coalesce( copy_user_id, run.user_id )
+    run_id = coalesce( copy_run_id, run.run_id )
+    p = rowtable(execute( retrieve_params, [user_id, run.model_name, run.model_version, run_id]))
     for r in p
         run.params[r.name] = r.data
     end
 end
 
-# !!! microapi=# select hashtextextended(string_agg(data,'' ORDER BY name),999) from run_params where user_id=2 and run_id=1234567890;
+function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
+    user_id = coalesce( copy_user_id, run.user_id )
+    run_id = coalesce( copy_run_id, run.run_id )
+    param_hash = rowtable(execute( hash_params, [run.user_id, run.model_name, run.model_version, run.run_id]))[1].param_hash
+    is_cached = rowtable(execute( run_is_cached, [run.model_name, run.model_version, param_hash]))[1].is_cached
+    if is_cached
+        p = rowtable(execute( retrieve_cached_output, [run.model_name, run.model_version, param_hash]))
+        for r in p
+            k = OutputKey( r.item, r.datatype )
+            v = OutputItem( r.info, r.data )
+            run.output[k] = v
+        end
+        # is displayed out
+    else
 
-
-function initialise_params_and_output!( run::Run)
-
-
+    end
 end
 
-function get_run(; user_id::Int, model_name :: String, version :: VersionNumber, run_id::Union{Int,Nothing} )::Run #, copy_from_id::Union{Int,Nothing} )::Run
+function get_run(;
+                 user_id::Int,
+                 model_name :: String,
+                 version :: VersionNumber,
+                 run_id::Union{Int,Nothing},
+                 copy_from::Union{Int,Nothing}=nothing)::Run #, copy_from_id::Union{Int,Nothing} )::Run
 
     function rs_to_run( r )
         rs = rowtable(r)[1]
@@ -339,20 +323,14 @@ function get_run(; user_id::Int, model_name :: String, version :: VersionNumber,
         run_params = [user_id, model_name, version, run_id, "", "E", false, path]
         rs = execute( run_upsert, run_params )
         run = rs_to_run( rs )
-        #=
-        copy = if isnothing(copy_from)
+        copyrun = if isnothing( copy_from )
             r = execute( retrieve_run, [DEFAULT_USER, model_name, version, DEFAULT_RUN])
             rs_to_run( r )
         else
-            copy_from
+            @show  [user_id, model_name, version, copy_from ]
+            r = execute( retrieve_run, [user_id, model_name, version, copy_from ])
+            rs_to_run( r )
         end
-        for (ok,ov) in copy.output
-            execute( output_upsert, [ ])
-        end
-        for (pk,pv) in copy.params
-
-        end
-        =#
         return run
     end
 
@@ -362,7 +340,8 @@ function get_run(; user_id::Int, model_name :: String, version :: VersionNumber,
     else
         retrieve_live_run()
     end
-    load_params_and_output!( run )
+    load_params!( run )
+    load_output!( run )
     return run
 end
 
