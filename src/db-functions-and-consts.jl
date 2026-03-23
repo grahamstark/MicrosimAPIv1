@@ -162,7 +162,7 @@ const retrieve_params = makeps(
     """
     select name, data from run_params where user_id=\$1 and model_name=\$2 and model_version=\$3 and run_id=\$4
     """)
-
+#=
 const output_upsert = makeps(
     """
        insert into run_results( user_id, model_name, model_version, run_id, datatype, item, data ) values
@@ -172,7 +172,7 @@ const output_upsert = makeps(
            set data=\$7
         returning *
     """)
-
+=#
 const run_state_upsert = makeps(
     """
     insert into run_state( user_id, model_name, model_version, run_id, thread_no, phase, completed, todo, timer )
@@ -185,7 +185,7 @@ const retrieve_run = makeps(
     """
     select * from runs where user_id = \$1 and model_name=\$2 and model_version=\$3 and run_id=\$4
     """)
-
+#=
 const retrieve_output = makeps(
     """
     select run_results.datatype, run_results.item, result_description.info, data from run_results, result_description where
@@ -197,6 +197,7 @@ const retrieve_output = makeps(
         result_description.model_version = run_results.model_version and
         result_description.datatype = run_results.datatype;
     """)
+=#
 
 const retrieve_cached_output_item = makeps(
     """

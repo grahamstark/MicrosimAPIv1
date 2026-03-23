@@ -54,15 +54,15 @@ function load_junk_into_parameters_and_output(user_id=DEFAULT_USER, run_id=TEST_
                       run_id=run_id )
             # rowtable( execute( run_upsert, [DEFAULT_USER, m.model_name, m.model_version, TEST_RUN, "default", 'E', true, "some dir"] ))[1]
         @assert run.run_id == run_id "run.run_id = $(run.run_id) run_id=$run_id"
-        for s in rss
-            data = randstring(1009)
-            execute( output_upsert, [user_id, m.model_name, m.model_version, run.run_id, s.datatype, s.item, data ])
-        end
         for st in pss
             data = randstring(1009)
             execute( params_upsert, [user_id, m.model_name, m.model_version, run.run_id, st.name, data ])
         end
-
+        for s in rss
+            data = randstring(1009)
+            param_hash = rowtable(execute( hash_params, [user_id, m.model_name, m.model_version, run_id ]))[1].param_hash
+            outputrec = execute( output_upsert, [m.model_name, m.model_version, param_hash, s.datatype, s.item, data ])
+        end
     end
 end
 

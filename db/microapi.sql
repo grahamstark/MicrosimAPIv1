@@ -157,19 +157,19 @@ insert into result_description( model_name, model_version, datatype, item, info 
 ('scotben', '0.17.0', 'povtrans_matrix', 'json', 'Desciption Goes Here'),
 ('scotben', '0.17.0', 'povtrans_matrix_df', 'json', 'Desciption Goes Here');
 
-
-create table run_results(
-    user_id bigint not null,
-    model_name char(20) not null default 'scotben',
-    model_version char(12) not null default '0.17.0',
-    run_id integer not null,
-    item char(30) not null,
-    datatype char(30) not null default 'json',
-    data text,
-    primary key( user_id, run_id, model_name, model_version, item, datatype ),
-    foreign key( user_id, run_id, model_name, model_version ) references runs on delete cascade on update cascade,
-    foreign key( model_name, model_version, item, datatype ) references result_description );
-
+--
+-- create table run_results(
+--     user_id bigint not null,
+--     model_name char(20) not null default 'scotben',
+--     model_version char(12) not null default '0.17.0',
+--     run_id integer not null,
+--     item char(30) not null,
+--     datatype char(30) not null default 'json',
+--     data text,
+--     primary key( user_id, run_id, model_name, model_version, item, datatype ),
+--     foreign key( user_id, run_id, model_name, model_version ) references runs on delete cascade on update cascade,
+--     foreign key( model_name, model_version, item, datatype ) references result_description );
+--
 
 create table run_results_cache(
     model_name char(20) not null default 'scotben',
