@@ -170,7 +170,7 @@ const run_state_upsert = makeps(
 const retrieve_run = makeps(
     """
     select * from runs where user_id = \$1 and model_name=\$2 and model_version=\$3 and run_id=\$4
-    """)`
+    """)
 
 const retrieve_cached_output_item = makeps(
     """
@@ -249,10 +249,22 @@ function get_user( user_id ::Union{Int,Nothing} )::User
 end
 
 function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
-    user_id = coalesce( copy_user_id, run.user_id )
-    run_id = coalesce( copy_run_id, run.run_id )
+    user_id = if isnothing(copy_user_id)
+        run.user_id
+    else
+        copy_user_id
+    end
+    run_id = if isnothing(copy_run_id)
+        run.run_id
+    else
+        copy_run_id
+    end
+    @show user_id run_id
     p = rowtable(execute( retrieve_params, [user_id, run.model_name, run.model_version, run_id]))
     for r in p
+        if (! isnothing(copy_run_id)) # we are copying in parameters from user_id
+            execute( params_upsert, [run.user_id, run.model_name, run.model_version, run.run_id, r.name, r.data ])
+        end
         run.params[r.name] = r.data
     end
 end
@@ -317,10 +329,10 @@ function get_run(;
     end
 
     function create_run()
-        run_id = get_next_free_run_id()
+        new_run_id = get_next_free_run_id()
         d = joinpath( tempdir(), "$(user_id)", "$(model_name)", "$(version)", "$(run_id)")
         path = mkpath(d)
-        run_params = [user_id, model_name, version, run_id, "", "E", false, path]
+        run_params = [user_id, model_name, version, new_run_id, "", "E", false, path]
         rs = execute( run_upsert, run_params )
         run = rs_to_run( rs )
         copyrun = if isnothing( copy_from )
