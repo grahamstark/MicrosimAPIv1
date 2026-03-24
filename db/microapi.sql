@@ -92,6 +92,7 @@ create table run_params(
     run_id integer not null,
     name char(30) not null,
     data text,
+    errors text,
     primary key( user_id, run_id, model_name, model_version, name ),
     foreign key( user_id, run_id, model_name, model_version ) references runs on delete cascade on update cascade,
     foreign key( model_name, model_version, name) references param_page_description );

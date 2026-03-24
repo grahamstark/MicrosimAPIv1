@@ -73,9 +73,7 @@ function validate_ratebands!( errs::Dict, name::String, rates::Vector, bands::Ve
     end
 end
 
-
-
-function validate( sp :: SimpleParams )::Dict
+function validate_simple( sp :: SimpleParams )::Dict
     errs = Dict()
     validate_ratebands!( errs, "tax", sp.taxrates, sp.taxbands )
     validate_ratebands!( errs, "ni", sp.nirates, sp.nibands )
@@ -89,7 +87,6 @@ function validate( sp :: SimpleParams )::Dict
     validate_value!(errs, "uc_taper", sp.uc_taper; min=0, max=100)
     return errs
 end
-
 
 function get_user_and_run_id()::Tuple
     conn =
