@@ -1,4 +1,3 @@
-using LibPQ, DataFrames,ConcurrentUtilities.Pools,Dates,Random,Tables
 
 function makeconn()::LibPQ.Connection
     return LibPQ.Connection("dbname=microapi user=postgres host=/var/run/postgresql")
@@ -163,9 +162,20 @@ const run_state_upsert = makeps(
     """
     insert into run_state( user_id, model_name, model_version, run_id, thread_no, phase, completed, todo, timer )
     values(\$1, \$2,\$3, \$4, \$5, \$6, \$7, \$8, now() ) on conflict( user_id, model_name, model_version, run_id, thread_no ) do
-        update set phase=\$9, completed=\$10, todo=\$11, timer=now()
+        update set phase=\$6, completed=\$7, todo=\$8, timer=now()
     returning *
     """)
+
+const clear_run_states = makeps(
+    """
+    delete from run state where
+        user_id=\$1 and
+        model_name=\$2 and
+        model_version=\$3 and
+        run_id=\$4 and
+        thread_no >= \$5
+    """
+    )
 
 const retrieve_run = makeps(
     """
@@ -215,9 +225,55 @@ const run_is_cached = makeps(
     param_hash=\$3
     """ )
 
+const retrieve_model = makeps(
+    """
+    select models.model_name, models.description, model_versions.model_version from models, model_versions where
+        models.model_name=\$1 and model_versions.model_version=\$2 and model_versions.model_name=models.model_name
+    """ )
+
 function make_param_hash( user_id :: Int, model_name::String, model_version::VersionNumber, run_id::Int)::BigInt
     rc = rowtable( execute( hash_params, [user_id, model_name, string(model_version), run_id]))[1]
     return rc.param_hash
+end
+
+function get_model( model_name :: String, version :: VersionNumber )::Model
+    r = rowtable( execute( retrieve_model, [model_name, version]))[1]
+    return Model( r.model_name, r.description, VersionNumber(r.model_version ))
+end
+
+function update_progress(
+    user_id::Integer,
+    model_name::String,
+    version::VersionNumber,
+    run_id::Integer,
+    prog::Progress )
+    #= thread_no, phase, completed, todo,
+    phase  :: String
+        thread :: Int
+        count  :: Int
+        step   :: Int
+        size   :: Int
+    =#
+    execute( run_state_upsert, [user_id, model_name, version, run_id, prog.phase, prog.thread, prog.count, prog.size])
+end
+
+function clear_run_states( run :: Run, delete_threads_above :: Int )
+    execute( clear_run_states, [run.user_id, run.model_name, run.model_version, run.run_id, delete_threads_above ])
+end
+
+function cache_output( run :: Run, param_hash :: BigInt, allout :: AllOutput )
+    model = get_model( run.model_name, run.model_version )
+    update_progress( run.user_id, run.model_name, run.version, run.run_id, allout.endprog )
+    for k in keys( allout.summary )
+        data = JSON3.write( allout.summary[k])
+        execute( output_upsert, [ run.model_name, run.model_version, param_hash, "json", k, data ] )
+    end
+    for k in keys( allout.html )
+        execute( output_upsert, [ run.model_name, run.model_version, param_hash, "html", k, allout.html[k] ] )
+    end
+    for k in keys( allout.images )
+        execute( output_upsert, [ run.model_name, run.model_version, param_hash, "svg", k, allout.images[k] ] )
+    end
 end
 
 function get_user( user_id ::Union{Int,Nothing} )::User
@@ -285,6 +341,15 @@ function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
     else
 
     end
+end
+
+function create_and_save_default_scotben_run( version :: VersionNumber )
+    model =
+    user = get_user( DEFAULT_USER )
+    models = rowtable( execute( conn, "select * from model_versions"))
+    rss = rowtable( execute( conn, "select * from result_description"))
+    pss = rowtable( execute( conn, "select * from param_page_description"))
+
 end
 
 function get_run(;

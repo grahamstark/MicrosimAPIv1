@@ -1,7 +1,22 @@
 using ScottishTaxBenefitModel
+using .BCCalcs
+using .Definitions
+using .ExampleHelpers
+using .FRSHouseholdGetter
+using .GeneralTaxComponents
+using .LocalLevelCalculations
+using .ModelHousehold
+using .Monitor
+using .Runner
+using .RunSettings
+using .SimplePovertyCounts: GroupPoverty
+using .SingleHouseholdCalculations
+using .STBIncomes
+using .STBOutput
 using .STBParameters
+using .Utils
 
-
+using UUIDs
 
 const BIG_A = 9999999999
 
@@ -19,6 +34,53 @@ struct SimpleParams{T}
     uc_taper :: T
 end
 
+struct BIParams{T}
+    taxrates :: Vector{T}
+    taxbands :: Vector{T}
+    nirates :: Vector{T}
+    nibands :: Vector{T}
+    taxallowance :: T
+
+    abolish_uc :: Bool
+    abolish_sick :: Bool
+    abolish_pensions :: Bool
+    abolish_pencred :: Bool
+    abolish_hb :: Bool
+    abolish_ctb :: Bool
+    ubi_as_mt_income :: Bool
+    ubi_taxable :: Bool
+
+    bi_adult :: T
+    bi_child :: T
+    bi_pensioner :: T
+    bi_adult_age :: T
+    bi_pens_age :: Int
+    mt_bens_treatment :: String
+end
+
+#=
+      if d["ubi_mtbens_abolish"]
+         ub_abolish
+      elseif d["ubi_mtbens_keep_as_is"]
+         ub_as_is
+      elseif d["ubi_mtbens_keep_housing"]
+         ub_keep_housing
+      else
+         @assert false "no assignment for ubi.mt_bens_treatment"
+      end
+   br = d["it_basic_rate"] /=100.0
+   if br == 0
+      sys.it.non_savings_rates[1:3] .= 0.0
+   else
+      bincr = br-sys.it.non_savings_rates[2]
+      sys.it.non_savings_rates[1:3] .+= bincr
+      sys.it.non_savings_rates[1] = max(0, sys.it.non_savings_rates[1])
+   end
+   sys.it.non_savings_rates[4] = d["it_higher_rate"] / 100.0
+   sys.it.non_savings_rates[5] = d["it_top_rate"] / 100.0
+   make_ubi_pre_adjustments!( sys )
+
+=#
 
 function loaddefs() :: TaxBenefitSystem
     return get_default_system_for_fin_year(
@@ -148,30 +210,44 @@ const DEFAULT_SIMPLE_PARAMS :: SimpleParams = map_full_to_simple( DEFAULT_PARAMS
 const BASE_UUID = UUID("985c312f-129b-4acd-9e40-cb629d184183")
 const DEF_PROGRESS = Progress( BASE_UUID, "na", 0, 0, 0, 0 )
 
-
-function do_run( prs :: ParamsAndSettings; do_dumps = false, show_progress=true )::Integer
-    settings = prs.settings
-    @info "do_run entered"
-    if show_progress
-        update_progress( prs.hid, Progress( settings.uuid, "starting", 0, 0, 0, 0 ))
+function do_default_run()::NamedTuple
+    obs = Observable( Progress(settings.uuid, "",0,0,0,0))
+    tot = 0
+    of = on(obs) do p
+        tot += p.step
+        println( tot )
     end
-    sys1 = deepcopy( DEFAULT_PARAMS )
-    sys2 = deepcopy( DEFAULT_PARAMS)
-    map_simple_to_full!( sys2, prs.params[2] )
-    weeklyise!( sys1 )
-    weeklyise!( sys2 )
+    return do_one_run( Settings(), [DEFAULT_WEEKLY_PARAMS], obs )
+end
+
+const BASE_RESULTS = do_default_run()
+
+function do_run(
+    user_id :: Integer,
+    model_name :: String,
+    run_id :: Integer,
+    version :: VersionNumber,
+    simple :: SimpleParams;
+    update_progess::Function )::AllOutput
+    @info "do_run entered"
+    settings = Settings()
+    update_progress( user_id, model_name, version, run_id, Progress( settings.uuid, "starting", 0, 0, 0, 0 )
+    sys = deepcopy( DEFAULT_PARAMS)
+    map_simple_to_full!( sys, simple )
+    weeklyise!( sys )
     obs = Observable( Progress(settings.uuid, "",0,0,0,0))
     tot = 0
     of = on(obs) do p
         tot += p.step
         @info "monitor tot=$tot p = $(p)"
-        if show_progress
-            update_progress( prs.hid, p )
-        else
-            println( tot )
-        end
+        update_progress( user_id, model_name, version, run_id,  p )
     end
-    results = do_one_run( settings, [sys1,sys2], obs )
+    results = do_one_run( settings, [sys], obs )
+    insert( results.hh, 1, BASE_RESULTS.hh )
+    insert( results.bu, 1, BASE_RESULTS.bu )
+    insert( results.indiv, 1, BASE_RESULTS.indiv )
+    insert( results.income, 1, BASE_RESULTS.income )
+    insert( results.behavioural_results, 1, BASE_RESULTS.behavioural_results )
     summaries = summarise_frames!( results, settings )
     # short_summary = make_short_summary( summaries )
     exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys2, settings )
@@ -180,9 +256,8 @@ function do_run( prs :: ParamsAndSettings; do_dumps = false, show_progress=true 
     if do_dumps
         dump_summaries( settings, summaries )
     end
-    endprog = Progress( settings.uuid, "completed", -99, -99, -99, -99 )
-    aout = AllOutput( summaries, images, html, exres, endprog )
-    cache_output( prs.hid, aout )
-    return prs.hid
+    update_progress( user_id, model_name, version, run_id,
+        Progress( settings.uuid, "completed", -99, -99, -99, -99 ) )
+    return AllOutput( summaries, images, html, exres, endprog )
 end
 
