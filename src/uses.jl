@@ -13,6 +13,7 @@ using Random
 using StructTypes
 using SwaggerMarkdown
 using SwagUI
+using Tables
 using UUIDs
 
 using ScottishTaxBenefitModel

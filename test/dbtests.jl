@@ -37,6 +37,25 @@ using .Utils
 
 using MicroVisualisations
 
+function load_scotben_default()
+    user = get_user( DEFAULT_USER )
+    rs = rowtable(execute( run_upsert, [DEFAULT_USER,"scotben",v"0.17.0",DEFAULT_RUN,"default scotben", "E",true,"nodir"] ))[1]
+    @show rs
+    run = Run(
+        rs.user_id,
+        rs.model_name,
+        VersionNumber( rs.model_version ),
+        rs.run_id,
+        rs.run_name,
+        rs.submission,
+        rs.qstatus[1],
+        rs.output_in_sync,
+        rs.working_dir,
+        RunState[],
+        Dict{String,String}(),
+        Dict{String,String}(),
+        Dict{String,String}())
+end
 
 function load_junk_into_parameters_and_output(user_id=DEFAULT_USER, run_id=TEST_RUN)
     conn = acquire( makeconn, CON_POOL )

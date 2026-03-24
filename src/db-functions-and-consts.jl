@@ -76,6 +76,7 @@ mutable struct Run
     working_dir :: String
     state :: Vector{RunState}
     params :: Dict{String,String}
+    errors :: Dict{String,String}
     output :: Dict{OutputKey,OutputItem}
 end
 
@@ -145,8 +146,8 @@ const copy_output = makeps(
 
 const params_upsert = makeps(
     """
-       insert into run_params( user_id, model_name, model_version, run_id, name, data ) values
-           ( \$1, \$2 ,\$3 ,\$4, \$5, \$6 )
+       insert into run_params( user_id, model_name, model_version, run_id, name, data, errors ) values
+           ( \$1, \$2 ,\$3 ,\$4, \$5, \$6, \$7 )
        on conflict( user_id, model_name, model_version, run_id, name )
        do update
            set data=\$6
@@ -155,7 +156,7 @@ const params_upsert = makeps(
 
 const retrieve_params = makeps(
     """
-    select name, data from run_params where user_id=\$1 and model_name=\$2 and model_version=\$3 and run_id=\$4
+    select name, data, errors from run_params where user_id=\$1 and model_name=\$2 and model_version=\$3 and run_id=\$4
     """)
 
 const run_state_upsert = makeps(
@@ -319,9 +320,10 @@ function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
     p = rowtable(execute( retrieve_params, [user_id, run.model_name, run.model_version, run_id]))
     for r in p
         if (! isnothing(copy_run_id)) # we are copying in parameters from user_id
-            execute( params_upsert, [run.user_id, run.model_name, run.model_version, run.run_id, r.name, r.data ])
+            execute( params_upsert, [run.user_id, run.model_name, run.model_version, run.run_id, r.name, r.data, r.errors ])
         end
         run.params[r.name] = r.data
+        run.errors[r.name] = r.errors
     end
 end
 
