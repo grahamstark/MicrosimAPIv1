@@ -58,36 +58,21 @@ struct BIParams{T}
     mt_bens_treatment :: String
 end
 
-#=
-      if d["ubi_mtbens_abolish"]
-         ub_abolish
-      elseif d["ubi_mtbens_keep_as_is"]
-         ub_as_is
-      elseif d["ubi_mtbens_keep_housing"]
-         ub_keep_housing
-      else
-         @assert false "no assignment for ubi.mt_bens_treatment"
-      end
-   br = d["it_basic_rate"] /=100.0
-   if br == 0
-      sys.it.non_savings_rates[1:3] .= 0.0
-   else
-      bincr = br-sys.it.non_savings_rates[2]
-      sys.it.non_savings_rates[1:3] .+= bincr
-      sys.it.non_savings_rates[1] = max(0, sys.it.non_savings_rates[1])
-   end
-   sys.it.non_savings_rates[4] = d["it_higher_rate"] / 100.0
-   sys.it.non_savings_rates[5] = d["it_top_rate"] / 100.0
-   make_ubi_pre_adjustments!( sys )
-
-=#
-
 function loaddefs() :: TaxBenefitSystem
     return get_default_system_for_fin_year(
         2026;
         scotland = true,
         autoweekly = false )
 end
+
+mutable struct AllOutput
+    summary  :: NamedTuple
+    images   :: NamedTuple
+    html     :: NamedTuple
+    examples :: Vector
+    # progress :: Progress
+end
+
 
 function weeklyparams() :: TaxBenefitSystem
     pars = deepcopy( DEFAULT_PARAMS )
@@ -211,13 +196,14 @@ const BASE_UUID = UUID("985c312f-129b-4acd-9e40-cb629d184183")
 const DEF_PROGRESS = Progress( BASE_UUID, "na", 0, 0, 0, 0 )
 
 function do_default_run()::NamedTuple
+    settings = Settings()
     obs = Observable( Progress(settings.uuid, "",0,0,0,0))
     tot = 0
     of = on(obs) do p
         tot += p.step
         println( tot )
     end
-    return do_one_run( Settings(), [DEFAULT_WEEKLY_PARAMS], obs )
+    return do_one_run( settings, [DEFAULT_WEEKLY_PARAMS], obs )
 end
 
 const BASE_RESULTS = do_default_run()
@@ -228,10 +214,11 @@ function do_run(
     run_id :: Integer,
     version :: VersionNumber,
     simple :: SimpleParams;
-    update_progess::Function )::AllOutput
+    update_progress::Function,
+    do_dumps :: Bool )::AllOutput
     @info "do_run entered"
     settings = Settings()
-    update_progress( user_id, model_name, version, run_id, Progress( settings.uuid, "starting", 0, 0, 0, 0 )
+    update_progress( user_id, model_name, version, run_id, Progress( settings.uuid, "starting", 0, 0, 0, 0 ))
     sys = deepcopy( DEFAULT_PARAMS)
     map_simple_to_full!( sys, simple )
     weeklyise!( sys )
@@ -239,25 +226,25 @@ function do_run(
     tot = 0
     of = on(obs) do p
         tot += p.step
-        @info "monitor tot=$tot p = $(p)"
+        # @info "monitor tot=$tot p = $(p)"
         update_progress( user_id, model_name, version, run_id,  p )
     end
     results = do_one_run( settings, [sys], obs )
-    insert( results.hh, 1, BASE_RESULTS.hh )
-    insert( results.bu, 1, BASE_RESULTS.bu )
-    insert( results.indiv, 1, BASE_RESULTS.indiv )
-    insert( results.income, 1, BASE_RESULTS.income )
-    insert( results.behavioural_results, 1, BASE_RESULTS.behavioural_results )
+    insert!( results.hh, 1, BASE_RESULTS.hh[1] )
+    insert!( results.bu, 1, BASE_RESULTS.bu[1] )
+    insert!( results.indiv, 1, BASE_RESULTS.indiv[1] )
+    insert!( results.income, 1, BASE_RESULTS.income[1] )
+    insert!( results.behavioural_results, 1, BASE_RESULTS.behavioural_results[1] )
     summaries = summarise_frames!( results, settings )
     # short_summary = make_short_summary( summaries )
-    exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys2, settings )
-    images = construct_images( settings, results, summaries, [sys1,sys2] )
+    exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys, settings )
+    images = construct_images( settings, results, summaries, [DEFAULT_WEEKLY_PARAMS,sys] )
     html = construct_html( settings, results, summaries )
     if do_dumps
         dump_summaries( settings, summaries )
     end
     update_progress( user_id, model_name, version, run_id,
         Progress( settings.uuid, "completed", -99, -99, -99, -99 ) )
-    return AllOutput( summaries, images, html, exres, endprog )
+    return AllOutput( summaries, images, html, exres )
 end
 

@@ -263,7 +263,7 @@ end
 
 function cache_output( run :: Run, param_hash :: BigInt, allout :: AllOutput )
     model = get_model( run.model_name, run.model_version )
-    update_progress( run.user_id, run.model_name, run.version, run.run_id, allout.endprog )
+    # update_progress( run.user_id, run.model_name, run.version, run.run_id, allout.endprog )
     for k in keys( allout.summary )
         data = JSON3.write( allout.summary[k])
         execute( output_upsert, [ run.model_name, run.model_version, param_hash, "json", k, data ] )
