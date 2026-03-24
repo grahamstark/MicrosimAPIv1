@@ -168,7 +168,7 @@ const run_state_upsert = makeps(
 
 const clear_run_states = makeps(
     """
-    delete from run state where
+    delete from run_state where
         user_id=\$1 and
         model_name=\$2 and
         model_version=\$3 and
@@ -257,7 +257,7 @@ function update_progress(
     execute( run_state_upsert, [user_id, model_name, version, run_id, prog.phase, prog.thread, prog.count, prog.size])
 end
 
-function clear_run_states( run :: Run, delete_threads_above :: Int )
+function clearup_run_states( run :: Run, delete_threads_above :: Int )
     execute( clear_run_states, [run.user_id, run.model_name, run.model_version, run.run_id, delete_threads_above ])
 end
 
