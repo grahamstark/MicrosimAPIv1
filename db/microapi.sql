@@ -47,7 +47,7 @@ create table runs(
     model_name char(20) not null default 'scotben',
     model_version char(12) not null default '0.17.0',
     run_id integer not null,
-    run_name char(32), -- actually, a uuid
+    run_name text, -- actually, a uuid
     submission timestamp,
     qstatus char(1) not null default 'E', -- E, Q,X,C
     output_in_sync boolean default true,

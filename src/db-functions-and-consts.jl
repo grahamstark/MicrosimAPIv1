@@ -134,7 +134,7 @@ const switch_run_state = makeps(
 
 const change_run_state = makeps(
     """
-        update runs set qstatus = \$1 where user_id=\$2 and model_name=\$3 and model_version=\$4 and run_id=\$5
+        update runs set qstatus = \$5, output_in_sync=\$6 where user_id=\$1 and model_name=\$2 and model_version=\$3 and run_id=\$4
     """)
 
 #=
@@ -355,14 +355,35 @@ function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
     end
 end
 
-function create_and_save_default_scotben_run( version :: VersionNumber )
-    model =
-    user = get_user( DEFAULT_USER )
-    models = rowtable( execute( conn, "select * from model_versions"))
-    rss = rowtable( execute( conn, "select * from result_description"))
-    pss = rowtable( execute( conn, "select * from param_page_description"))
 
+function initialise_scotben_default()
+    user = get_user( DEFAULT_USER )
+    model = get_model( "scotben", v"0.17.0" )
+    rs = rowtable(execute( run_upsert, [DEFAULT_USER, model.name, model.version, DEFAULT_RUN, "default $(model.name) run, version $(model.version).", "E",true,"nodir"] ))[1]
+    @show rs
+    run = Run(
+        rs.user_id,
+        rs.model_name,
+        VersionNumber( rs.model_version ),
+        rs.run_id,
+        rs.run_name,
+        rs.submission,
+        rs.qstatus[1],
+        rs.output_in_sync,
+        rs.working_dir,
+        RunState[],
+        Dict{String,String}(),
+        Dict{String,String}(),
+        Dict{String,String}())
+    no_errs = Dict{String,String}()
+    save_params( run, "SimpleParams", JSON3.write( DEFAULT_SIMPLE_PARAMS),JSON3.write( no_errs ))
+    allout = do_run( run.user_id, run.model_name, run.model_version, run.run_id, DEFAULT_SIMPLE_PARAMS;
+                    update_progress=update_progress,
+                    do_dumps=true  )
+    h = make_param_hash( run.user_id, run.model_name, run.model_version, run.run_id )
+    cache_output( run, h, allout )
 end
+
 
 function get_run(;
                  user_id::Int,
@@ -383,6 +404,7 @@ function get_run(;
                     rs.output_in_sync,
                     rs.working_dir,
                     RunState[],
+                    Dict{String,String}(),
                     Dict{String,String}(),
                     Dict{String,String}())
     end
@@ -407,7 +429,7 @@ function get_run(;
 
     function create_run()
         new_run_id = get_next_free_run_id()
-        d = joinpath( tempdir(), "$(user_id)", "$(model_name)", "$(version)", "$(run_id)")
+        d = joinpath( tempdir(), "$(user_id)", "$(model_name)", "$(version)", "$(new_run_id)")
         path = mkpath(d)
         run_params = [user_id, model_name, version, new_run_id, "", "E", false, path]
         rs = execute( run_upsert, run_params )
@@ -420,6 +442,14 @@ function get_run(;
             r = execute( retrieve_run, [user_id, model_name, version, copy_from ])
             rs_to_run( r )
         end
+        load_params!( run;  copy_user_id=copyrun.user_id, copy_run_id=copyrun.run_id )
+        load_output!( run;  copy_user_id=copyrun.user_id, copy_run_id=copyrun.run_id )
+        run.output_in_sync = true
+        execute( change_run_state, [run.user_id, run.model_name, run.model_version, run.run_id, 'E', true ])
+        # demote the copied run if not the default
+        if(copyrun.user_id == run.user_id) && (copyrun.qstatus in ['E'])
+            exec( change_run_state, [copyrun.user_id, copyrun.model_name, copyrun.model_version, copyrun.run_id,'C', copyrun.output_in_sync])
+        end
         return run
     end
 
@@ -428,9 +458,9 @@ function get_run(;
         create_run()
     else
         retrieve_live_run()
+        load_params!( run )
+        load_output!( run )
     end
-    load_params!( run )
-    load_output!( run )
     return run
 end
 
