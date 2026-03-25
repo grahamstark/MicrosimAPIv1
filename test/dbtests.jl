@@ -37,7 +37,7 @@ using .Utils
 
 using MicroVisualisations
 
-function load_scotben_default()
+function initialise_scotben_default()
     user = get_user( DEFAULT_USER )
     rs = rowtable(execute( run_upsert, [DEFAULT_USER,"scotben",v"0.17.0",DEFAULT_RUN,"default scotben", "E",true,"nodir"] ))[1]
     @show rs
@@ -55,6 +55,13 @@ function load_scotben_default()
         Dict{String,String}(),
         Dict{String,String}(),
         Dict{String,String}())
+    no_errs = Dict{String,String}()
+    save_params( run, "SimpleParams", JSON3.write( DEFAULT_SIMPLE_PARAMS),JSON3.write( no_errs ))
+    allout = do_run( run.user_id, run.model_name, run.model_version, run.run_id, DEFAULT_SIMPLE_PARAMS;
+                    update_progress=update_progress,
+                    do_dumps=true  )
+    h = make_param_hash( run.user_id, run.model_name, run.model_version, run.run_id )
+    cache_output( run, h, allout )
 end
 
 function load_junk_into_parameters_and_output(user_id=DEFAULT_USER, run_id=TEST_RUN)

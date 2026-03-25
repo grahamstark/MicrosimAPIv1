@@ -58,6 +58,12 @@ struct BIParams{T}
     mt_bens_treatment :: String
 end
 
+StructTypes.StructType(::Type{SimpleParams}) = StructTypes.Struct()
+StructTypes.StructType(::Type{BIParams}) = StructTypes.Struct()
+StructTypes.StructType(::Type{Progress}) = StructTypes.Struct()
+StructTypes.StructType(::Type{Settings}) = StructTypes.Struct()
+
+
 function loaddefs() :: TaxBenefitSystem
     return get_default_system_for_fin_year(
         2026;
@@ -211,8 +217,8 @@ const BASE_RESULTS = do_default_run()
 function do_run(
     user_id :: Integer,
     model_name :: String,
-    run_id :: Integer,
     version :: VersionNumber,
+    run_id :: Integer,
     simple :: SimpleParams;
     update_progress::Function,
     do_dumps :: Bool )::AllOutput

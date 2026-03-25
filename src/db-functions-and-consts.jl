@@ -255,7 +255,7 @@ function update_progress(
         step   :: Int
         size   :: Int
     =#
-    execute( run_state_upsert, [user_id, model_name, version, run_id, prog.phase, prog.thread, prog.count, prog.size])
+    execute( run_state_upsert, [user_id, model_name, version, run_id, prog.thread, prog.phase, prog.count, prog.size])
 end
 
 function clearup_run_states( run :: Run, delete_threads_above :: Int )
@@ -264,16 +264,22 @@ end
 
 function cache_output( run :: Run, param_hash :: BigInt, allout :: AllOutput )
     model = get_model( run.model_name, run.model_version )
-    # update_progress( run.user_id, run.model_name, run.version, run.run_id, allout.endprog )
     for k in keys( allout.summary )
-        data = JSON3.write( allout.summary[k])
-        execute( output_upsert, [ run.model_name, run.model_version, param_hash, "json", k, data ] )
+        if k == :gain_lose # gain-lose data is a sub-enum type - just the main tables here
+            for gk in [:children_gl, :dec_gl, :hhtype_gl, :ten_gl]
+                data = JSON3.write( allout.summary.gain_lose[2][gk]; allow_inf=true)
+                execute( output_upsert, [ run.model_name, run.model_version, param_hash, "json", gk, data ] )
+            end
+        elseif k != :legalaid # skip Legalaid entirely
+            data = JSON3.write( allout.summary[k]; allow_inf=true)
+            execute( output_upsert, [ run.model_name, run.model_version, param_hash, "json", k, data ] )
+        end
     end
     for k in keys( allout.html )
-        execute( output_upsert, [ run.model_name, run.model_version, param_hash, "html", k, allout.html[k] ] )
+        execute( output_upsert, [ run.model_name, run.model_version, param_hash,  "html", k, allout.html[k] ] )
     end
     for k in keys( allout.images )
-        execute( output_upsert, [ run.model_name, run.model_version, param_hash, "svg", k, allout.images[k] ] )
+        execute( output_upsert, [ run.model_name, run.model_version, param_hash, "img", k, fig_to_svg_string(allout.images[k]) ] )
     end
 end
 
@@ -303,6 +309,10 @@ function get_user( user_id ::Union{Int,Nothing} )::User
     else
         rs_to_user(execute( update_user_expiry, [user_id]))
     end
+end
+
+function save_params( run :: Run, name::String, params :: String, errors :: String )
+    execute( params_upsert, [run.user_id, run.model_name, run.model_version, run.run_id, name, params, errors ])
 end
 
 function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
