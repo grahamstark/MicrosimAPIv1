@@ -221,6 +221,14 @@ function output_phunpak()
         body=output_zipfile )
 end
 
+function middleware()
+    user = payload(:user,nothing)
+    model = payload(:model)
+    edition = payload(:edition)
+    return handle_middle( user, nothing, model, edition)
+end
+
+
 """
 
 """

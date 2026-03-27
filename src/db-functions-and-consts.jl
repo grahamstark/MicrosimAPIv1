@@ -43,7 +43,7 @@ end
 struct Model
    name :: String
    description :: String
-   version :: VersionNumber
+   edition :: String
 end
 
 struct RunState
@@ -67,10 +67,11 @@ end
 mutable struct Run
     user_id :: Int
     model_name :: String
-    model_version :: VersionNumber
+    model_edition :: String
     run_id :: Int
     run_name :: String
-    submission :: DateTime
+    created :: DateTime
+    last_changed :: DateTime
     qstatus :: Char
     output_in_sync :: Bool
     working_dir :: String
@@ -80,11 +81,47 @@ mutable struct Run
     output :: Dict{OutputKey,OutputItem}
 end
 
+const user_queue_counts = makeps(
+    """
+    select qstatus,count(*)  as qcount from runs where user_id=\$1 group by qstatus
+    """)
+
+const total_queue_counts = makeps(
+    """
+    select qstatus,count(*) as qcount from runs group by qstatus
+    """)
+
+
+function  get_all_q_statuses()
+    conn = acquire( makeconn, CON_POOL )
+    r = columntable( execute( conn, "select qstatus from q_statuses"))
+    release(CON_POOL,conn)
+    return map( x -> x[1], r.qstatus ) # this casts to Chars
+end
+
+const Q_STATUSES = get_all_q_statuses()
+
+function get_queue_counts( user_id :: Union{Int,Nothing} = nothing )::Dict{Char,Integer}
+    runs = if isnothing( user_id )
+        rowtable(execute( total_queue_counts ))
+    else
+        rowtable(execute( user_queue_counts, [user_id] ))
+    end
+    d = Dict{Char,Integer}()
+    for k in Q_STATUSES
+        d[k] = 0 # the [1] forces the key to be Char
+    end
+    for r in runs
+        d[r.qstatus[1]] = r.qcount
+    end
+    return d;
+end
+
 const output_upsert = makeps(
     """
-    insert into run_results_cache( model_name, model_version, param_hash, datatype, item, data ) values
+    insert into run_results_cache( model_name, model_edition, param_hash, datatype, item, data ) values
            ( \$1, \$2 ,\$3 ,\$4, \$5, \$6 )
-       on conflict( model_name, model_version, param_hash, datatype, item )
+       on conflict( model_name, model_edition, param_hash, datatype, item )
        do update
            set data = \$6
         returning *
@@ -107,48 +144,58 @@ const user_exists= makeps(
     select count(*) as nusers from users where user_id = \$1
     """)
 
-const run_exists= makeps(
+const run_exists = makeps(
     """
-    select count(*) as nruns from runs where user_id = \$1 and model_name=\$2 and model_version=\$3 and run_id = \$4
+    select count(*) as nruns from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and run_id = \$4
+    """)
+
+const run_in_state_exists = makeps(
+    """
+    select count(*) as nruns from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and qstatus = \$4
+    """)
+
+const get_latest_runs_in_state = makeps(
+    """
+    select * from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and qstatus = \$4 order by last_changed
     """)
 
 const run_upsert = makeps(
     """
-       insert into runs( user_id, model_name, model_version, run_id, run_name, submission, qstatus, output_in_sync, working_dir ) values
-           ( \$1, \$2 ,\$3 ,\$4, \$5, now(), \$6, \$7, \$8 )
-       on conflict( user_id, model_name, model_version, run_id )
+       insert into runs( user_id, model_name, model_edition, run_id, run_name, created, last_changed, qstatus, output_in_sync, working_dir ) values
+           ( \$1, \$2 ,\$3 ,\$4, \$5, \$6, now(), \$7, \$8, \$9 )
+       on conflict( user_id, model_name, model_edition, run_id )
        do update
-           set qstatus=\$6, output_in_sync=\$7
+           set last_changed = now(), qstatus=\$7, output_in_sync=\$8
         returning *
     """)
 
 const next_free_run_id = makeps(
     """
-        select coalesce(max( run_id ),0) + 1 as next_free_run_id from runs where user_id=\$1 and model_name=\$2 and model_version=\$3
+        select coalesce(max( run_id ),0) + 1 as next_free_run_id from runs where user_id=\$1 and model_name=\$2 and model_edition=\$3
     """)
 
 const switch_run_state = makeps(
     """
-        update runs set qstatus = \$1 where qstatus = \$2 and user_id=\$3 and model_name=\$4 and model_version=\$5
+        update runs set qstatus = \$1 where qstatus = \$2 and user_id=\$3 and model_name=\$4 and model_edition=\$5
     """)
 
 const change_run_state = makeps(
     """
-        update runs set qstatus = \$5, output_in_sync=\$6 where user_id=\$1 and model_name=\$2 and model_version=\$3 and run_id=\$4
+        update runs set qstatus = \$5, output_in_sync=\$6 where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
     """)
 
 #=
 const copy_output = makeps(
     """
-    insert into run_results select \$1, \$2, \$3, \$4, item, datatype, data from run_results where user_id=\$5 and model_name=\$2 and model_version=\$3 and run_id=\$6
+    insert into run_results select \$1, \$2, \$3, \$4, item, datatype, data from run_results where user_id=\$5 and model_name=\$2 and model_edition=\$3 and run_id=\$6
     """)
 =#
 
 const params_upsert = makeps(
     """
-       insert into run_params( user_id, model_name, model_version, run_id, name, data, errors ) values
+       insert into run_params( user_id, model_name, model_edition, run_id, name, data, errors ) values
            ( \$1, \$2 ,\$3 ,\$4, \$5, \$6, \$7 )
-       on conflict( user_id, model_name, model_version, run_id, name )
+       on conflict( user_id, model_name, model_edition, run_id, name )
        do update
            set data=\$6
         returning *
@@ -156,13 +203,13 @@ const params_upsert = makeps(
 
 const retrieve_params = makeps(
     """
-    select name, data, errors from run_params where user_id=\$1 and model_name=\$2 and model_version=\$3 and run_id=\$4
+    select name, data, errors from run_params where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
     """)
 
 const run_state_upsert = makeps(
     """
-    insert into run_state( user_id, model_name, model_version, run_id, thread_no, phase, completed, todo, timer )
-    values(\$1, \$2,\$3, \$4, \$5, \$6, \$7, \$8, now() ) on conflict( user_id, model_name, model_version, run_id, thread_no ) do
+    insert into run_state( user_id, model_name, model_edition, run_id, thread_no, phase, completed, todo, timer )
+    values(\$1, \$2,\$3, \$4, \$5, \$6, \$7, \$8, now() ) on conflict( user_id, model_name, model_edition, run_id, thread_no ) do
         update set phase=\$6, completed=\$7, todo=\$8, timer=now()
     returning *
     """)
@@ -172,7 +219,7 @@ const clear_run_states = makeps(
     delete from run_state where
         user_id=\$1 and
         model_name=\$2 and
-        model_version=\$3 and
+        model_edition=\$3 and
         run_id=\$4 and
         thread_no >= \$5
     """
@@ -180,14 +227,14 @@ const clear_run_states = makeps(
 
 const retrieve_run = makeps(
     """
-    select * from runs where user_id = \$1 and model_name=\$2 and model_version=\$3 and run_id=\$4
+    select * from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
     """)
 
 const retrieve_cached_output_item = makeps(
     """
     select data from run_results_cache where
         model_name=\$1 and
-        model_version=\$2 and
+        model_edition=\$2 and
         param_hash=\$3 and
         datatype=\$4 and
         item=\$5
@@ -201,7 +248,7 @@ const retrieve_cached_output = makeps(
         run_results_cache.data from
         run_results_cache, result_description where
         run_results_cache.model_name=\$1 and
-        run_results_cache.model_version=\$2 and
+        run_results_cache.model_edition=\$2 and
         run_results_cache.param_hash=\$3 and
         run_results_cache.datatype = result_description.datatype and
         run_results_cache.item = result_description.item
@@ -214,7 +261,7 @@ const hash_params = makeps(
         run_params where
             user_id=\$1 and
             model_name=\$2 and
-            model_version=\$3
+            model_edition=\$3
             and run_id=\$4
     """ )
 
@@ -222,30 +269,30 @@ const run_is_cached = makeps(
     """
     select count(*) >= 1 as is_cached from run_results_cache where
     model_name=\$1 and
-    model_version=\$2 and
+    model_edition=\$2 and
     param_hash=\$3
     """ )
 
 const retrieve_model = makeps(
     """
-    select models.model_name, models.description, model_versions.model_version from models, model_versions where
-        models.model_name=\$1 and model_versions.model_version=\$2 and model_versions.model_name=models.model_name
+    select models.model_name, models.description, model_editions.model_edition from models, model_editions where
+        models.model_name=\$1 and model_editions.model_edition=\$2 and model_editions.model_name=models.model_name
     """ )
 
-function make_param_hash( user_id :: Int, model_name::String, model_version::VersionNumber, run_id::Int)::BigInt
-    rc = rowtable( execute( hash_params, [user_id, model_name, string(model_version), run_id]))[1]
+function make_param_hash( user_id :: Int, model_name::String, model_edition::String, run_id::Int)::BigInt
+    rc = rowtable( execute( hash_params, [user_id, model_name, string(model_edition), run_id]))[1]
     return rc.param_hash
 end
 
-function get_model( model_name :: String, version :: VersionNumber )::Model
-    r = rowtable( execute( retrieve_model, [model_name, version]))[1]
-    return Model( r.model_name, r.description, VersionNumber(r.model_version ))
+function get_model( model_name :: String, edition :: String )::Model
+    r = rowtable( execute( retrieve_model, [model_name, edition]))[1]
+    return Model( r.model_name, r.description, String(r.model_edition ))
 end
 
 function update_progress(
     user_id::Integer,
     model_name::String,
-    version::VersionNumber,
+    edition::String,
     run_id::Integer,
     prog::Progress )
     #= thread_no, phase, completed, todo,
@@ -255,31 +302,31 @@ function update_progress(
         step   :: Int
         size   :: Int
     =#
-    execute( run_state_upsert, [user_id, model_name, version, run_id, prog.thread, prog.phase, prog.count, prog.size])
+    execute( run_state_upsert, [user_id, model_name, edition, run_id, prog.thread, prog.phase, prog.count, prog.size])
 end
 
 function clearup_run_states( run :: Run, delete_threads_above :: Int )
-    execute( clear_run_states, [run.user_id, run.model_name, run.model_version, run.run_id, delete_threads_above ])
+    execute( clear_run_states, [run.user_id, run.model_name, run.model_edition, run.run_id, delete_threads_above ])
 end
 
 function cache_output( run :: Run, param_hash :: BigInt, allout :: AllOutput )
-    model = get_model( run.model_name, run.model_version )
+    model = get_model( run.model_name, run.model_edition )
     for k in keys( allout.summary )
         if k == :gain_lose # gain-lose data is a sub-enum type - just the main tables here
             for gk in [:children_gl, :dec_gl, :hhtype_gl, :ten_gl]
                 data = JSON3.write( allout.summary.gain_lose[2][gk]; allow_inf=true)
-                execute( output_upsert, [ run.model_name, run.model_version, param_hash, "json", gk, data ] )
+                execute( output_upsert, [ run.model_name, run.model_edition, param_hash, "json", gk, data ] )
             end
         elseif k != :legalaid # skip Legalaid entirely
             data = JSON3.write( allout.summary[k]; allow_inf=true)
-            execute( output_upsert, [ run.model_name, run.model_version, param_hash, "json", k, data ] )
+            execute( output_upsert, [ run.model_name, run.model_edition, param_hash, "json", k, data ] )
         end
     end
     for k in keys( allout.html )
-        execute( output_upsert, [ run.model_name, run.model_version, param_hash,  "html", k, allout.html[k] ] )
+        execute( output_upsert, [ run.model_name, run.model_edition, param_hash,  "html", k, allout.html[k] ] )
     end
     for k in keys( allout.images )
-        execute( output_upsert, [ run.model_name, run.model_version, param_hash, "img", k, fig_to_svg_string(allout.images[k]) ] )
+        execute( output_upsert, [ run.model_name, run.model_edition, param_hash, "img", k, fig_to_svg_string(allout.images[k]) ] )
     end
 end
 
@@ -312,7 +359,7 @@ function get_user( user_id ::Union{Int,Nothing} )::User
 end
 
 function save_params( run :: Run, name::String, params :: String, errors :: String )
-    execute( params_upsert, [run.user_id, run.model_name, run.model_version, run.run_id, name, params, errors ])
+    execute( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, name, params, errors ])
 end
 
 function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
@@ -327,10 +374,10 @@ function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
         copy_run_id
     end
     @show user_id run_id
-    p = rowtable(execute( retrieve_params, [user_id, run.model_name, run.model_version, run_id]))
+    p = rowtable(execute( retrieve_params, [user_id, run.model_name, run.model_edition, run_id]))
     for r in p
         if (! isnothing(copy_run_id)) # we are copying in parameters from user_id
-            execute( params_upsert, [run.user_id, run.model_name, run.model_version, run.run_id, r.name, r.data, r.errors ])
+            execute( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, r.name, r.data, r.errors ])
         end
         run.params[r.name] = r.data
         run.errors[r.name] = r.errors
@@ -340,10 +387,10 @@ end
 function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
     user_id = coalesce( copy_user_id, run.user_id )
     run_id = coalesce( copy_run_id, run.run_id )
-    param_hash = rowtable(execute( hash_params, [run.user_id, run.model_name, run.model_version, run.run_id]))[1].param_hash
-    is_cached = rowtable(execute( run_is_cached, [run.model_name, run.model_version, param_hash]))[1].is_cached
+    param_hash = rowtable(execute( hash_params, [run.user_id, run.model_name, run.model_edition, run.run_id]))[1].param_hash
+    is_cached = rowtable(execute( run_is_cached, [run.model_name, run.model_edition, param_hash]))[1].is_cached
     if is_cached
-        p = rowtable(execute( retrieve_cached_output, [run.model_name, run.model_version, param_hash]))
+        p = rowtable(execute( retrieve_cached_output, [run.model_name, run.model_edition, param_hash]))
         for r in p
             k = OutputKey( r.item, r.datatype )
             v = OutputItem( r.info, r.data )
@@ -358,13 +405,13 @@ end
 
 function initialise_scotben_default()
     user = get_user( DEFAULT_USER )
-    model = get_model( "scotben", v"0.17.0" )
-    rs = rowtable(execute( run_upsert, [DEFAULT_USER, model.name, model.version, DEFAULT_RUN, "default $(model.name) run, version $(model.version).", "E",true,"nodir"] ))[1]
+    model = get_model( "scotben", "simple-2026a" )
+    rs = rowtable(execute( run_upsert, [DEFAULT_USER, model.name, model.edition, DEFAULT_RUN, "default $(model.name) run, edition $(model.edition).", "E",true,"nodir"] ))[1]
     @show rs
     run = Run(
         rs.user_id,
         rs.model_name,
-        VersionNumber( rs.model_version ),
+        rs.model_edition,
         rs.run_id,
         rs.run_name,
         rs.submission,
@@ -377,18 +424,22 @@ function initialise_scotben_default()
         Dict{String,String}())
     no_errs = Dict{String,String}()
     save_params( run, "SimpleParams", JSON3.write( DEFAULT_SIMPLE_PARAMS),JSON3.write( no_errs ))
-    allout = do_run( run.user_id, run.model_name, run.model_version, run.run_id, DEFAULT_SIMPLE_PARAMS;
+    allout = do_run( run.user_id, run.model_name, run.model_edition, run.run_id, DEFAULT_SIMPLE_PARAMS;
                     update_progress=update_progress,
                     do_dumps=true  )
-    h = make_param_hash( run.user_id, run.model_name, run.model_version, run.run_id )
+    h = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
     cache_output( run, h, allout )
 end
 
+function get_active_run()
+
+
+end
 
 function get_run(;
                  user_id::Int,
                  model_name :: String,
-                 version :: VersionNumber,
+                 edition :: String,
                  run_id::Union{Int,Nothing},
                  copy_from::Union{Int,Nothing}=nothing)::Run #, copy_from_id::Union{Int,Nothing} )::Run
 
@@ -396,7 +447,7 @@ function get_run(;
         rs = rowtable(r)[1]
         return Run( rs.user_id,
                     rs.model_name,
-                    VersionNumber( rs.model_version ),
+                    rs.model_edition,
                     rs.run_id,
                     rs.run_name,
                     rs.submission,
@@ -413,42 +464,42 @@ function get_run(;
         if isnothing( run_id )
             return true
         end
-        rs = execute( run_exists, [user_id, model_name, version, run_id])
+        rs = execute( run_exists, [user_id, model_name, edition, run_id])
         return columntable(rs).nruns[1] == 0
     end
 
     function retrieve_live_run()
-        r = execute( retrieve_run, [user_id, model_name, version, run_id])
+        r = execute( retrieve_run, [user_id, model_name, edition, run_id])
         rs_to_run( r )
     end
 
     function get_next_free_run_id()::Int
-        r = execute( next_free_run_id, [user_id, model_name, version])
+        r = execute( next_free_run_id, [user_id, model_name, edition])
         return columntable(r).next_free_run_id[1]
     end
 
     function create_run()
         new_run_id = get_next_free_run_id()
-        d = joinpath( tempdir(), "$(user_id)", "$(model_name)", "$(version)", "$(new_run_id)")
+        d = joinpath( tempdir(), "$(user_id)", "$(model_name)", "$(edition)", "$(new_run_id)")
         path = mkpath(d)
-        run_params = [user_id, model_name, version, new_run_id, "", "E", false, path]
+        run_params = [user_id, model_name, edition, new_run_id, "", "E", false, path]
         rs = execute( run_upsert, run_params )
         run = rs_to_run( rs )
         copyrun = if isnothing( copy_from )
-            r = execute( retrieve_run, [DEFAULT_USER, model_name, version, DEFAULT_RUN])
+            r = execute( retrieve_run, [DEFAULT_USER, model_name, edition, DEFAULT_RUN])
             rs_to_run( r )
         else
-            @show  [user_id, model_name, version, copy_from ]
-            r = execute( retrieve_run, [user_id, model_name, version, copy_from ])
+            @show  [user_id, model_name, edition, copy_from ]
+            r = execute( retrieve_run, [user_id, model_name, edition, copy_from ])
             rs_to_run( r )
         end
         load_params!( run;  copy_user_id=copyrun.user_id, copy_run_id=copyrun.run_id )
         load_output!( run;  copy_user_id=copyrun.user_id, copy_run_id=copyrun.run_id )
         run.output_in_sync = true
-        execute( change_run_state, [run.user_id, run.model_name, run.model_version, run.run_id, 'E', true ])
+        execute( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, 'E', true ])
         # demote the copied run if not the default
         if(copyrun.user_id == run.user_id) && (copyrun.qstatus in ['E'])
-            exec( change_run_state, [copyrun.user_id, copyrun.model_name, copyrun.model_version, copyrun.run_id,'C', copyrun.output_in_sync])
+            exec( change_run_state, [copyrun.user_id, copyrun.model_name, copyrun.model_edition, copyrun.run_id,'C', copyrun.output_in_sync])
         end
         return run
     end
@@ -464,8 +515,8 @@ function get_run(;
     return run
 end
 
-function handle_middle( user_id ::Union{Int,Nothing}, run_id :: Union{Int,Nothing}, model_name::String,  version :: VersionNumber )::Integer
+function handle_middle( user_id ::Union{Int,Nothing}, run_id :: Union{Int,Nothing}, model_name::String,  edition :: String )::Integer
     user = get_user( user_id )
-    run = get_run( user_id, run_id, model_name, version )
-
+    runrec = get_run( user_id, run_id, model_name, edition )
+    return user, runrec
 end

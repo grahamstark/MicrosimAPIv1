@@ -217,14 +217,14 @@ const BASE_RESULTS = do_default_run()
 function do_run(
     user_id :: Integer,
     model_name :: String,
-    version :: VersionNumber,
+    edition :: String,
     run_id :: Integer,
     simple :: SimpleParams;
     update_progress::Function,
     do_dumps :: Bool )::AllOutput
     @info "do_run entered"
     settings = Settings()
-    update_progress( user_id, model_name, version, run_id, Progress( settings.uuid, "starting", 0, 0, 0, 0 ))
+    update_progress( user_id, model_name, edition, run_id, Progress( settings.uuid, "starting", 0, 0, 0, 0 ))
     sys = deepcopy( DEFAULT_PARAMS)
     map_simple_to_full!( sys, simple )
     weeklyise!( sys )
@@ -233,7 +233,7 @@ function do_run(
     of = on(obs) do p
         tot += p.step
         # @info "monitor tot=$tot p = $(p)"
-        update_progress( user_id, model_name, version, run_id,  p )
+        update_progress( user_id, model_name, edition, run_id,  p )
     end
     results = do_one_run( settings, [sys], obs )
     insert!( results.hh, 1, BASE_RESULTS.hh[1] )
@@ -249,7 +249,7 @@ function do_run(
     if do_dumps
         dump_summaries( settings, summaries )
     end
-    update_progress( user_id, model_name, version, run_id,
+    update_progress( user_id, model_name, edition, run_id,
         Progress( settings.uuid, "completed", -99, -99, -99, -99 ) )
     return AllOutput( summaries, images, html, exres )
 end
