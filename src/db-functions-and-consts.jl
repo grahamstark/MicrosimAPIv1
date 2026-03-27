@@ -143,22 +143,23 @@ const user_exists= makeps(
     """
     select count(*) as nusers from users where user_id = \$1
     """)
-
+#=
 const run_exists = makeps(
     """
     select count(*) as nruns from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and run_id = \$4
     """)
+=#
 
 const run_in_state_exists = makeps(
     """
     select count(*) as nruns from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and qstatus = \$4
     """)
-
+#=
 const get_latest_runs_in_state = makeps(
     """
     select * from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and qstatus = \$4 order by last_change
     """)
-
+=#
 const run_upsert = makeps(
     """
        insert into runs( user_id, model_name, model_edition, run_id, run_name, created, last_change, qstatus, output_in_sync, working_dir ) values
@@ -217,9 +218,14 @@ const clear_run_states = makeps(
     """
     )
 
-const retrieve_run = makeps(
+const retrieve_latest_run = makeps(
     """
     select * from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and qstatus=\$4 order by last_change limit 1;
+    """)
+
+const retrieve_numbered_run = makeps(
+    """
+    select * from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and run_id =\$4
     """)
 
 const retrieve_cached_output_item = makeps(
@@ -423,7 +429,7 @@ function initialise_scotben_default()
 end
 
 
-function get_run(;
+function get_run(
                  user_id::Int,
                  model_name :: String,
                  edition :: String,
@@ -456,14 +462,14 @@ function get_run(;
         d = joinpath( tempdir(), "$(user_id)", "$(model_name)", "$(edition)", "$(new_run_id)")
         path = mkpath(d)
         run_params = [user_id, model_name, edition, new_run_id, "", "E", false, path]
-        run = execute( run_upsert, run_params )[1] |> rowtable |> rs_to_run
+        run = rowtable(execute( run_upsert, run_params ))[1]|> rs_to_run
         # run = rs_to_run( rs )
         copyrun = if isnothing( copy_from )
-            rs = rowtable(execute( retrieve_run, [DEFAULT_USER, model_name, edition, DEFAULT_RUN]))[1]
+            rs = rowtable(execute( retrieve_numbered_run, [DEFAULT_USER, model_name, edition, DEFAULT_RUN]))[1]
             rs_to_run( rs )
         else
             @show  [user_id, model_name, edition, copy_from ]
-            rs = rowtable(execute( retrieve_run, [user_id, model_name, edition, copy_from ]))[1]
+            rs = rowtable(execute( retrieve_numbered_run, [user_id, model_name, edition, copy_from ]))[1]
             rs_to_run( rs )
         end
         load_params!( run;  copy_user_id=copyrun.user_id, copy_run_id=copyrun.run_id )
@@ -476,8 +482,7 @@ function get_run(;
         end
         return run
     end
-
-    rs = rowtable(execute( retrieve_run, [user_id, model_name, edition, 'E']))
+    rs = rowtable(execute( retrieve_latest_run, [user_id, model_name, edition, 'E']))
     l = length(rs)
     @assert l in 0:1
     return if l == 1
@@ -491,9 +496,10 @@ function get_run(;
 end
 
 function handle_middle( user_id ::Union{Int,Nothing},
-                       run_id :: Union{Int,Nothing},
-                       model_name::String,  edition :: String )::Integer
+                        model_name::String,
+                        edition :: String,
+                        copy_from::Union{Int,Nothing}=nothing )::Tuple
     user = get_user( user_id )
-    runrec = get_run( user_id, model_name, edition )
+    runrec = get_run( user.user_id, model_name, edition, copy_from )
     return user, runrec
 end
