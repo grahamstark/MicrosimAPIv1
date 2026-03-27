@@ -236,6 +236,7 @@ function do_run(
         update_progress( user_id, model_name, edition, run_id,  p )
     end
     results = do_one_run( settings, [sys], obs )
+    # merge with defaults
     insert!( results.hh, 1, BASE_RESULTS.hh[1] )
     insert!( results.bu, 1, BASE_RESULTS.bu[1] )
     insert!( results.indiv, 1, BASE_RESULTS.indiv[1] )

@@ -1,9 +1,7 @@
 -- psql -h /var/run/postgresql/ -U postgres
 -- pg_lsclusters
 
--- drop database microapi;
--- create database microapi;
-\c microapi
+-- drop database microapi; create database microapi;\c microapi
 
 create table users(
     user_id bigint not null,
@@ -50,7 +48,7 @@ create table runs(
     model_edition char(12) not null default 'simple-2026a',
     run_id integer not null,
     run_name text, -- actually, a uuid
-    creation timestamp,
+    created timestamp,
     last_change timestamp,
     qstatus char(1) not null default 'E', -- E, Q,X,C
     output_in_sync boolean default true,
@@ -61,7 +59,7 @@ create table runs(
     foreign key( qstatus ) references q_statuses,
     foreign key( model_name, model_edition) references model_editions );
 -- a dummy test run
-insert into runs values( 2, 'scotben', 'simple-2026a', 1234567890, 'default test run', now(), 'E', true , 'dummy dir');
+insert into runs values( 2, 'scotben', 'simple-2026a', 1234567890, 'default test run', now(), now(), 'E', true , 'dummy dir');
 
 create table run_state(
     user_id bigint not null,
