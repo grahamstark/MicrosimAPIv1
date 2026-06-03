@@ -10,6 +10,7 @@ using Jedis
 
 
 include( "ScotbenAPIImpl.jl")
+include( )
 export ScotbenAPIImpl
 
 const up = Genie.up

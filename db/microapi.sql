@@ -19,7 +19,7 @@ insert into users values
 create table models(
     model_name char(20) not null primary key,
     description text );
-insert into models values( 'scotben', '');
+insert into models values( 'scotben', 'A Scottish Tax Benfit Model implemented in Julia.');
 
 create table model_editions(
     model_name char(30) not null,
@@ -28,8 +28,8 @@ create table model_editions(
     primary key( model_name, model_edition ),
     foreign key( model_name ) references models on delete cascade );
 insert into model_editions values
-    ('scotben', 'simple-2026a',''),
-    ('scotben', 'basic-income-2026a','');
+    ('scotben', 'simple-2026a','A simple default set of parameters for Scotben.'),
+    ('scotben', 'basic-income-2026a','A basic income simulation, God help us...');
 
 create table q_statuses(
     qstatus char(1) not null primary key,
@@ -45,7 +45,7 @@ insert into q_statuses values
 create table runs(
     user_id bigint not null,
     model_name char(20) not null default 'scotben',
-    model_edition char(12) not null default 'simple-2026a',
+    model_edition char(24) not null default 'simple-2026a',
     run_id integer not null,
     run_name text, -- actually, a uuid
     created timestamp,
@@ -64,7 +64,7 @@ insert into runs values( 2, 'scotben', 'simple-2026a', 1234567890, 'default test
 create table run_state(
     user_id bigint not null,
     model_name char(20) not null default 'scotben',
-    model_edition char(12) not null default 'simple-2026a',
+    model_edition char(40) not null default 'simple-2026a',
     run_id integer not null,
     thread_no int default 1,
     phase text not null,
@@ -76,7 +76,7 @@ create table run_state(
 
 create table param_page_description(
     model_name char(20) not null default 'scotben',
-    model_edition char(12) not null default 'simple-2026a',
+    model_edition char(24) not null default 'simple-2026a',
     name  char(30) not null,
     info text,
     primary key( model_name, model_edition, name ),
@@ -90,7 +90,7 @@ insert into param_page_description values
 create table run_params(
     user_id bigint not null,
     model_name char(20) not null default 'scotben',
-    model_edition char(12) not null default 'simple-2026a',
+    model_edition char(24) not null default 'simple-2026a',
     run_id integer not null,
     name char(30) not null,
     data text,
@@ -101,7 +101,7 @@ create table run_params(
 
 create table result_description(
     model_name char(20) not null default 'scotben',
-    model_edition char(12) not null default 'simple-2026a',
+    model_edition char(24) not null default 'simple-2026a',
     datatype char(30) not null default 'json',
     item char(30) not null,
     info text,
@@ -183,7 +183,7 @@ insert into result_description( model_name, model_edition, item, datatype, info 
 -- create table run_results(
 --     user_id bigint not null,
 --     model_name char(20) not null default 'scotben',
---     model_edition char(12) not null default 'simple-2026a',
+--     model_edition char(24) not null default 'simple-2026a',
 --     run_id integer not null,
 --     item char(30) not null,
 --     datatype char(30) not null default 'json',
@@ -195,7 +195,7 @@ insert into result_description( model_name, model_edition, item, datatype, info 
 
 create table run_results_cache(
     model_name char(20) not null default 'scotben',
-    model_edition char(12) not null default 'simple-2026a',
+    model_edition char(24) not null default 'simple-2026a',
     param_hash bigint not null,
     datatype char(30) not null default 'json',
     item char(30) not null,

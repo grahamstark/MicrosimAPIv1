@@ -92,6 +92,15 @@ const total_queue_counts = makeps(
     """)
 
 
+function get_avaliable_models_and_versions()::AbstractDataFrame
+    conn = acquire( makeconn, CON_POOL )
+    r = rowtable( execute( conn, """
+        select models.model_name, models.description as model_desc, model_edition, model_editions.description as edition_desc from model_editions, models where model_editions.model_name = models.model_name
+        """))
+    release(CON_POOL,conn)
+    return DataFrame(r)
+end
+
 function  get_all_q_statuses()
     conn = acquire( makeconn, CON_POOL )
     r = columntable( execute( conn, "select qstatus from q_statuses"))
@@ -287,6 +296,7 @@ function get_model( model_name :: String, edition :: String )::Model
     return Model( r.model_name, r.description, String(r.model_edition ))
 end
 
+
 function update_progress(
     user_id::Integer,
     model_name::String,
@@ -428,12 +438,16 @@ function initialise_scotben_default()
     cache_output( run, h, allout )
 end
 
+#=
+retrieve or create a run
 
+* @param copy_from: if no currently edited run, make a copy of the run with this id for the user, otherwise make a copy of the default for this model&edition
+=#
 function get_run(
                  user_id::Int,
                  model_name :: String,
                  edition :: String,
-                 copy_from::Union{Int,Nothing}=nothing)::Run #, copy_from_id::Union{Int,Nothing} )::Run
+                 copy_from::Union{Int,Nothing}=nothing)::Run
 
     function rs_to_run( rs )
         return Run( rs.user_id,
@@ -481,16 +495,18 @@ function get_run(
             exec( change_run_state, [copyrun.user_id, copyrun.model_name, copyrun.model_edition, copyrun.run_id,'C', copyrun.output_in_sync])
         end
         return run
-    end
+    end # create run
+
+
     rs = rowtable(execute( retrieve_latest_run, [user_id, model_name, edition, 'E']))
     l = length(rs)
     @assert l in 0:1
-    return if l == 1
+    return if l == 1 # there's a latest run in 'Edit' state
         run = rs_to_run( rs[1] )
         load_params!( run )
         load_output!( run )
         run
-    else
+    else # no run
         create_run()
     end
 end

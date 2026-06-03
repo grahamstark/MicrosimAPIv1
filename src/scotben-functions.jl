@@ -250,12 +250,12 @@ function do_run(
     exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys, settings )
     # images = construct_images( settings, results, summaries, [DEFAULT_WEEKLY_PARAMS,sys] )
     # html = construct_html( settings, results, summaries )
-    html_tabs = construct_tables( settings, results, summary, mv.MV_HTML())
-    typst_tabs = construct_tables( settings, results, summary, mv.MV_TYPST())
+    html_tabs = construct_tables( settings, results, summaries, mv.MV_HTML())
+    typst_tabs = construct_tables( settings, results, summaries, mv.MV_TYPST())
     println( "tabs OK")
-    graphs = construct_images( settings, results, summary, sys )
+    graphs = construct_images( settings, results, summaries, [sys, sys] )
     println( "graphs OK")
-    path, zippath = mv.phunpackify( settings, graphs, typst_tabs, html_tabs, zippath, summary )
+    path, zippath = mv.phunpackify( settings, graphs, typst_tabs, html_tabs, summaries )
     #=
     if do_dumps
         dump_summaries( settings, summaries )
@@ -263,6 +263,6 @@ function do_run(
     =#
     update_progress( user_id, model_name, edition, run_id,
         Progress( settings.uuid, "completed", -99, -99, -99, -99 ) )
-    return AllOutput( summaries, graphs, html_tabs, exres )
+    return AllOutput( summaries, graphs, html_tabs, typst_tabs, zippath, exres )
 end
 
