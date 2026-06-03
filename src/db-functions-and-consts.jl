@@ -317,8 +317,12 @@ function clearup_run_states( run :: Run, delete_threads_above :: Int )
     execute( clear_run_states, [run.user_id, run.model_name, run.model_edition, run.run_id, delete_threads_above ])
 end
 
+"""
+for now, just cache SVG and HTML output
+"""
 function cache_output( run :: Run, param_hash :: BigInt, allout :: AllOutput )
     model = get_model( run.model_name, run.model_edition )
+    #=
     for k in keys( allout.summary )
         if k == :gain_lose # gain-lose data is a sub-enum type - just the main tables here
             for gk in [:children_gl, :dec_gl, :hhtype_gl, :ten_gl]
@@ -330,11 +334,12 @@ function cache_output( run :: Run, param_hash :: BigInt, allout :: AllOutput )
             execute( output_upsert, [ run.model_name, run.model_edition, param_hash, "json", k, data ] )
         end
     end
+    =#
     for k in keys( allout.html )
-        execute( output_upsert, [ run.model_name, run.model_edition, param_hash,  "html", k, allout.html[k] ] )
+        execute( output_upsert, [ run.model_name, run.model_edition, param_hash,  "html", k, allout.html[k].data ] )
     end
     for k in keys( allout.images )
-        execute( output_upsert, [ run.model_name, run.model_edition, param_hash, "img", k, fig_to_svg_string(allout.images[k]) ] )
+        execute( output_upsert, [ run.model_name, run.model_edition, param_hash, "svg", k, mv.fig_to_svg_string(allout.images[k].data) ] )
     end
 end
 

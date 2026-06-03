@@ -34,4 +34,4 @@ using .STBOutput
 using .STBParameters
 using .Utils
 
-using MicroVisualisations
+import MicroVisualisations as mv

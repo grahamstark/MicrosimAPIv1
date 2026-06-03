@@ -1,3 +1,4 @@
+#=
 using ScottishTaxBenefitModel
 using .BCCalcs
 using .Definitions
@@ -18,6 +19,7 @@ using .Utils
 
 import MicroVisualisations as mv
 using UUIDs
+=#
 
 const BIG_A = 9999999999
 
@@ -250,10 +252,10 @@ function do_run(
     exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys, settings )
     # images = construct_images( settings, results, summaries, [DEFAULT_WEEKLY_PARAMS,sys] )
     # html = construct_html( settings, results, summaries )
-    html_tabs = construct_tables( settings, results, summaries, mv.MV_HTML())
-    typst_tabs = construct_tables( settings, results, summaries, mv.MV_TYPST())
+    html_tabs = mv.construct_tables( settings, results, summaries, mv.MV_HTML())
+    typst_tabs = mv.construct_tables( settings, results, summaries, mv.MV_TYPST())
     println( "tabs OK")
-    graphs = construct_images( settings, results, summaries, [sys, sys] )
+    graphs = mv.construct_images( settings, results, summaries, [sys, sys] )
     println( "graphs OK")
     path, zippath = mv.phunpackify( settings, graphs, typst_tabs, html_tabs, summaries )
     #=
