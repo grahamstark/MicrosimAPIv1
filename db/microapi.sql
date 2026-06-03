@@ -99,60 +99,85 @@ create table run_params(
     foreign key( user_id, run_id, model_name, model_edition ) references runs on delete cascade on update cascade,
     foreign key( model_name, model_edition, name) references param_page_description );
 
+-- nb remove model_edition here on the assumption that any model edition can produce the same output
 create table result_description(
     model_name char(20) not null default 'scotben',
-    model_edition char(24) not null default 'simple-2026a',
+    -- model_edition char(24) not null default 'simple-2026a',
     datatype char(30) not null default 'json',
     item char(30) not null,
     info text,
-    primary key( model_name, model_edition, item, datatype ),
-    foreign key( model_name, model_edition) references model_editions );
+    primary key( model_name, item, datatype ),
+    foreign key( model_name ) references models );
 
-insert into result_description( model_name, model_edition, item, datatype, info ) values -- note: wrong way round item, datatype
-('scotben', 'simple-2026a', 'summary_graphs', 'img', 'A set of four summary graphs'),
-('scotben', 'simple-2026a', 'summary_graphs_v2 ', 'img', 'A set of four summary graphs'),
-('scotben', 'simple-2026a', 'taxable_graph', 'img', 'Chart of taxable income, in bands, with marginal tax rates.'),
-('scotben', 'simple-2026a', 'hbai', 'img', 'Reproduction of the standard HBAI diagram, with income in bands and deciles.'),
-('scotben', 'simple-2026a', 'lorenz_curve', 'img', 'A standard Lorenz Curve'),
-('scotben', 'simple-2026a', 'lorenz_curve_thumb','img', 'Thumbnail verison of a standard Lorenz Curve'),
-('scotben', 'simple-2026a', 'deciles','img', 'Average Gains by income decile.'),
-('scotben', 'simple-2026a', 'deciles_thumb', 'img', 'Average Gains by income decile, Thumbnail edition.'),
-('scotben', 'simple-2026a', 'metrs_hist', 'img', 'Histogram of Marginal Effective Tax Rates (METRs)'),
-('scotben', 'simple-2026a', 'metrs', 'img', 'Bar Chart of Marginal Effective Tax Rates (METRs)'),
-('scotben', 'simple-2026a', 'metrs2', 'img', 'Bar Chart of Marginal Effective Tax Rates (METRs)'),
-('scotben', 'simple-2026a', 'metrs_hist_thumb', 'img', 'Bar Chart of Marginal Effective Tax Rates (METRs), thumbnail'),
+insert into result_description( model_name, item, datatype, info ) values
 
-('scotben', 'simple-2026a', 'overall_cost_table', 'html', 'format_overall_cost('),
-('scotben', 'simple-2026a', 'costs_table', 'html', 'format_costs_table('),
-('scotben', 'simple-2026a', 'hhtype_gl', 'html', 'format_gainlose("By Household Size",summary.gain_lose[2].hhtype_gl ),'),
-('scotben', 'simple-2026a', 'ten_gl', 'html', 'format_gainlose("By Tenure Type",summary.gain_lose[2].ten_gl ),'),
-('scotben', 'simple-2026a', 'dec_gl', 'html', 'format_gainlose("By Decile",summary.gain_lose[2].dec_gl ),'),
-('scotben', 'simple-2026a', 'children_gl', 'html', 'format_gainlose("By Numbers of Children",summary.gain_lose[2].children_gl ),'),
-('scotben', 'simple-2026a', 'reg_gl', 'html', 'format_gainlose("By Region",summary.gain_lose[2].reg_gl ),'),
-('scotben', 'simple-2026a', 'sfc', 'html', 'format_sfc("SFC Behavioral Corrections", results.behavioural_results[2]),'),
-('scotben', 'simple-2026a', 'gain_lose_summary', 'html', 'format_gain_lose_table_v2( summary.gain_lose[2] ),'),
-('scotben', 'simple-2026a', 'inequality_summary', 'html', 'format_ineq_table('),
-('scotben', 'simple-2026a', 'metrs_table', 'html', 'format_mr_table( summary.metrs[1], summary.metrs[2] ),'),
-('scotben', 'simple-2026a', 'poverty_summary', 'html', 'format_pov_table( summary.poverty[1],'),
-('scotben', 'simple-2026a', 'poverty_transitions', 'html', 'format_pov_transitions( summary.povtrans_matrix[2]),'),
-('scotben', 'simple-2026a', 'run_settings_summary', 'html', 'format_run_settings_summary( settings ),'),
-('scotben', 'simple-2026a', 'detailed_costs', 'html', 'costs_frame_to_table(detailed_cost_dataframe('),
+('scotben', 'overall_cost_table', 'html', 'One Line entry showing the net costs of your reform' ),
+('scotben', 'costs_table', 'html', 'Short Table with headline costs of your reform' ),
+('scotben', 'hhtype_gl', 'html', 'Gain Lose Table By Household Size (counts of individuals)' ),
+('scotben', 'ten_gl', 'html', 'Gain Lose Table By Tenure(counts of individuals)' ),
+('scotben', 'dec_gl', 'html', 'Gain Lose Table By Income Decile(counts of individuals)' ),
+('scotben', 'children_gl', 'html', 'Gain Lose Table By Number of Children in the Household (counts of individuals)' ),
+('scotben', 'reg_gl', 'html', 'Gain Lose Table By Region (counts of individuals)' ),
+('scotben', 'sfc', 'html', 'Table describing our SFC correction' ),
+('scotben', 'gain_lose_summary', 'html', 'Short text summary of numbers of gainers and losers' ),
+('scotben', 'inequality_summary', 'html', 'Short textual summmary of our standard inequality measures.' ),
+('scotben', 'metrs_table', 'html', 'Summary table of our Marginal Rate estimates (if available).' ),
+('scotben', 'metrs_transitions', 'html', 'Transitions table from our Marginal Rate estimates (if available).' ),
+('scotben', 'poverty_summary', 'html', 'Short Table with headline poverty measures' ),
+('scotben', 'poverty_transitions', 'html', 'Summary table of our Poverty estimates (if available).' ),
+('scotben', 'run_settings_summary', 'html', 'Highlights from the run settings' ),
+('scotben', 'detailed_costs', 'html', 'Huge dump of all incomes and case counts from the run.' ),
 
-('scotben', 'simple-2026a', 'overall_cost_table', 'typst', 'format_overall_cost('),
-('scotben', 'simple-2026a', 'costs_table', 'typst', 'format_costs_table('),
-('scotben', 'simple-2026a', 'hhtype_gl', 'typst', 'format_gainlose("By Household Size",summary.gain_lose[2].hhtype_gl ),'),
-('scotben', 'simple-2026a', 'ten_gl', 'typst', 'format_gainlose("By Tenure Type",summary.gain_lose[2].ten_gl ),'),
-('scotben', 'simple-2026a', 'dec_gl', 'typst', 'format_gainlose("By Decile",summary.gain_lose[2].dec_gl ),'),
-('scotben', 'simple-2026a', 'children_gl', 'typst', 'format_gainlose("By Numbers of Children",summary.gain_lose[2].children_gl ),'),
-('scotben', 'simple-2026a', 'reg_gl', 'typst', 'format_gainlose("By Region",summary.gain_lose[2].reg_gl ),'),
-('scotben', 'simple-2026a', 'sfc', 'typst', 'format_sfc("SFC Behavioral Corrections", results.behavioural_results[2]),'),
-('scotben', 'simple-2026a', 'gain_lose_summary', 'typst', 'format_gain_lose_table_v2( summary.gain_lose[2] ),'),
-('scotben', 'simple-2026a', 'inequality_summary', 'typst', 'format_ineq_table('),
-('scotben', 'simple-2026a', 'metrs_table', 'typst', 'format_mr_table( summary.metrs[1], summary.metrs[2] ),'),
-('scotben', 'simple-2026a', 'poverty_summary', 'typst', 'format_pov_table( summary.poverty[1],'),
-('scotben', 'simple-2026a', 'poverty_transitions', 'typst', 'format_pov_transitions( summary.povtrans_matrix[2]),'),
-('scotben', 'simple-2026a', 'run_settings_summary', 'typst', 'format_run_settings_summary( settings ),'),
-('scotben', 'simple-2026a', 'detailed_costs', 'typst', 'costs_frame_to_table(detailed_cost_dataframe('),
+('scotben', 'summary_graphs', 'svg', '4 quadrant summary graph' ),
+('scotben', 'summary_graphs_v2', 'svg', '4 quadrant summary graph, 2nd version' ),
+('scotben', 'taxable_graph', 'svg', 'Graph showing taxable income in bands against marginal tax rates' ),
+('scotben', 'hbai', 'svg', 'Comparison graphs of equilvalised income in bands, similar to DWPs HBAI report graph' ),
+('scotben', 'lorenz_curve', 'svg', 'Pre- and Post- Lorenz Curve' ),
+('scotben', 'lorenz_curve_thumb', 'svg', 'Pre- and Post- Lorenz Curve (thumbnail)' ),
+('scotben', 'deciles', 'svg', 'Average Gains and Losses by Eq, Income Decile' ),
+('scotben', 'deciles_thumb', 'svg', 'Average Gains and Losses by Eq, Income Decile, thumbnail version' ),
+('scotben', 'metrs_hist', 'svg', 'Density Plot of pre- and post- Marginal Effective Tax Rates (METRs)'),
+('scotben', 'metrs', 'svg', 'pre- and post- Marginal Effective Tax Rates (METRs) in 2% intervals' ),
+('scotben', 'metrs2', 'svg', 'pre- and post- Marginal Effective Tax Rates (METRs) in 2% intervals, 2 graph version' ),
+('scotben', 'metrs_hist_thumb', 'svg', 'Density Plot of pre- and post- Marginal Effective Tax Rates (METRs), thumbnail version' );
+
+/* TODO redo JSON files, add handling for phunpak
+
+
+('scotben', 'overall_cost_table', 'typst', 'One Line entry showing the net costs of your reform' ),
+('scotben', 'costs_table', 'typst', 'Short Table with headline costs of your reform' ),
+('scotben', 'hhtype_gl', 'typst', 'Gain Lose Table By Household Size (counts of individuals)' ),
+('scotben', 'ten_gl', 'typst', 'Gain Lose Table By Tenure(counts of individuals)' ),
+('scotben', 'dec_gl', 'typst', 'Gain Lose Table By Income Decile(counts of individuals)' ),
+('scotben', 'children_gl', 'typst', 'Gain Lose Table By Number of Children in the Household (counts of individuals)' ),
+('scotben', 'reg_gl', 'typst', 'Gain Lose Table By Region (counts of individuals)' ),
+('scotben', 'sfc', 'typst', 'Table describing our SFC correction' ),
+('scotben', 'gain_lose_summary', 'typst', 'Short text summary of numbers of gainers and losers' ),
+('scotben', 'inequality_summary', 'typst', 'Short textual summmary of our standard inequality measures.' ),
+('scotben', 'metrs_table', 'typst', 'Summary table of our Marginal Rate estimates (if available).' ),
+('scotben', 'metrs_transitions', 'typst', 'Transitions table from our Marginal Rate estimates (if available).' ),
+('scotben', 'poverty_summary', 'typst', 'Short Table with headline poverty measures' ),
+('scotben', 'poverty_transitions', 'typst', 'Summary table of our Poverty estimates (if available).' ),
+('scotben', 'run_settings_summary', 'typst', 'Highlights from the run settings' ),
+('scotben', 'detailed_costs', 'typst', 'Huge dump of all incomes and case counts from the run.' ),
+
+('scotben', 'overall_cost_table', 'pdf', 'One Line entry showing the net costs of your reform' ),
+('scotben', 'costs_table', 'pdf', 'Short Table with headline costs of your reform' ),
+('scotben', 'hhtype_gl', 'pdf', 'Gain Lose Table By Household Size (counts of individuals)' ),
+('scotben', 'ten_gl', 'pdf', 'Gain Lose Table By Tenure(counts of individuals)' ),
+('scotben', 'dec_gl', 'pdf', 'Gain Lose Table By Income Decile(counts of individuals)' ),
+('scotben', 'children_gl', 'pdf', 'Gain Lose Table By Number of Children in the Household (counts of individuals)' ),
+('scotben', 'reg_gl', 'pdf', 'Gain Lose Table By Region (counts of individuals)' ),
+('scotben', 'sfc', 'pdf', 'Table describing our SFC correction' ),
+('scotben', 'gain_lose_summary', 'pdf', 'Short text summary of numbers of gainers and losers' ),
+('scotben', 'inequality_summary', 'pdf', 'Short textual summmary of our standard inequality measures.' ),
+('scotben', 'metrs_table', 'pdf', 'Summary table of our Marginal Rate estimates (if available).' ),
+('scotben', 'metrs_transitions', 'pdf', 'Transitions table from our Marginal Rate estimates (if available).' ),
+('scotben', 'poverty_summary', 'pdf', 'Short Table with headline poverty measures' ),
+('scotben', 'poverty_transitions', 'pdf', 'Summary table of our Poverty estimates (if available).' ),
+('scotben', 'run_settings_summary', 'pdf', 'Highlights from the run settings' ),
+('scotben', 'detailed_costs', 'pdf', 'Huge dump of all incomes and case counts from the run.' ),
+
 
 ('scotben', 'simple-2026a', 'headline_figures','json', 'Desciption Goes Here'),
 ('scotben', 'simple-2026a', 'quantiles', 'json', 'Desciption Goes Here'),
@@ -177,21 +202,7 @@ insert into result_description( model_name, model_edition, item, datatype, info 
 ('scotben', 'simple-2026a', 'income_hists_df', 'json', 'Desciption Goes Here'),
 ('scotben', 'simple-2026a', 'taxable_income_hists', 'json', 'Desciption Goes Here'),
 ('scotben', 'simple-2026a', 'povtrans_matrix', 'json', 'Desciption Goes Here'),
-('scotben', 'simple-2026a', 'povtrans_matrix_df', 'json', 'Desciption Goes Here');
-
---
--- create table run_results(
---     user_id bigint not null,
---     model_name char(20) not null default 'scotben',
---     model_edition char(24) not null default 'simple-2026a',
---     run_id integer not null,
---     item char(30) not null,
---     datatype char(30) not null default 'json',
---     data text,
---     primary key( user_id, run_id, model_name, model_edition, item, datatype ),
---     foreign key( user_id, run_id, model_name, model_edition ) references runs on delete cascade on update cascade,
---     foreign key( model_name, model_edition, item, datatype ) references result_description );
---
+('scotben', 'simple-2026a', 'povtrans_matrix_df', 'json', 'Desciption Goes Here')*/
 
 create table run_results_cache(
     model_name char(20) not null default 'scotben',
@@ -201,4 +212,4 @@ create table run_results_cache(
     item char(30) not null,
     data text,
     primary key( model_name, model_edition, param_hash, item, datatype ),
-    foreign key( model_name, model_edition, item, datatype ) references result_description );
+    foreign key( model_name, item, datatype ) references result_description );
