@@ -11,247 +11,247 @@ end
 
 
 @swagger"""
-/scotben/params/list-available:
+/model/model/:model/edition/:edition/user/:user/params/list-available:
   get:
     description: List all the avaliable default parameter systems (for example fy2023, Scotland)
     responses:
       '200':
         description: A json list of parameter systems.
 """
-route( "/scotben/params/list-available", MicrosimAPIv1.ScotbenAPIImpl.params_list_available, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/params/list-available", MicrosimAPIv1.ScotbenAPIImpl.params_list_available, method = GET  )
 
 @swagger"""
-/scotben/params/initialise:
+/model/:model/edition/:edition/user/:user/params/initialise:
   post:
     description: Reset parameters to the default.
     responses:
       '200':
         description: A json list of default parameters.
 """
-route( "/scotben/params/initialise", MicrosimAPIv1.ScotbenAPIImpl.params_initialise, method = POST  )
+route( "/model/:model/edition/:edition/user/:user/params/initialise", MicrosimAPIv1.ScotbenAPIImpl.params_initialise, method = POST  )
 
 @swagger"""
-/scotben/params/get:
+/model/:model/edition/:edition/user/:user/params/get:
   post:
     description: Get the current parameters.
     responses:
       '200':
         description: A json list of current parameters.
 """
-route( "/scotben/params/get", MicrosimAPIv1.ScotbenAPIImpl.params_get, method = POST  )
+route( "/model/:model/edition/:edition/user/:user/params/get", MicrosimAPIv1.ScotbenAPIImpl.params_get, method = POST  )
 
 @swagger"""
-/scotben/params/set:
+/model/:model/edition/:edition/user/:user/params/set:
   post:
     description: set model parameters to the payload.
     responses:
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/set", MicrosimAPIv1.ScotbenAPIImpl.params_set, method = POST  )
+route( "/model/:model/edition/:edition/user/:user/params/set", MicrosimAPIv1.ScotbenAPIImpl.params_set, method = POST  )
 
 @swagger"""
-/scotben/params/helppage:
+/model/:model/edition/:edition/user/:user/params/helppage:
   get:
     description: set model parameters to the payload.
     responses:
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/helppage", MicrosimAPIv1.ScotbenAPIImpl.params_helppage, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/params/helppage", MicrosimAPIv1.ScotbenAPIImpl.params_helppage, method = GET  )
 
 @swagger"""
-/scotben/params/set:
+/model/:model/edition/:edition/user/:user/params/set:
   get:
     description: set model parameters to the payload.
     responses:
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/set", MicrosimAPIv1.ScotbenAPIImpl.params_set, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/params/set", MicrosimAPIv1.ScotbenAPIImpl.params_set, method = GET  )
 
 @swagger"""
-/scotben/params/validate:
+/model/:model/edition/:edition/user/:user/params/validate:
   get:
     description: set model parameters to the payload.
     responses:
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/validate", MicrosimAPIv1.ScotbenAPIImpl.params_validate, method = POST  )
+route( "/model/:model/edition/:edition/user/:user/params/validate", MicrosimAPIv1.ScotbenAPIImpl.params_validate, method = POST  )
 
 @swagger"""
-/scotben/params/describe:
+/model/:model/edition/:edition/user/:user/params/describe:
   get:
     description: set model parameters to the payload.
     responses:
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/describe", MicrosimAPIv1.ScotbenAPIImpl.params_describe, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/params/describe", MicrosimAPIv1.ScotbenAPIImpl.params_describe, method = GET  )
 
 @swagger"""
-/scotben/params/subsys:
+/model/:model/edition/:edition/user/:user/params/subsys:
   get:
     description: set model parameters to the payload.
     responses:
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/subsys", MicrosimAPIv1.ScotbenAPIImpl.params_subsys, method = GET)
+route( "/model/:model/edition/:edition/user/:user/params/subsys", MicrosimAPIv1.ScotbenAPIImpl.params_subsys, method = GET)
 
 
 @swagger"""
-/scotben/params/labels:
+/model/:model/edition/:edition/user/:user/params/labels:
   get:
     description: set model parameters to the payload.
     responses:
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/params/labels", MicrosimAPIv1.ScotbenAPIImpl.params_labels, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/params/labels", MicrosimAPIv1.ScotbenAPIImpl.params_labels, method = GET  )
 
 @swagger"""
-/scotben/settings/initialise:
+/model/:model/edition/:edition/user/:user/settings/initialise:
   get:
     description: set model parameters to the payload.
     responses:
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/settings/initialise", MicrosimAPIv1.ScotbenAPIImpl.settings_initialise, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/settings/initialise", MicrosimAPIv1.ScotbenAPIImpl.settings_initialise, method = GET  )
 
 @swagger"""
-/scotben/settings/set:
+/model/:model/edition/:edition/user/:user/settings/set:
   get:
     description: set model parameters to the payload.
     responses:
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/settings/set", MicrosimAPIv1.ScotbenAPIImpl.settings_set, method = POST  )
+route( "/model/:model/edition/:edition/user/:user/settings/set", MicrosimAPIv1.ScotbenAPIImpl.settings_set, method = POST  )
 
 @swagger"""
-/scotben/settings/validate:
+/model/:model/edition/:edition/user/:user/settings/validate:
   get:
     description: set model parameters to the payload.
     responses:
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/settings/validate", MicrosimAPIv1.ScotbenAPIImpl.settings_validate, method = POST  )
+route( "/model/:model/edition/:edition/user/:user/settings/validate", MicrosimAPIv1.ScotbenAPIImpl.settings_validate, method = POST  )
 
 @swagger"""
-/scotben/settings/describe:
+/model/:model/edition/:edition/user/:user/settings/describe:
   get:
     description: a dict of key/description for each setting variable.
     responses:
       '200':
         description:  a dict of key/description for each setting variable.
 """
-route( "/scotben/settings/describe", MicrosimAPIv1.ScotbenAPIImpl.settings_describe, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/settings/describe", MicrosimAPIv1.ScotbenAPIImpl.settings_describe, method = GET  )
 
 @swagger"""
-/scotben/settings/helppage:
+/model/:model/edition/:edition/user/:user/settings/helppage:
   get:
     description: A help page (probably in markdown) for the run settings.
     responses:
       '200':
         description: A help page (probably in markdown) for the run settings.
 """
-route( "/scotben/settings/helppage", MicrosimAPIv1.ScotbenAPIImpl.settings_helppage, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/settings/helppage", MicrosimAPIv1.ScotbenAPIImpl.settings_helppage, method = GET  )
 
 @swagger"""
-/scotben/settings/labels:
+/model/:model/edition/:edition/user/:user/settings/labels:
   get:
     description: Key/value dict of labels for each settings option.
     responses:
       '200':
         description: Key/value dict of labels for each settings option.
 """
-route( "/scotben/settings/labels", MicrosimAPIv1.ScotbenAPIImpl.settings_labels, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/settings/labels", MicrosimAPIv1.ScotbenAPIImpl.settings_labels, method = GET  )
 
 @swagger"""
-/scotben/run/status:
+/model/:model/edition/:edition/user/:user/run/status:
   get:
     description: The status of the current run, if any.
     responses:
       '200':
-        description: A json dict with one of the keys from `/scotben/run/statuses` and optional counts.
+        description: A json dict with one of the keys from `/model/:model/edition/:edition/user/:user/run/statuses` and optional counts.
 """
-route( "/scotben/run/status", MicrosimAPIv1.ScotbenAPIImpl.run_status, method = GET )
+route( "/model/:model/edition/:edition/user/:user/run/status", MicrosimAPIv1.ScotbenAPIImpl.run_status, method = GET )
 
 @swagger"""
-/scotben/run/statuses:
+/model/:model/edition/:edition/user/:user/run/statuses:
   get:
     description: an ordered dict of key/label values for possible run statuses (queued/executing/output, etc.) Should also describle any additional info e.g. counts of units processed, position in job queue, etc..
     responses:
       '200':
         description: an ordered dict of key/label values for possible run statuses (queued/executing/output, etc.)..
 """
-route( "/scotben/run/statuses", MicrosimAPIv1.ScotbenAPIImpl.run_statuses, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/run/statuses", MicrosimAPIv1.ScotbenAPIImpl.run_statuses, method = GET  )
 
 @swagger"""
-/scotben/run/submit:
+/model/:model/edition/:edition/user/:user/run/submit:
   post:
     description: submit a run with the current params and settings.
     responses:
       '200':
         description: xxx.
 """
-route( "/scotben/run/submit", MicrosimAPIv1.ScotbenAPIImpl.run_submit, method = POST )
+route( "/model/:model/edition/:edition/user/:user/run/submit", MicrosimAPIv1.ScotbenAPIImpl.run_submit, method = POST )
 
 @swagger"""
-/scotben/run/abort:
+/model/:model/edition/:edition/user/:user/run/abort:
   get:
     description: abort the run associated with the session
     responses:
       '200':
         description: if aborted OK.
 """
-route( "/scotben/run/abort", MicrosimAPIv1.ScotbenAPIImpl.run_abort, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/run/abort", MicrosimAPIv1.ScotbenAPIImpl.run_abort, method = GET  )
 
 @swagger"""
-/scotben/output/items:
+/model/:model/edition/:edition/user/:user/output/items:
   get:
     description: A name/description dict of items created by a run, in json.
     responses:
       '200':
         description: A name/description dict of items created by a run, in json.
 """
-route( "/scotben/output/items", MicrosimAPIv1.ScotbenAPIImpl.output_items, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/output/items", MicrosimAPIv1.ScotbenAPIImpl.output_items, method = GET  )
 
 @swagger"""
-/scotben/output/phunpa:
+/model/:model/edition/:edition/user/:user/output/phunpa:
   get:
     description: All or most outputs from a run as a zip file.
     responses:
       '200':
         description: downloadable zipfile.
 """
-route( "/scotben/output/phunpak", MicrosimAPIv1.ScotbenAPIImpl.output_phunpak, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/output/phunpak", MicrosimAPIv1.ScotbenAPIImpl.output_phunpak, method = GET  )
 
 @swagger"""
-/scotben/output/labels:
+/model/:model/edition/:edition/user/:user/output/labels:
   get:
     description: Return a dict of key/value labels for all output items.
     responses:
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/output/labels", MicrosimAPIv1.ScotbenAPIImpl.output_labels, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/output/labels", MicrosimAPIv1.ScotbenAPIImpl.output_labels, method = GET  )
 
 @swagger"""
-/scotben/output/fetch/:format/:item/:subitem:
+/model/:model/edition/:edition/user/:user/output/fetch/:format/:item/:subitem:
   get:
-    description: return an output item `item` and optionally `subitem`. Should be in the list of outputs from `/scotben/settings/helppage`. Probably in json. Format is one of 'json', 'html', 'svg'
+    description: return an output item `item` and optionally `subitem`. Should be in the list of outputs from `/model/:model/edition/:edition/user/:user/settings/helppage`. Probably in json. Format is one of 'json', 'html', 'svg'
     responses:
       '200':
         description: A json list of new parameters.
 """
-route( "/scotben/output/fetch/:format/:item", MicrosimAPIv1.ScotbenAPIImpl.output_fetch_item, method = GET  )
-route( "/scotben/output/fetch/:format/:item/:subitem", MicrosimAPIv1.ScotbenAPIImpl.output_fetch_item, method = GET  )
-route( "/scotben/output/fetch/:format/:item/:subitem/:sub2", MicrosimAPIv1.ScotbenAPIImpl.output_fetch_item, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/output/fetch/:format/:item", MicrosimAPIv1.ScotbenAPIImpl.output_fetch_item, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/output/fetch/:format/:item/:subitem", MicrosimAPIv1.ScotbenAPIImpl.output_fetch_item, method = GET  )
+route( "/model/:model/edition/:edition/user/:user/output/fetch/:format/:item/:subitem/:sub2", MicrosimAPIv1.ScotbenAPIImpl.output_fetch_item, method = GET  )
 
 @swagger"""
 /get_session_id:
@@ -274,7 +274,7 @@ route( "/get_session_id", MicrosimAPIv1.ScotbenAPIImpl.get_session_id, method=GE
 route( "/destroy_session", MicrosimAPIv1.ScotbenAPIImpl.destroy_session, method=GET )
 
 @swagger"""
-/scotben/settings/helppage:
+/model/:model/edition/:edition/user/:user/settings/helppage:
   get:
     description: Get the id for the current session or create one if no current session.
     responses:

@@ -16,6 +16,7 @@ using .STBOutput
 using .STBParameters
 using .Utils
 
+import MicroVisualisations as mv
 using UUIDs
 
 const BIG_A = 9999999999
@@ -75,6 +76,8 @@ mutable struct AllOutput
     summary  :: NamedTuple
     images   :: NamedTuple
     html     :: NamedTuple
+    typst    :: NamedTuple
+    phunpack :: String
     examples :: Vector
     # progress :: Progress
 end
@@ -245,13 +248,21 @@ function do_run(
     summaries = summarise_frames!( results, settings )
     # short_summary = make_short_summary( summaries )
     exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys, settings )
-    images = construct_images( settings, results, summaries, [DEFAULT_WEEKLY_PARAMS,sys] )
-    html = construct_html( settings, results, summaries )
+    # images = construct_images( settings, results, summaries, [DEFAULT_WEEKLY_PARAMS,sys] )
+    # html = construct_html( settings, results, summaries )
+    html_tabs = construct_tables( settings, results, summary, mv.MV_HTML())
+    typst_tabs = construct_tables( settings, results, summary, mv.MV_TYPST())
+    println( "tabs OK")
+    graphs = construct_images( settings, results, summary, sys )
+    println( "graphs OK")
+    path, zippath = mv.phunpackify( settings, graphs, typst_tabs, html_tabs, zippath, summary )
+    #=
     if do_dumps
         dump_summaries( settings, summaries )
     end
+    =#
     update_progress( user_id, model_name, edition, run_id,
         Progress( settings.uuid, "completed", -99, -99, -99, -99 ) )
-    return AllOutput( summaries, images, html, exres )
+    return AllOutput( summaries, graphs, html_tabs, exres )
 end
 
