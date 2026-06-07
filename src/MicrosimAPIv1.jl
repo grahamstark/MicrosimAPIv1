@@ -1,7 +1,9 @@
 module MicrosimAPIv1
 
-
 include( "uses.jl")
+include( "scotben-functions.jl")
+include( "examples.jl")
+include( "db-functions-and-consts.jl")
 
 function __init__()
     # global t
