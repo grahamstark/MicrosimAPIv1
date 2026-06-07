@@ -50,7 +50,7 @@ end
     uid::Union{Nothing,Int}=nothing,
     runid::Union{Nothing,Int}=nothing )
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-    return Oxygen.html( "<p>uid=$(user.user_id) runid=$(runrec.run_id)</p>")
+    return json( [user,runrec] ) # Oxygen.html( "<p>uid=$(user.user_id) runid=$(runrec.run_id)</p>")
 end
 
 @get "/div/{a}/{b}/"  function(
