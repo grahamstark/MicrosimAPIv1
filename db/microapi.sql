@@ -78,14 +78,16 @@ create table param_page_description(
     model_name char(20) not null default 'scotben',
     model_edition char(24) not null default 'simple-2026a',
     name  char(30) not null,
+    title text,
     info text,
     primary key( model_name, model_edition, name ),
     foreign key( model_name, model_edition) references model_editions );
 
 insert into param_page_description values
-('scotben', 'simple-2026a', 'SimpleParams', 'Basic Set of SB Parameters' ),
-('scotben', 'simple-2026a', 'BIParams','Basic Income Simulation Parameters'),
-('scotben', 'simple-2026a', 'RunSettings',  'Default Run Settings' );
+('scotben', 'simple-2026a', 'SimpleParams', 'Basic Set of SB Parameters', '' ),
+('scotben', 'basic-income-2026a', 'BIParams','Basic Income Simulation Parameters', ''),
+('scotben', 'simple-2026a', 'BIParams','Basic Income Simulation Parameters', ''),
+('scotben', 'basic-income-2026a', 'RunSettings', 'Default Run Settings','');
 
 create table run_params(
     user_id bigint not null,

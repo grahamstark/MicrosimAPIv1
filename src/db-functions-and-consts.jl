@@ -16,20 +16,6 @@ function makeps( query :: AbstractString ) :: LibPQ.Statement
     return ps
 end
 
-struct SimpleParams{T}
-    taxrates :: Vector{T}
-    taxbands :: Vector{T}
-    nirates :: Vector{T}
-    nibands :: Vector{T}
-    taxallowance :: T
-    child_benefit :: T
-    pension :: T
-    scottish_child_payment :: T
-    scp_age :: Int
-    uc_single :: T
-    uc_taper :: T
-end
-
 struct User
     user_id :: Int
     email    :: String

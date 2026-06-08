@@ -23,49 +23,48 @@ using UUIDs
 
 const BIG_A = 9999999999
 
-struct SimpleParams{T}
-    taxrates :: Vector{T}
-    taxbands :: Vector{T}
-    nirates :: Vector{T}
-    nibands :: Vector{T}
-    taxallowance :: T
-    child_benefit :: T
-    pension :: T
-    scottish_child_payment :: T
-    scp_age :: Int
-    uc_single :: T
-    uc_taper :: T
+@tags struct SimpleParams{T}
+    taxrates :: Vector{T} & (; label="Rates", min=0.0, max=100.0, agroup="Scottish Income Tax ", unit="%")
+    taxbands :: Vector{T} & (; label="Thresholds", min=0.0, agroup="Scottish Income Tax", unit="£s pa" )
+    nirates :: Vector{T} & (; label="Rates", min=0.0, max=100.0, agroup="Employee National Insurance", unit="%")
+    nibands :: Vector{T} & (; label="Bands", min=0.0, agroup="Employee National Insurance", unit="£a pw")
+    taxallowance :: T  & (; label="Income Tax Allowance", min=0.0, unit="£s pa")
+    child_benefit :: T & (; label="Child Benefit (1st Child)", min=0.0, unit="£s pw")
+    pension :: T & (; label="New State Pension", min=0.0, unit="£s pw")
+    scottish_child_payment :: T & (; label="Scottish Child Payment (Per Child)", min=0.0, unit="£s pw")
+    scp_age :: Int & (; label="Scottish Child Payment Maximum Age", min=0, max=18, unit="Years")
+    uc_single :: T & (; label="Universal Credit: Allowance for Single Person", min=0.0, unit="£s pm")
+    uc_taper :: T & (; label="Universal Credit: Withdrawal Rate", min=0.0, max=100.0, unit="%")
 end
 
-struct BIParams{T}
-    taxrates :: Vector{T}
-    taxbands :: Vector{T}
-    nirates :: Vector{T}
-    nibands :: Vector{T}
-    taxallowance :: T
+@tags struct BIParams{T}
+    taxrates :: Vector{T} & (; label="Rates", min=0.0, max=100.0, group="Scottish Income Tax ", unit="%")
+    taxbands :: Vector{T} & (; label="Thresholds", min=0.0, agroup="Scottish Income Tax", unit="£s pa" )
+    nirates :: Vector{T} & (; label="Rates", min=0.0, max=100.0, group="Employee National Insurance", unit="%")
+    nibands :: Vector{T} & (; label="Bands", min=0.0, agroup="Employee National Insurance", unit="£s pw")
+    taxallowance :: T  & (; label="Income Tax Allowance", min=0.0, unit="£s pa")
 
-    abolish_uc :: Bool
-    abolish_sick :: Bool
-    abolish_pensions :: Bool
-    abolish_pencred :: Bool
-    abolish_hb :: Bool
-    abolish_ctb :: Bool
-    ubi_as_mt_income :: Bool
-    ubi_taxable :: Bool
+    abolish_uc :: Bool & (; label="Abolish Universal Credit")
+    abolish_sick :: Bool & (; label="Abolish Sickness and Disablement Benefits?")
+    abolish_pensions :: Bool & (; label="Abolish The State Pension")
+    abolish_pencred :: Bool & (; label="Abolish Pension Credit?")
+    abolish_hb :: Bool & (; label="Abolish Housing Benefit (Pension Age Families Only)?")
+    abolish_ctb :: Bool & (; label="Abolish Local Tax Rebates?")
+    ubi_as_mt_income :: Bool & (; label="Treat The UBI As Income for Means-Tested Benefits?")
+    ubi_taxable :: Bool & (; label="Make the UBI Taxable?")
 
-    bi_adult :: T
-    bi_child :: T
-    bi_pensioner :: T
-    bi_adult_age :: T
-    bi_pens_age :: Int
-    mt_bens_treatment :: String
+    bi_adult :: T & (; label="UBI: Amount Per Adult", min=0.0, unit="£s pw")
+    bi_child :: T & (; label="UBI: Amount Per Child", min=0.0, unit="£s pw")
+    bi_pensioner :: T & (; label="UBI: Amount Per Pension Age Person", min=0.0, unit="£s pw")
+    bi_adult_age :: Int & (; label="UBI: Age of Adulthood", min=0, max=21, unit="Years")
+    bi_pens_age :: Int & (; label="UBI: Age of Adulthood", min=50, unit="Years")
+    mt_bens_treatment :: UBEntitlement & (; label="UBI: How to treat Means-Tested Benefits", options=["1"])
 end
 
 StructTypes.StructType(::Type{SimpleParams}) = StructTypes.Struct()
 StructTypes.StructType(::Type{BIParams}) = StructTypes.Struct()
 StructTypes.StructType(::Type{Progress}) = StructTypes.Struct()
 StructTypes.StructType(::Type{Settings}) = StructTypes.Struct()
-
 
 function loaddefs() :: TaxBenefitSystem
     return get_default_system_for_fin_year(
@@ -124,6 +123,22 @@ function map_full_to_simple( sys :: TaxBenefitSystem )::SimpleParams
         nr,
         nb,
         sys.it.personal_allowance,
+
+            adult_amount :: RT = 4_800.0
+    child_amount :: RT = 3_000.0
+    universal_pension :: RT = 8_780.0
+    adult_age :: Int = 17
+    retirement_age :: Int = 66
+    mt_bens_treatment :: UBIMTBenTreatment = ub_abolish
+    abolish_sickness_bens :: Bool = false
+    abolish_pensions :: Bool = true
+    abolish_jsa_esa :: Bool = true
+    abolish_others  :: Bool = true
+    ub_as_mt_income :: Bool = true
+    ub_taxable :: Bool = false
+
+
+
         sys.nmt_bens.child_benefit.first_child,
         sys.nmt_bens.pensions.new_state_pension,
         sys.scottish_child_payment.amounts[1],
@@ -131,6 +146,28 @@ function map_full_to_simple( sys :: TaxBenefitSystem )::SimpleParams
         sys.uc.age_25_and_over,
         sys.uc.taper )
 end
+
+function map_full_to_bi( sys :: TaxBenefitSystem )::BIParams
+    itr, itb = copyArrays(
+        sys.it.non_savings_rates,
+        sys.it.non_savings_thresholds )
+    nr, nb = copyArrays(
+        sys.ni.primary_class_1_rates,
+        sys.ni.primary_class_1_bands )
+    return BIParams(
+        itr,
+        itb,
+        nr,
+        nb,
+        sys.it.personal_allowance,
+        sys.nmt_bens.child_benefit.first_child,
+        sys.nmt_bens.pensions.new_state_pension,
+        sys.scottish_child_payment.amounts[1],
+        sys.scottish_child_payment.maximum_ages[1],
+        sys.uc.age_25_and_over,
+        sys.uc.taper )
+end
+
 
 function roundm( v::T, m::T, digits=2)::T where T<:Number
     v *= m
@@ -206,6 +243,8 @@ const DEFAULT_SIMPLE_PARAMS :: SimpleParams = map_full_to_simple( DEFAULT_PARAMS
 const BASE_UUID = UUID("985c312f-129b-4acd-9e40-cb629d184183")
 const DEF_PROGRESS = Progress( BASE_UUID, "na", 0, 0, 0, 0 )
 
+BASE_RESULTS = (;) # declared this way for convoluted reasons & initialised in __init__ in main moduke
+
 function do_default_run()::NamedTuple
     settings = Settings()
     obs = Observable( Progress(settings.uuid, "",0,0,0,0))
@@ -216,8 +255,6 @@ function do_default_run()::NamedTuple
     end
     return do_one_run( settings, [DEFAULT_WEEKLY_PARAMS], obs )
 end
-
-const BASE_RESULTS = do_default_run()
 
 function do_run(
     user_id :: Integer,
@@ -264,7 +301,7 @@ function do_run(
     end
     =#
     update_progress( user_id, model_name, edition, run_id,
-        Progress( settings.uuid, "completed", -99, -99, -99, -99 ) )
+        Progress( settings.uuid, "completed", -99, -99, -99, -99 ))
     return AllOutput( summaries, graphs, html_tabs, typst_tabs, zippath, exres )
 end
 

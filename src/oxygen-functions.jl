@@ -43,6 +43,18 @@ end
 end
 =#
 
+@get "/params/info/{model_name}/{edition}/" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String)
+    # if ... or somewhere in db
+    return if edition == "simple-2026a"
+        Oxygen.html(struct_to_labels(DEFAULT_SIMPLE_PARAMS))
+    elseif edition == ""
+        Oxygen.html(struct_to_labels(DEFAULT_SIMPLE_PARAMS))
+    end
+end
+
 @get "/run/{model_name}/{edition}/" function(
     req::HTTP.Request,
     model_name::String,
