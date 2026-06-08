@@ -58,7 +58,7 @@ end
     bi_pensioner :: T & (; label="UBI: Amount Per Pension Age Person", min=0.0, unit="£s pw")
     bi_adult_age :: Int & (; label="UBI: Age of Adulthood", min=0, max=21, unit="Years")
     bi_pens_age :: Int & (; label="UBI: Age of Adulthood", min=50, unit="Years")
-    mt_bens_treatment :: UBEntitlement & (; label="UBI: How to treat Means-Tested Benefits", options=["1"])
+    # mt_bens_treatment :: UBEntitlement & (; label="UBI: How to treat Means-Tested Benefits", options=["1"])
 end
 
 StructTypes.StructType(::Type{SimpleParams}) = StructTypes.Struct()
@@ -123,22 +123,6 @@ function map_full_to_simple( sys :: TaxBenefitSystem )::SimpleParams
         nr,
         nb,
         sys.it.personal_allowance,
-
-            adult_amount :: RT = 4_800.0
-    child_amount :: RT = 3_000.0
-    universal_pension :: RT = 8_780.0
-    adult_age :: Int = 17
-    retirement_age :: Int = 66
-    mt_bens_treatment :: UBIMTBenTreatment = ub_abolish
-    abolish_sickness_bens :: Bool = false
-    abolish_pensions :: Bool = true
-    abolish_jsa_esa :: Bool = true
-    abolish_others  :: Bool = true
-    ub_as_mt_income :: Bool = true
-    ub_taxable :: Bool = false
-
-
-
         sys.nmt_bens.child_benefit.first_child,
         sys.nmt_bens.pensions.new_state_pension,
         sys.scottish_child_payment.amounts[1],
@@ -154,17 +138,37 @@ function map_full_to_bi( sys :: TaxBenefitSystem )::BIParams
     nr, nb = copyArrays(
         sys.ni.primary_class_1_rates,
         sys.ni.primary_class_1_bands )
+    # sys. mt_bens_treatment :: UBEntitlement = if sys.
     return BIParams(
         itr,
         itb,
         nr,
         nb,
         sys.it.personal_allowance,
+        #=
+        adult_amount :: RT = 4_800.0
+    child_amount :: RT = 3_000.0
+    universal_pension :: RT = 8_780.0
+    adult_age :: Int = 17
+    retirement_age :: Int = 66
+    mt_bens_treatment :: UBIMTBenTreatment = ub_abolish
+    abolish_sickness_bens :: Bool = false
+    abolish_pensions :: Bool = true
+    abolish_jsa_esa :: Bool = true
+    abolish_others  :: Bool = true
+    ub_as_mt_income :: Bool = true
+    ub_taxable :: Bool = false
+
+
+
+
+        sys.it.personal_allowance,
         sys.nmt_bens.child_benefit.first_child,
         sys.nmt_bens.pensions.new_state_pension,
         sys.scottish_child_payment.amounts[1],
         sys.scottish_child_payment.maximum_ages[1],
         sys.uc.age_25_and_over,
+        =#
         sys.uc.taper )
 end
 
@@ -304,4 +308,3 @@ function do_run(
         Progress( settings.uuid, "completed", -99, -99, -99, -99 ))
     return AllOutput( summaries, graphs, html_tabs, typst_tabs, zippath, exres )
 end
-
