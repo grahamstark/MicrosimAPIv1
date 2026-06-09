@@ -47,6 +47,8 @@ function struct_to_labels( x )
     return String(take!(io))
 end
 
+# TODO something to create and load db from StructUtils
+
 
 """
 <fieldset class='col border rounded-2 m-1 p-2'>

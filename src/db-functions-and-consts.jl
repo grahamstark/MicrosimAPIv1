@@ -27,7 +27,7 @@ struct User
 end
 
 struct Model
-   name :: String
+   subsys :: String
    description :: String
    edition :: String
 end
@@ -181,9 +181,9 @@ const change_run_state = makeps(
     """)
 const params_upsert = makeps(
     """
-       insert into run_params( user_id, model_name, model_edition, run_id, name, data, errors ) values
+       insert into run_params( user_id, model_name, model_edition, run_id, subsys,  data, errors ) values
            ( \$1, \$2 ,\$3 ,\$4, \$5, \$6, \$7 )
-       on conflict( user_id, model_name, model_edition, run_id, name )
+       on conflict( user_id, model_name, model_edition, run_id, subsys )
        do update
            set data=\$6
         returning *
@@ -191,7 +191,7 @@ const params_upsert = makeps(
 
 const retrieve_params = makeps(
     """
-    select name, data, errors from run_params where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
+    select subsys,  data, errors from run_params where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
     """)
 
 const run_state_upsert = makeps(
@@ -250,7 +250,7 @@ const retrieve_cached_output = makeps(
 
 const hash_params = makeps(
     """
-    select hashtextextended(string_agg(data,'' ORDER BY name),999) as param_hash from
+    select hashtextextended(string_agg(data,'' ORDER BY subsys),999) as param_hash from
         run_params where
             user_id=\$1 and
             model_name=\$2 and
@@ -357,8 +357,8 @@ function get_user( user_id ::Union{Int,Nothing} )::User
     end
 end
 
-function save_params( run :: Run, name::String, params :: String, errors :: String )
-    execute( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, name, params, errors ])
+function save_params( run :: Run, subsys::String, params :: String, errors :: String )
+    execute( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, subsys, params, errors ])
 end
 
 function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
@@ -398,7 +398,6 @@ function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
         # is displayed out
      end
 end
-
 
 function initialise_scotben_default()
     user = get_user( DEFAULT_USER )
@@ -509,4 +508,16 @@ function handle_middle( user_id ::Union{Int,Nothing},
     user = get_user( user_id )
     runrec = get_run( user.user_id, model_name, edition, copy_from )
     return user, runrec
+end
+
+function load_parameter_description( model::String, edition::String, title::String, thestruct )
+    info = Oxygen.html(struct_to_labels(thestruct))
+    subsys = string(typeof(thestruct))
+    conn = acquire( makeconn, CON_POOL )
+    r = rowtable( execute( conn, """
+        insert into param_page_description values( \1, \2, \3, \4, \5 )
+        returning *
+    """))[model, edition, subsys, title, info]
+
+    release(CON_POOL,conn)
 end
