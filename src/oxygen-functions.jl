@@ -1,47 +1,119 @@
-
-#=
-
-list outputs
-progress
-submit run
-submit inputs
-describe inputs
-available models
-available
-
-=#
-
-#=
-const CORS_HEADERS = [
-    "Access-Control-Allow-Origin" => "*",
-    "Access-Control-Allow-Headers" => "*",
-    "Access-Control-Allow-Methods" => "POST, GET, OPTIONS"
-]
-
-
-# https://juliaweb.github.io/HTTP.jl/stable/examples/#Cors-Server
-function CorsMiddleware(handler)
-    return function(req::HTTP.Request)
-        println("CORS middleware")
-        # determine if this is a pre-flight request from the browser
-        if HTTP.method(req)=="OPTIONS"
-            return HTTP.Response(200, CORS_HEADERS)
-        else
-            return handler(req) # passes the request to the AuthMiddleware
-        end
-    end
+@get "/params/list-available/{model_name}/{edition}/" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String)
 end
 
-function middle(req::HTTP.Request)
-    user, runrec = handle_middle( user_id, model_name, edition, copy_from )
+@get "/params/get/{model_name}/{edition}/" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String,
+    uid::Union{Nothing,Int}=nothing,
+    runid::Union{Nothing,Int}=nothing)
+    user, runrec = handle_middle( uid, model_name, edition, nothing )
+end
+
+@get "/params/set/{model_name}/{edition}/" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String,
+    uid::Union{Nothing,Int}=nothing,
+    runid::Union{Nothing,Int}=nothing)
+    user, runrec = handle_middle( uid, model_name, edition, nothing )
 
 end
 
-@get "/greet" function(req::HTTP.Request)
-    middle( req )
-    return "hello world!"
+@get "/params/helppage/{model_name}/{edition}/" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String)
 end
-=#
+
+@get "/params/validate/{model_name}/{edition}/" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String,
+    uid::Union{Nothing,Int}=nothing,
+    runid::Union{Nothing,Int}=nothing)
+    user, runrec = handle_middle( uid, model_name, edition, nothing )
+end
+
+@get "/params/describe/{model_name}/{edition}/" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String)
+end
+
+@get "/params/subsys/{model_name}/{edition}/{subsys}" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String,
+    subsys::String,
+    uid::Union{Nothing,Int}=nothing,
+    runid::Union{Nothing,Int}=nothing)
+    user, runrec = handle_middle( uid, model_name, edition, nothing )
+end
+
+@get "/params/initialise/{model_name}/{edition}/" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String,
+    uid::Union{Nothing,Int}=nothing,
+    runid::Union{Nothing,Int}=nothing)
+    user, runrec = handle_middle( uid, model_name, edition, nothing )
+end
+
+@get "/run/submit/{model_name}/{edition}/" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String,
+    uid::Union{Nothing,Int}=nothing,
+    runid::Union{Nothing,Int}=nothing)
+    user, runrec = handle_middle( uid, model_name, edition, nothing )
+end
+
+@get "/run/monitor/{model_name}/{edition}/" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String,
+    uid::Union{Nothing,Int}=nothing,
+    runid::Union{Nothing,Int}=nothing)
+    user, runrec = handle_middle( uid, model_name, edition, nothing )
+end
+
+@get "/run/abort/{model_name}/{edition}/" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String,
+    uid::Union{Nothing,Int}=nothing,
+    runid::Union{Nothing,Int}=nothing)
+    user, runrec = handle_middle( uid, model_name, edition, nothing )
+end
+
+@get "/output/items/{model_name}/{edition}/" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String )
+    user, runrec = handle_middle( uid, model_name, edition, nothing )
+end
+
+@get "/output/phunpack/{model_name}/{edition}/" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String )
+    user, runrec = handle_middle( uid, model_name, edition, nothing )
+end
+
+@get "/output/fetch/{model_name}/{edition}/{format}/{item}" function(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String,
+    format::String,
+    item::String,
+    uid::Union{Nothing,Int}=nothing,
+    runid::Union{Nothing,Int}=nothing)
+    user, runrec = handle_middle( uid, model_name, edition, nothing )
+end
 
 @get "/params/info/{model_name}/{edition}/" function(
     req::HTTP.Request,
@@ -54,31 +126,3 @@ end
         Oxygen.html(struct_to_labels(DEFAULT_SIMPLE_PARAMS))
     end
 end
-
-@get "/run/{model_name}/{edition}/" function(
-    req::HTTP.Request,
-    model_name::String,
-    edition::String,
-    uid::Union{Nothing,Int}=nothing,
-    runid::Union{Nothing,Int}=nothing )
-    user, runrec = handle_middle( uid, model_name, edition, nothing )
-    return json( [user,runrec] ) # Oxygen.html( "<p>uid=$(user.user_id) runid=$(runrec.run_id)</p>")
-end
-
-@get "/div/{a}/{b}/"  function(
-    request::HTTP.Request,
-    b::Int,
-    a::Int,
-    q::Int=10,
-    uid::Union{Nothing,Int}=nothing,
-    runid::Union{Nothing,Int}=nothing)
-    println( "uid=$uid")
-    return q + Float64(b)/a
-end
-
-@get "/add/{a}/{b}" function( req :: HTTP.Request, a::Int, b::Int )
-    return Oxygen.html( "<p>A=$(a + b)</p>")
-end
-
-# start the web server
-serve()
