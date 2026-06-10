@@ -536,4 +536,30 @@ function load_all_parameter_descriptions() # so far
     load_parameter_description("scotben", "basic-income-2026a", "Basic Income Simulation Parameters", DEFAULT_UBI_PARAMETERS )
 end
 
+function get_available_models()::DataFrame
+    conn = acquire( makeconn, CON_POOL )
+    r = DataFrame( execute( conn, "select * from models"))
+    release(CON_POOL,conn)
+    return r
+end
 
+function get_available_editions( model :: String )::DataFrame
+    conn = acquire( makeconn, CON_POOL )
+    r = DataFrame( execute( conn, "select * from model_editions where model_name=\$1", [model]))
+    release(CON_POOL,conn)
+    return r
+end
+
+function get_available_subsystems( model::String, edition :: String )::DataFrame
+    conn = acquire( makeconn, CON_POOL )
+    r = DataFrame( execute( conn, "select * from param_page_description where model_name=\$1 and model_edition=\$2", [model,edition]))
+    release(CON_POOL,conn)
+    return r
+end
+
+function get_parameter_descriptions( model::String, edition :: String, subsys :: String )
+    conn = acquire( makeconn, CON_POOL )
+    r = DataFrame( execute( conn, "select * from param_page_description where model_name=\$1 and model_edition=\$2 and subsys=\$3", [model,edition,subsys]))
+    release(CON_POOL,conn)
+    return r
+end

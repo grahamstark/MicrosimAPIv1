@@ -1,3 +1,9 @@
+function tohtml( d :: DataFrame )
+    io = IOBuffer()
+    pretty_table( io, d; backend=:html, stand_alone=true )
+    return String(take!(io))
+end
+
 """
 Make a struct annotated with StructUtils.@tag into a table.
 
@@ -42,10 +48,9 @@ function struct_to_labels( x )
         r.minv = string(get( tag, :min, "No Minimum" ))
         r.maxv = string(get( tag, :max, "No Maximum" ))
     end #
-    io = IOBuffer()
-    pretty_table( io, d; backend=:html, stand_alone=true )
-    return String(take!(io))
+    return tohtml( d )
 end
+
 
 # TODO something to create and load db from StructUtils
 
