@@ -45,20 +45,20 @@ end
     taxallowance :: T  & (edit=(; label="Income Tax Allowance", min=0.0, unit="£s pa"))
 
     abolish_uc :: Bool & (edit=(; label="Abolish Universal Credit"))
-    abolish_sick :: Bool & (edit=(; label="Abolish Sickness and Disablement Benefits?"))
+    abolish_sickness_bens :: Bool & (edit=(; label="Abolish Sickness and Disablement Benefits?"))
     abolish_jsa_esa:: Bool & (edit=(; label="Abolish Contributory ESA/JSA?"))
     abolish_pensions :: Bool & (edit=(; label="Abolish The State Pension"))
-    abolish_hb :: Bool & (edit=(; label="Don't Meet Housing Costs of Low Income Families (Housing Benefit, Housing Component of Universal Credit)?"))
+    abolish_housing :: Bool & (edit=(; label="Don't Meet Housing Costs of Low Income Families (Housing Benefit, Housing Component of Universal Credit)?"))
     abolish_others :: Bool & (edit=(; label="Abolish All Other Benefits?"))
 
     ubi_as_mt_income :: Bool & (edit=(; label="Treat The UBI As Income for Means-Tested Benefits?"))
     ubi_taxable :: Bool & (edit=(; label="Make the UBI Taxable?"))
 
-    bi_adult :: T & (edit=(; label="UBI: Amount Per Adult", min=0.0, unit="£s pw"))
-    bi_child :: T & (edit=(; label="UBI: Amount Per Child", min=0.0, unit="£s pw"))
-    bi_pensioner :: T & (edit=(; label="UBI: Amount Per Pension Age Person", min=0.0, unit="£s pw"))
-    bi_adult_age :: Int & (edit=(; label="UBI: Age of Adulthood", min=0, max=21, unit="Years"))
-    bi_pens_age :: Int & (edit=(; label="UBI: Age of Adulthood", min=50, unit="Years"))
+    adult_amount :: T & (edit=(; label="UBI: Amount Per Adult", min=0.0, unit="£s pw"))
+    child_amount :: T & (edit=(; label="UBI: Amount Per Child", min=0.0, unit="£s pw"))
+    universal_pension :: T & (edit=(; label="UBI: Amount Per Pension Age Person", min=0.0, unit="£s pw"))
+    adult_age :: Int & (edit=(; label="UBI: Age of Adulthood", min=0, max=21, unit="Years"))
+    retirement_age :: Int & (edit=(; label="UBI: Age of Retirement", min=50, unit="Years"))
     # mt_bens_treatment :: UBEntitlement & (edit=(; label="UBI: How to treat Means-Tested Benefits", options=["1"])
 end
 
@@ -232,6 +232,36 @@ function map_simple_to_full!( sys ::  TaxBenefitSystem, sm :: SimpleParams )
     sys.uc.childcare_max_1_child  = roundm( sys.uc.childcare_max_1_child , p )
     sys.uc.work_allowance_w_housing = roundm( sys.uc.work_allowance_w_housing, p )
     sys.uc.work_allowance_no_housing = roundm( sys.uc.work_allowance_no_housing, p )
+end
+
+function map_ubi_to_full!( sys ::  TaxBenefitSystem, ubi :: UBIParams )
+    sys.it.non_savings_rates = copy(ubi.taxrates)
+    br = sys.it.non_savings_basic_rate
+    orig = DEFAULT_PARAMS.it.non_savings_rates[br]
+    sys.it.non_savings_basic_rate = nearest( sys.it.non_savings_rates, orig )
+    @info " setting sys.it.non_savings_basic_rate to " sys.it.non_savings_basic_rate " orig = " orig
+    sys.it.non_savings_thresholds = copy(ubi.taxbands)
+    sys.ni.primary_class_1_rates = copy(ubi.nirates)
+    sys.ni.primary_class_1_bands = copy(ubi.nibands)
+    sys.it.personal_allowance = ubi.taxallowance
+    sys.ubi.mt_bens_treatment = if(ubi.abolish_housing && ubi.abolish_uc)
+        ub_abolish
+    elseif ubi.abolish_uc
+        ub_keep_housing
+    else
+        ub_as_is
+    end
+    sys.ubi.abolish_sickness_bens = ubi.abolish_sickness_bens
+    sys.ubi.abolish_jsa_esa = ubi.abolish_jsa_esa
+    sys.ubi.abolish_pensions = ubi.abolish_pensions
+    sys.ubi.abolish_others = ubi.abolish_others
+    sys.ubi.ub_as_mt_income = ubi.ubi_as_mt_income
+    sys.ubi.ub_taxable = ubi.ubi_taxable
+    sys.ubi.adult_amount = ubi.adult_amount
+    sys.ubi.child_amount = ubi.child_amount
+    sys.ubi.universal_pension = ubi.universal_pension
+    sys.ubi.adult_age = ubi.adult_age
+    sys.ubi.retirement_age = ubi.retirement_age
 end
 
 const DEFAULT_SIMPLE_PARAMS :: SimpleParams = map_full_to_simple( DEFAULT_PARAMS )
