@@ -3,7 +3,7 @@ Make a struct annotated with StructUtils.@tag into a table.
 
 """
 function struct_to_labels( x )
-    @argcheck isstructtype( typeof(x) )
+    @argcheck isstructtype(typeof(x))
     T = typeof( x )
     tags = ftags( DefStyle(), T )
     vnames = fieldnames(T)
@@ -37,7 +37,7 @@ function struct_to_labels( x )
         end
         r.datatype = "$datatype"
         r.label = label
-        r.unit = get( tag, :unit, nothing )
+        r.unit = get( tag, :unit, "" )
         r.default = val
         r.minv = string(get( tag, :min, "No Minimum" ))
         r.maxv = string(get( tag, :max, "No Maximum" ))

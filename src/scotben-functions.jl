@@ -37,7 +37,7 @@ const BIG_A = 9999999999
     uc_taper :: T & (edit=(; label="Universal Credit: Withdrawal Rate", min=0.0, max=100.0, unit="%"))
 end
 
-@tags struct BIParams{T}
+@tags struct UBIParams{T}
     taxrates :: Vector{T} & (edit=(; label="Rates", min=0.0, max=100.0, group="Scottish Income Tax ", unit="%"))
     taxbands :: Vector{T} & (edit=(; label="Thresholds", min=0.0, agroup="Scottish Income Tax", unit="£s pa" ))
     nirates :: Vector{T} & (edit=(; label="Rates", min=0.0, max=100.0, group="Employee National Insurance", unit="%"))
@@ -46,10 +46,11 @@ end
 
     abolish_uc :: Bool & (edit=(; label="Abolish Universal Credit"))
     abolish_sick :: Bool & (edit=(; label="Abolish Sickness and Disablement Benefits?"))
+    abolish_jsa_esa:: Bool & (edit=(; label="Abolish Contributory ESA/JSA?"))
     abolish_pensions :: Bool & (edit=(; label="Abolish The State Pension"))
-    abolish_pencred :: Bool & (edit=(; label="Abolish Pension Credit?"))
-    abolish_hb :: Bool & (edit=(; label="Abolish Housing Benefit (Pension Age Families Only))?"))
-    abolish_ctb :: Bool & (edit=(; label="Abolish Local Tax Rebates?"))
+    abolish_hb :: Bool & (edit=(; label="Don't Meet Housing Costs of Low Income Families (Housing Benefit, Housing Component of Universal Credit)?"))
+    abolish_others :: Bool & (edit=(; label="Abolish All Other Benefits?"))
+
     ubi_as_mt_income :: Bool & (edit=(; label="Treat The UBI As Income for Means-Tested Benefits?"))
     ubi_taxable :: Bool & (edit=(; label="Make the UBI Taxable?"))
 
@@ -62,7 +63,7 @@ end
 end
 
 StructTypes.StructType(::Type{SimpleParams}) = StructTypes.Struct()
-StructTypes.StructType(::Type{BIParams}) = StructTypes.Struct()
+StructTypes.StructType(::Type{UBIParams}) = StructTypes.Struct()
 StructTypes.StructType(::Type{Progress}) = StructTypes.Struct()
 StructTypes.StructType(::Type{Settings}) = StructTypes.Struct()
 
@@ -131,45 +132,39 @@ function map_full_to_simple( sys :: TaxBenefitSystem )::SimpleParams
         sys.uc.taper )
 end
 
-function map_full_to_bi( sys :: TaxBenefitSystem )::BIParams
+function map_full_to_ubi( sys :: TaxBenefitSystem )::UBIParams
     itr, itb = copyArrays(
         sys.it.non_savings_rates,
         sys.it.non_savings_thresholds )
     nr, nb = copyArrays(
         sys.ni.primary_class_1_rates,
         sys.ni.primary_class_1_bands )
-    # sys. mt_bens_treatment :: UBEntitlement = if sys.
-    return BIParams(
+    abolish_housing, abolish_uc = if sys.ubi.mt_bens_treatment == ub_as_is
+        false, false
+    elseif sys.ubi.mt_bens_treatment == ub_abolish
+        true, true
+    elseif sys.ubi.mt_bens_treatment == ub_keep_housing
+        false, true
+    end
+    return UBIParams(
         itr,
         itb,
         nr,
         nb,
         sys.it.personal_allowance,
-        #=
-        adult_amount :: RT = 4_800.0
-    child_amount :: RT = 3_000.0
-    universal_pension :: RT = 8_780.0
-    adult_age :: Int = 17
-    retirement_age :: Int = 66
-    mt_bens_treatment :: UBIMTBenTreatment = ub_abolish
-    abolish_sickness_bens :: Bool = false
-    abolish_pensions :: Bool = true
-    abolish_jsa_esa :: Bool = true
-    abolish_others  :: Bool = true
-    ub_as_mt_income :: Bool = true
-    ub_taxable :: Bool = false
-
-
-
-
-        sys.it.personal_allowance,
-        sys.nmt_bens.child_benefit.first_child,
-        sys.nmt_bens.pensions.new_state_pension,
-        sys.scottish_child_payment.amounts[1],
-        sys.scottish_child_payment.maximum_ages[1],
-        sys.uc.age_25_and_over,
-        =#
-        sys.uc.taper )
+        abolish_uc,
+        sys.ubi.abolish_sickness_bens,
+        sys.ubi.abolish_jsa_esa,
+        sys.ubi.abolish_pensions,
+        abolish_housing,
+        sys.ubi.abolish_others,
+        sys.ubi.ub_as_mt_income,
+        sys.ubi.ub_taxable,
+        sys.ubi.adult_amount,
+        sys.ubi.child_amount,
+        sys.ubi.universal_pension,
+        sys.ubi.adult_age,
+        sys.ubi.retirement_age )
 end
 
 
@@ -240,6 +235,7 @@ function map_simple_to_full!( sys ::  TaxBenefitSystem, sm :: SimpleParams )
 end
 
 const DEFAULT_SIMPLE_PARAMS :: SimpleParams = map_full_to_simple( DEFAULT_PARAMS )
+const DEFAULT_UBI_PARAMETERS :: UBIParams =  map_full_to_ubi( DEFAULT_PARAMS )
 
 #
 # Foolish decision to index runs by UUIDs...

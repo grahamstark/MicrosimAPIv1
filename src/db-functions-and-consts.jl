@@ -510,14 +510,30 @@ function handle_middle( user_id ::Union{Int,Nothing},
     return user, runrec
 end
 
-function load_parameter_description( model::String, edition::String, title::String, thestruct )
-    info = Oxygen.html(struct_to_labels(thestruct))
-    subsys = string(typeof(thestruct))
-    conn = acquire( makeconn, CON_POOL )
-    r = rowtable( execute( conn, """
-        insert into param_page_description values( \1, \2, \3, \4, \5 )
-        returning *
-    """))[model, edition, subsys, title, info]
+"""
 
+
+"""
+function load_parameter_description( model::String, edition::String, title::String, thestruct )::DataFrame
+    @argcheck isstructtype( typeof(thestruct))
+    info = struct_to_labels(thestruct)
+     # use the type pf the strict as the subsys name, but strip e.g. "{Float64}" from the end
+    subsys =  match( r"(.*?)({|$).*", string(typeof(thestruct)))[1]
+    conn = acquire( makeconn, CON_POOL )
+    r = DataFrame( execute( conn, """
+        insert into param_page_description values( \$1, \$2, \$3, \$4, \$5 )
+        on conflict( model_name, model_edition, subsys )
+        do update
+            set title = \$4, info=\$5
+        returning *
+    """, [model, edition, subsys, title, info]))
     release(CON_POOL,conn)
+    return r
 end
+
+function load_all_parameter_descriptions() # so far
+    load_parameter_description("scotben", "simple-2026a", "A Basic Set of SB Parameters", DEFAULT_SIMPLE_PARAMS )
+    load_parameter_description("scotben", "basic-income-2026a", "Basic Income Simulation Parameters", DEFAULT_UBI_PARAMETERS )
+end
+
+
