@@ -51,6 +51,10 @@ function struct_to_labels( x )
     return tohtml( d )
 end
 
+function structname( thestruct )
+    @argcheck isstructtype( typeof(thestruct))
+    return match( r"(.*?)({|$).*", string(typeof(thestruct)))[1]
+end
 
 # TODO something to create and load db from StructUtils
 

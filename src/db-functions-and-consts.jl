@@ -112,9 +112,30 @@ function get_queue_counts( user_id :: Union{Int,Nothing} = nothing )::Dict{Char,
     return d;
 end
 
+
+"""
+
+
+"""
+function load_parameter_description( model::String, edition::String, title::String, thestruct )::DataFrame
+    info = struct_to_labels(thestruct)
+     # use the type pf the strict as the subsys name, but strip e.g. "{Float64}" from the end
+    subsys = structname( thestruct )
+    conn = acquire( makeconn, CON_POOL )
+    r = DataFrame( execute( conn, """
+        insert into param_page_description values( \$1, \$2, \$3, \$4, \$5 )
+        on conflict( model_name, model_edition, subsys )
+        do update
+            set title = \$4, info=\$5
+        returning *
+    """, [model, edition, subsys, title, info]))
+    release(CON_POOL,conn)
+    return r
+end
+
 function load_all_parameter_descriptions() # so far
-    load_parameter_description("scotben", "simple-2026a", "A Basic Set of SB Parameters", DEFAULT_SIMPLE_PARAMS )
-    load_parameter_description("scotben", "basic-income-2026a", "Basic Income Simulation Parameters", DEFAULT_UBI_PARAMETERS )
+    load_parameter_description("scotben", "simple-2026a", "A Basic Set of SB Parameters", DEFAULT_MINI_PARAMS["SimpleParams"] )
+    load_parameter_description("scotben", "basic-income-2026a", "Basic Income Simulation Parameters", DEFAULT_MINI_PARAMS["UBIParams"] )
 end
 
 function get_available_models()::DataFrame
@@ -435,9 +456,13 @@ end
 function initialise_scotben_default()
     user = get_user( DEFAULT_USER )
     editions = get_available_editions( "scotben" )
-    for edition in editions
+    for edition in editions.edition
         model = get_model( "scotben", edition )
         rs = rowtable(execute( run_upsert, [DEFAULT_USER, model.name, model.edition, DEFAULT_RUN, "default $(model.name) run, edition $(model.edition).", "E",true,"nodir"] ))[1]
+        for subsys in eachrow(get_parameter_descriptions( "scotben", edition ))
+            params = DEFAULT_MINI_PARAMS[ subsys.subsys ]
+            save_params( run, subsys, JSON3.write( params ),JSON3.write( no_errs ))
+        end
         @show rs
         run = Run(
             rs.user_id,
@@ -455,13 +480,17 @@ function initialise_scotben_default()
             Dict{String,String}(),
             Dict{String,String}())
         no_errs = Dict{String,String}()
-        save_params( run, "SimpleParams", JSON3.write( DEFAULT_SIMPLE_PARAMS ),JSON3.write( no_errs ))
-        allout = do_run( run.user_id, run.model_name, run.model_edition, run.run_id, DEFAULT_SIMPLE_PARAMS;
+        allout = do_run( run.user_id, run.model_name, run.model_edition, run.run_id, DEFAULT_PARAMS;
                         update_progress=update_progress,
                         do_dumps=true  )
         h = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
         cache_output( run, h, allout )
     end
+end
+
+function initialise_database()
+    load_all_parameter_descriptions()
+    initialise_scotben_default()
 end
 
 #=
@@ -545,25 +574,3 @@ function handle_middle( user_id ::Union{Int,Nothing},
     runrec = get_run( user.user_id, model_name, edition, copy_from )
     return user, runrec
 end
-
-"""
-
-
-"""
-function load_parameter_description( model::String, edition::String, title::String, thestruct )::DataFrame
-    @argcheck isstructtype( typeof(thestruct))
-    info = struct_to_labels(thestruct)
-     # use the type pf the strict as the subsys name, but strip e.g. "{Float64}" from the end
-    subsys =  match( r"(.*?)({|$).*", string(typeof(thestruct)))[1]
-    conn = acquire( makeconn, CON_POOL )
-    r = DataFrame( execute( conn, """
-        insert into param_page_description values( \$1, \$2, \$3, \$4, \$5 )
-        on conflict( model_name, model_edition, subsys )
-        do update
-            set title = \$4, info=\$5
-        returning *
-    """, [model, edition, subsys, title, info]))
-    release(CON_POOL,conn)
-    return r
-end
-

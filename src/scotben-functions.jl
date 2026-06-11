@@ -264,8 +264,9 @@ function map_ubi_to_full!( sys ::  TaxBenefitSystem, ubi :: UBIParams )
     sys.ubi.retirement_age = ubi.retirement_age
 end
 
-const DEFAULT_SIMPLEPARAMS :: SimpleParams = map_full_to_simple( DEFAULT_PARAMS )
-const DEFAULT_UBIPARAMS :: UBIParams =  map_full_to_ubi( DEFAULT_PARAMS )
+const DEFAULT_MINI_PARAMS = Dict([
+    "SimpleParams" => map_full_to_simple( DEFAULT_PARAMS ),
+    "UBIParams"    => map_full_to_ubi( DEFAULT_PARAMS )])
 
 #
 # Foolish decision to index runs by UUIDs...
@@ -291,15 +292,12 @@ function do_run(
     model_name :: String,
     edition :: String,
     run_id :: Integer,
-    simple :: SimpleParams;
+    sys :: TaxBenefitSystem;
     update_progress::Function,
     do_dumps :: Bool )::AllOutput
     @info "do_run entered"
     settings = Settings()
     update_progress( user_id, model_name, edition, run_id, Progress( settings.uuid, "starting", 0, 0, 0, 0 ))
-    sys = deepcopy( DEFAULT_PARAMS)
-    map_simple_to_full!( sys, simple )
-    weeklyise!( sys )
     obs = Observable( Progress(settings.uuid, "",0,0,0,0))
     tot = 0
     of = on(obs) do p
@@ -325,4 +323,49 @@ function do_run(
     update_progress( user_id, model_name, edition, run_id,
         Progress( settings.uuid, "completed", -99, -99, -99, -99 ))
     return AllOutput( summaries, graphs, html_tabs, typst_tabs, zippath, exres )
+end
+
+"""
+Overloaded by miniparam
+"""
+function do_run(
+    user_id :: Integer,
+    model_name :: String,
+    edition :: String,
+    run_id :: Integer,
+    simple :: SimpleParams;
+    update_progress::Function,
+    do_dumps :: Bool )::AllOutput
+    sys = deepcopy( DEFAULT_PARAMS)
+    map_simple_to_full!( sys, simple )
+    weeklyise!( sys )
+    return do_run(
+        user_id,
+        model_name,
+        model_edition,
+        run_id,
+        sys;
+        update_progress=update_progress,
+        do_dumps=do_dumps )
+end
+
+function do_run(
+    user_id :: Integer,
+    model_name :: String,
+    edition :: String,
+    run_id :: Integer,
+    ubi :: UBIParams;
+    update_progress::Function,
+    do_dumps :: Bool )::AllOutput
+    sys = deepcopy( DEFAULT_PARAMS)
+    map_ubi_to_full!( sys, ubi )
+    weeklyise!( sys )
+    return do_run(
+        user_id,
+        model_name,
+        model_edition,
+        run_id,
+        sys;
+        update_progress=update_progress,
+        do_dumps=do_dumps )
 end
