@@ -264,8 +264,8 @@ function map_ubi_to_full!( sys ::  TaxBenefitSystem, ubi :: UBIParams )
     sys.ubi.retirement_age = ubi.retirement_age
 end
 
-const DEFAULT_SIMPLE_PARAMS :: SimpleParams = map_full_to_simple( DEFAULT_PARAMS )
-const DEFAULT_UBI_PARAMETERS :: UBIParams =  map_full_to_ubi( DEFAULT_PARAMS )
+const DEFAULT_SIMPLEPARAMS :: SimpleParams = map_full_to_simple( DEFAULT_PARAMS )
+const DEFAULT_UBIPARAMS :: UBIParams =  map_full_to_ubi( DEFAULT_PARAMS )
 
 #
 # Foolish decision to index runs by UUIDs...
