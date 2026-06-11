@@ -42,7 +42,7 @@ end
     uid::Union{Nothing,Int}=nothing,
     runid::Union{Nothing,Int}=nothing)
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-
+    return runrec.params[subsys]
 end
 
 @get "/params/set/{model_name}/{edition}/{subsys}" function(
@@ -154,4 +154,3 @@ end
     runid::Union{Nothing,Int}=nothing)
     user, runrec = handle_middle( uid, model_name, edition, nothing )
 end
-
