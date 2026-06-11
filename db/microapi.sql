@@ -83,11 +83,12 @@ create table param_page_description(
     primary key( model_name, model_edition, subsys ),
     foreign key( model_name, model_edition) references model_editions );
 
-insert into param_page_description values
-('scotben', 'simple-2026a', 'SimpleParams', 'Basic Set of SB Parameters', '' ),
-('scotben', 'basic-income-2026a', 'BIParams','Basic Income Simulation Parameters', ''),
-('scotben', 'simple-2026a', 'RunSettings','Basic Income Run Settings Subset', ''),
-('scotben', 'basic-income-2026a', 'RunSettings', 'Default Run Settings Subset','');
+-- replaced with Julia initialisation 'initialise_database()'
+-- insert into param_page_description values
+-- ('scotben', 'simple-2026a', 'SimpleParams', 'Basic Set of SB Parameters', '' ),
+-- ('scotben', 'basic-income-2026a', 'BIParams','Basic Income Simulation Parameters', ''),
+-- ('scotben', 'simple-2026a', 'RunSettings','Basic Income Run Settings Subset', ''),
+-- ('scotben', 'basic-income-2026a', 'RunSettings', 'Default Run Settings Subset','');
 
 create table run_params(
     user_id bigint not null,

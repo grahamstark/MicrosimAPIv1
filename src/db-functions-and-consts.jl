@@ -5,9 +5,9 @@ end
 
 const CON_POOL = Pool{LibPQ.Connection}(30)
 
-const DEFAULT_USER = 2
-const DEFAULT_RUN = 1
-const TEST_RUN = 1234567890
+const DEFAULT_USER_ID = 2
+const DEFAULT_RUN_ID = 1
+const TEST_RUN_ID = 1234567890
 
 function makeps( query :: AbstractString ) :: LibPQ.Statement
     conn = acquire( makeconn, CON_POOL )
@@ -27,7 +27,8 @@ struct User
 end
 
 struct Model
-   subsys :: String
+   name :: String
+   # subsys :: String
    description :: String
    edition :: String
 end
@@ -133,6 +134,9 @@ function load_parameter_description( model::String, edition::String, title::Stri
     return r
 end
 
+"""
+NOTE: you need BASE_RESULTS = do_default_run() first if you're not loading MicrosimAPIv1
+"""
 function load_all_parameter_descriptions() # so far
     load_parameter_description("scotben", "simple-2026a", "A Basic Set of SB Parameters", DEFAULT_MINI_PARAMS["SimpleParams"] )
     load_parameter_description("scotben", "basic-income-2026a", "Basic Income Simulation Parameters", DEFAULT_MINI_PARAMS["UBIParams"] )
@@ -456,13 +460,10 @@ end
 function initialise_scotben_default()
     user = get_user( DEFAULT_USER )
     editions = get_available_editions( "scotben" )
-    for edition in editions.edition
+    no_errs = Dict{String,String}()
+    for edition in editions.model_edition
         model = get_model( "scotben", edition )
-        rs = rowtable(execute( run_upsert, [DEFAULT_USER, model.name, model.edition, DEFAULT_RUN, "default $(model.name) run, edition $(model.edition).", "E",true,"nodir"] ))[1]
-        for subsys in eachrow(get_parameter_descriptions( "scotben", edition ))
-            params = DEFAULT_MINI_PARAMS[ subsys.subsys ]
-            save_params( run, subsys, JSON3.write( params ),JSON3.write( no_errs ))
-        end
+        rs = rowtable(execute( run_upsert, [DEFAULT_USER_ID, model.name, model.edition, DEFAULT_RUN_ID, "default $(model.name) run, edition $(model.edition).", "E",true,"nodir"] ))[1]
         @show rs
         run = Run(
             rs.user_id,
@@ -479,8 +480,11 @@ function initialise_scotben_default()
             Dict{String,String}(),
             Dict{String,String}(),
             Dict{String,String}())
-        no_errs = Dict{String,String}()
-        allout = do_run( run.user_id, run.model_name, run.model_edition, run.run_id, DEFAULT_PARAMS;
+        for subsys in eachrow(get_available_subsystems( "scotben", edition ))
+            params = DEFAULT_MINI_PARAMS[ subsys.subsys ]
+            save_params( run, subsys.subsys, JSON3.write( params ),JSON3.write( no_errs ))
+        end
+        allout = do_run( run.user_id, run.model_name, run.model_edition, run.run_id, DEFAULT_WEEKLY_PARAMS;
                         update_progress=update_progress,
                         do_dumps=true  )
         h = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
@@ -534,7 +538,7 @@ function get_run(
         run = rowtable(execute( run_upsert, run_params ))[1]|> rs_to_run
         # run = rs_to_run( rs )
         copyrun = if isnothing( copy_from )
-            rs = rowtable(execute( retrieve_numbered_run, [DEFAULT_USER, model_name, edition, DEFAULT_RUN]))[1]
+            rs = rowtable(execute( retrieve_numbered_run, [DEFAULT_USER_ID, model_name, edition, DEFAULT_RUN]))[1]
             rs_to_run( rs )
         else
             @show  [user_id, model_name, edition, copy_from ]
