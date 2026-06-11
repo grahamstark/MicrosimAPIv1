@@ -112,6 +112,39 @@ function get_queue_counts( user_id :: Union{Int,Nothing} = nothing )::Dict{Char,
     return d;
 end
 
+function load_all_parameter_descriptions() # so far
+    load_parameter_description("scotben", "simple-2026a", "A Basic Set of SB Parameters", DEFAULT_SIMPLE_PARAMS )
+    load_parameter_description("scotben", "basic-income-2026a", "Basic Income Simulation Parameters", DEFAULT_UBI_PARAMETERS )
+end
+
+function get_available_models()::DataFrame
+    conn = acquire( makeconn, CON_POOL )
+    r = DataFrame( execute( conn, "select * from models"))
+    release(CON_POOL,conn)
+    return r
+end
+
+function get_available_editions( model :: String )::DataFrame
+    conn = acquire( makeconn, CON_POOL )
+    r = DataFrame( execute( conn, "select * from model_editions where model_name=\$1", [model]))
+    release(CON_POOL,conn)
+    return r
+end
+
+function get_available_subsystems( model::String, edition :: String )::DataFrame
+    conn = acquire( makeconn, CON_POOL )
+    r = DataFrame( execute( conn, "select * from param_page_description where model_name=\$1 and model_edition=\$2", [model,edition]))
+    release(CON_POOL,conn)
+    return r
+end
+
+function get_parameter_descriptions( model::String, edition :: String, subsys :: String )
+    conn = acquire( makeconn, CON_POOL )
+    r = DataFrame( execute( conn, "select * from param_page_description where model_name=\$1 and model_edition=\$2 and subsys=\$3", [model,edition,subsys]))
+    release(CON_POOL,conn)
+    return r
+end
+
 const output_upsert = makeps(
     """
     insert into run_results_cache( model_name, model_edition, param_hash, datatype, item, data ) values
@@ -401,31 +434,34 @@ end
 
 function initialise_scotben_default()
     user = get_user( DEFAULT_USER )
-    model = get_model( "scotben", "simple-2026a" )
-    rs = rowtable(execute( run_upsert, [DEFAULT_USER, model.name, model.edition, DEFAULT_RUN, "default $(model.name) run, edition $(model.edition).", "E",true,"nodir"] ))[1]
-    @show rs
-    run = Run(
-        rs.user_id,
-        rs.model_name,
-        rs.model_edition,
-        rs.run_id,
-        rs.run_name,
-        rs.created,
-        rs.last_change,
-        rs.qstatus[1],
-        rs.output_in_sync,
-        rs.working_dir,
-        RunState[],
-        Dict{String,String}(),
-        Dict{String,String}(),
-        Dict{String,String}())
-    no_errs = Dict{String,String}()
-    save_params( run, "SimpleParams", JSON3.write( DEFAULT_SIMPLE_PARAMS),JSON3.write( no_errs ))
-    allout = do_run( run.user_id, run.model_name, run.model_edition, run.run_id, DEFAULT_SIMPLE_PARAMS;
-                    update_progress=update_progress,
-                    do_dumps=true  )
-    h = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
-    cache_output( run, h, allout )
+    editions = get_available_editions( "scotben" )
+    for edition in editions
+        model = get_model( "scotben", edition )
+        rs = rowtable(execute( run_upsert, [DEFAULT_USER, model.name, model.edition, DEFAULT_RUN, "default $(model.name) run, edition $(model.edition).", "E",true,"nodir"] ))[1]
+        @show rs
+        run = Run(
+            rs.user_id,
+            rs.model_name,
+            rs.model_edition,
+            rs.run_id,
+            rs.run_name,
+            rs.created,
+            rs.last_change,
+            rs.qstatus[1],
+            rs.output_in_sync,
+            rs.working_dir,
+            RunState[],
+            Dict{String,String}(),
+            Dict{String,String}(),
+            Dict{String,String}())
+        no_errs = Dict{String,String}()
+        save_params( run, "SimpleParams", JSON3.write( DEFAULT_SIMPLE_PARAMS ),JSON3.write( no_errs ))
+        allout = do_run( run.user_id, run.model_name, run.model_edition, run.run_id, DEFAULT_SIMPLE_PARAMS;
+                        update_progress=update_progress,
+                        do_dumps=true  )
+        h = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
+        cache_output( run, h, allout )
+    end
 end
 
 #=
@@ -531,35 +567,3 @@ function load_parameter_description( model::String, edition::String, title::Stri
     return r
 end
 
-function load_all_parameter_descriptions() # so far
-    load_parameter_description("scotben", "simple-2026a", "A Basic Set of SB Parameters", DEFAULT_SIMPLE_PARAMS )
-    load_parameter_description("scotben", "basic-income-2026a", "Basic Income Simulation Parameters", DEFAULT_UBI_PARAMETERS )
-end
-
-function get_available_models()::DataFrame
-    conn = acquire( makeconn, CON_POOL )
-    r = DataFrame( execute( conn, "select * from models"))
-    release(CON_POOL,conn)
-    return r
-end
-
-function get_available_editions( model :: String )::DataFrame
-    conn = acquire( makeconn, CON_POOL )
-    r = DataFrame( execute( conn, "select * from model_editions where model_name=\$1", [model]))
-    release(CON_POOL,conn)
-    return r
-end
-
-function get_available_subsystems( model::String, edition :: String )::DataFrame
-    conn = acquire( makeconn, CON_POOL )
-    r = DataFrame( execute( conn, "select * from param_page_description where model_name=\$1 and model_edition=\$2", [model,edition]))
-    release(CON_POOL,conn)
-    return r
-end
-
-function get_parameter_descriptions( model::String, edition :: String, subsys :: String )
-    conn = acquire( makeconn, CON_POOL )
-    r = DataFrame( execute( conn, "select * from param_page_description where model_name=\$1 and model_edition=\$2 and subsys=\$3", [model,edition,subsys]))
-    release(CON_POOL,conn)
-    return r
-end
