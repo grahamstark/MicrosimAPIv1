@@ -274,7 +274,14 @@ const DEFAULT_MINI_PARAMS = Dict([
 const BASE_UUID = UUID("985c312f-129b-4acd-9e40-cb629d184183")
 const DEF_PROGRESS = Progress( BASE_UUID, "na", 0, 0, 0, 0 )
 
-BASE_RESULTS = (;) # declared this way for convoluted reasons & initialised in __init__ in main moduke
+SCOTBEN_BASE_RESULTS = (;) # declared this way for convoluted reasons & initialised in lazy below
+function get_scotben_base_results()::NamedTuple
+     global SCOTBEN_BASE_RESULTS
+     if length( SCOTBEN_BASE_RESULTS ) == 0
+        SCOTBEN_BASE_RESULTS = do_default_run()
+     end
+     return SCOTBEN_BASE_RESULTS
+end
 
 function do_default_run()::NamedTuple
     settings = Settings()
@@ -307,11 +314,12 @@ function do_run(
     end
     results = do_one_run( settings, [sys], obs )
     # merge with defaults
-    insert!( results.hh, 1, BASE_RESULTS.hh[1] )
-    insert!( results.bu, 1, BASE_RESULTS.bu[1] )
-    insert!( results.indiv, 1, BASE_RESULTS.indiv[1] )
-    insert!( results.income, 1, BASE_RESULTS.income[1] )
-    insert!( results.behavioural_results, 1, BASE_RESULTS.behavioural_results[1] )
+    base_results = get_scotben_base_results()
+    insert!( results.hh, 1, base_results.hh[1] )
+    insert!( results.bu, 1, base_results.bu[1] )
+    insert!( results.indiv, 1, base_results.indiv[1] )
+    insert!( results.income, 1, base_results.income[1] )
+    insert!( results.behavioural_results, 1, base_results.behavioural_results[1] )
     summaries = summarise_frames!( results, settings )
     exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys, settings )
     html_tabs = mv.construct_tables( settings, results, summaries, mv.MV_HTML())

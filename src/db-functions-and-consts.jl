@@ -458,12 +458,12 @@ function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
 end
 
 function initialise_scotben_default()
-    user = get_user( DEFAULT_USER )
+    user = get_user( DEFAULT_USER_ID )
     editions = get_available_editions( "scotben" )
     no_errs = Dict{String,String}()
     for edition in editions.model_edition
         model = get_model( "scotben", edition )
-        rs = rowtable(execute( run_upsert, [DEFAULT_USER_ID, model.name, model.edition, DEFAULT_RUN_ID, "default $(model.name) run, edition $(model.edition).", "E",true,"nodir"] ))[1]
+        rs = rowtable(execute( run_upsert, [user.user_id, model.name, model.edition, DEFAULT_RUN_ID, "default $(model.name) run, edition $(model.edition).", "E",true,"nodir"] ))[1]
         @show rs
         run = Run(
             rs.user_id,

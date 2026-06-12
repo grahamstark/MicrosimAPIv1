@@ -11,7 +11,7 @@ export doserve
 doserve() = Oxygen.serve()
 
 function __init__()
-    global BASE_RESULTS = do_default_run()
+
 end
 
 end # module
