@@ -170,6 +170,13 @@ function get_parameter_descriptions( model::String, edition :: String, subsys ::
     return r
 end
 
+function get_output_descriptions( model::String ) ## add edition???
+    conn = acquire( makeconn, CON_POOL )
+    r = DataFrame( execute( conn, "select * from result_description where model_name=\$1", [model]))
+    release(CON_POOL,conn)
+    return r
+end
+
 const output_upsert = makeps(
     """
     insert into run_results_cache( model_name, model_edition, param_hash, datatype, item, data ) values

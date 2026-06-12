@@ -30,8 +30,19 @@ function list_params(
     return df[1,:info]
 end
 
+function list_outputs(
+    req::HTTP.Request,
+    model_name::String,
+    edition::String )
+    return tohtml(get_output_descriptions( model_name ))
+end
+
+# synonyms
 @get "/info/params-description/{model_name}/{edition}/{subsys}" list_params
 @get "/params/info/{model_name}/{edition}/{subsys}" list_params
+# synonyms
+@get "/info/output-description/{model_name}/{edition}" list_outputs
+@get "/output/info/{model_name}/{edition}" list_outputs
 
 @get "/params/get/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
@@ -43,6 +54,8 @@ end
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     return (; uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys])
 end
+
+
 
 @get "/params/set/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
