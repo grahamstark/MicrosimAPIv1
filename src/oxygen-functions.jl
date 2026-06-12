@@ -41,7 +41,7 @@ end
 @get "/info/params-description/{model_name}/{edition}/{subsys}" list_params
 @get "/params/info/{model_name}/{edition}/{subsys}" list_params
 # synonyms
-@get "/info/output-description/{model_name}/{edition}" list_outputs
+@get "/info/available-outputs/{model_name}/{edition}" list_outputs
 @get "/output/info/{model_name}/{edition}" list_outputs
 
 @get "/params/get/{model_name}/{edition}/{subsys}" function(

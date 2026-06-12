@@ -172,7 +172,7 @@ end
 
 function get_output_descriptions( model::String ) ## add edition???
     conn = acquire( makeconn, CON_POOL )
-    r = DataFrame( execute( conn, "select * from result_description where model_name=\$1", [model]))
+    r = DataFrame( execute( conn, "select * from result_description where model_name=\$1 order by model_name,datatype,item", [model]))
     release(CON_POOL,conn)
     return r
 end
