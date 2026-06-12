@@ -49,13 +49,18 @@ end
     model_name::String,
     edition::String,
     subsys::String,
-    uid::Union{Nothing,Int}=nothing,
-    runid::Union{Nothing,Int}=nothing)
+    uid::Union{Nothing,Int}=nothing )
+    qp =  queryparams(req)
+    @show qp
+    uids = get(qp,"uid",nothing)
+    uid = if ! isnothing( uids )
+        parse( Int, uids )
+    else
+        nothing
+    end
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     return (; uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys])
 end
-
-
 
 @get "/params/set/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
@@ -64,10 +69,12 @@ end
     subsys::String,
     uid::Union{Nothing,Int}=nothing,
     runid::Union{Nothing,Int}=nothing)
+    qp =  queryparams(req)
+    @show qp
+    uid = get(qp,"uid",nothing)
+    @show uid
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-    params =
-    # errors = "XXX"
-    # save_params( runrec, "XXX", params, errors )
+    params = json(req, "params")
     return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys] )
 end
 
