@@ -31,7 +31,6 @@ function list_params(
 end
 
 @get "/info/params-description/{model_name}/{edition}/{subsys}" list_params
-# synonym
 @get "/params/info/{model_name}/{edition}/{subsys}" list_params
 
 @get "/params/get/{model_name}/{edition}/{subsys}" function(
@@ -42,7 +41,7 @@ end
     uid::Union{Nothing,Int}=nothing,
     runid::Union{Nothing,Int}=nothing)
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-    return runrec.params[subsys]
+    return (; uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys])
 end
 
 @get "/params/set/{model_name}/{edition}/{subsys}" function(
@@ -53,9 +52,10 @@ end
     uid::Union{Nothing,Int}=nothing,
     runid::Union{Nothing,Int}=nothing)
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-    errors = "XXX"
-    params = "XXX"
-    save_params( runrec, "XXX", params, errors )
+    params =
+    # errors = "XXX"
+    # save_params( runrec, "XXX", params, errors )
+    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys] )
 end
 
 @get "/params/helppage/{model_name}/{edition}/{subsys}" function(
@@ -74,23 +74,6 @@ end
     runid::Union{Nothing,Int}=nothing)
     user, runrec = handle_middle( uid, model_name, edition, nothing )
 
-end
-
-@get "/params/describe/{model_name}/{edition}/{subsys}" function(
-    req::HTTP.Request,
-    model_name::String,
-    edition::String,
-    subsys::Union{String,Nothing})
-end
-
-@get "/params/subsys/{model_name}/{edition}/{subsys}" function(
-    req::HTTP.Request,
-    model_name::String,
-    edition::String,
-    subsys::Union{String,Nothing},
-    uid::Union{Nothing,Int}=nothing,
-    runid::Union{Nothing,Int}=nothing)
-    user, runrec = handle_middle( uid, model_name, edition, nothing )
 end
 
 @get "/params/initialise/{model_name}/{edition}/{subsys}" function(

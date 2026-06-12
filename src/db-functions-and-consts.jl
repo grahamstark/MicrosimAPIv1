@@ -434,10 +434,10 @@ function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
     p = rowtable(execute( retrieve_params, [user_id, run.model_name, run.model_edition, run_id]))
     for r in p
         if (! isnothing(copy_run_id)) # we are copying in parameters from user_id
-            execute( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, r.name, r.data, r.errors ])
+            execute( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, r.subsys, r.data, r.errors ])
         end
-        run.params[r.name] = r.data
-        run.errors[r.name] = r.errors
+        run.params[r.subsys] = r.data
+        run.errors[r.subsys] = r.errors
     end
 end
 
@@ -538,7 +538,7 @@ function get_run(
         run = rowtable(execute( run_upsert, run_params ))[1]|> rs_to_run
         # run = rs_to_run( rs )
         copyrun = if isnothing( copy_from )
-            rs = rowtable(execute( retrieve_numbered_run, [DEFAULT_USER_ID, model_name, edition, DEFAULT_RUN]))[1]
+            rs = rowtable(execute( retrieve_numbered_run, [DEFAULT_USER_ID, model_name, edition, DEFAULT_RUN_ID]))[1]
             rs_to_run( rs )
         else
             @show  [user_id, model_name, edition, copy_from ]

@@ -7,6 +7,9 @@ include( "scotben-functions.jl")
 include( "db-functions-and-consts.jl")
 include( "oxygen-functions.jl")
 
+export doserve
+doserve() = Oxygen.serve()
+
 function __init__()
     global BASE_RESULTS = do_default_run()
 end
