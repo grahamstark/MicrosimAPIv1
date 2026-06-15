@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="UTF-8">
+    <title>A Budget for Scotland/Microsim API V1 Demo</title>
+    <link rel="icon" href="images/favicon.ico?v=2.0.0" type="image/x-icon">
+    <link rel="stylesheet" href="css/stb-bootstrap.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@latest"></script>
+    <script type='text/javascript' src='js/jquery.js'></script>
+    <script type='text/javascript' src='js/jquery.periodicalupdater.js'></script>
+    <script type='text/javascript' src='js/jquery.validate.js'></script>
+    <script type='text/javascript' src='js/jquery.number.js'></script>
+    <script type='text/javascript' src='js/formatting-libs.js'></script>
+    <script type='text/javascript' src='js/graphics-libs.js'></script>
+    <!-- bootstrap -->
+    <script src="js/bootstrap.bundle.js"></script>
+    <!-- vega graphics -->
+    <script type="text/javascript" src="js/vega-lite.min.js"></script>
+    <script type="text/javascript" src="js/vega.js"></script>
+    <script type="text/javascript" src="js/vega-embed.min.js"></script>
+    <!-- templates -->
+    <script type='text/javascript' src="js/mustache.min.js"></script>
+    <!-- FIXME add colours in bootstrap -->
+    <style type="text/css">
+        .bg-purple {background:#cdf;}
+        .bg-orange {background:#fec;}
+        .modcon:hover {filter:brightness(0.6);}
+    </style>
+
+</head>
+
+<body class='text-primary p-2'>
+
+</body>
+
+<script>
+var sys = {
+  "taxrates":[19.0,20.0,21.0,42.0,45.0,48.0],
+  "taxbands":[3967.0,16956.0,31092.0,62430.0,125140.0],
+  "nirates":[0.0,0.0,8.0,2.0],
+  "nibands":[129.0,242.0,967.0],
+  "taxallowance":12570.0,
+  "child_benefit":27.05,
+  "pension":241.3,
+  "scottish_child_payment":28.2,
+  "scp_age":15,
+  "uc_single":424.9,
+  "uc_taper":55.0
+}
+
+</script>
+</html>
