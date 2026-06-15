@@ -37,6 +37,13 @@
 </body>
 
 <script>
+
+const API = "http://localhost:9890";
+const UID = 4907240437919486244;
+const MODEL = "scotben";
+const EDITION = "simple-2026a"
+const SUBSET = ""
+
 var sys = {
   "taxrates":[19.0,20.0,21.0,42.0,45.0,48.0],
   "taxbands":[3967.0,16956.0,31092.0,62430.0,125140.0],
@@ -50,6 +57,30 @@ var sys = {
   "uc_single":424.9,
   "uc_taper":55.0
 }
+
+function loadpars(sys,action,uid){
+    const url = [API,"params",action,MODEL,EDITION,SUBSET].join("/") + "?uid="+uid";
+    console.log("url=|" + url + "|");
+    $.ajax(
+        { url: url,
+        method: 'get',
+        dataType: 'json',
+        data: sys,
+        contentType: "application/json",
+    }).done(
+            function( result ){
+                console.log( "load_parameters; results are ", result );
+                // populateForm( result.session_id, result.params, result.default );
+            }
+    ).fail(
+            function( jqXHR, textStatus, errorThrown ){
+                console.log( "failed with " + textStatus + " errorThrown "+errorThrown );
+                console.log( "jqXHR.statusCode" + jqXHR.status + " text" + jqXHR.statusText );
+            }
+    ); // fail
+}
+
+loadpars( sys, "validate", UID);
 
 </script>
 </html>
