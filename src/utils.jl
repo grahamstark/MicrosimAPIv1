@@ -4,6 +4,55 @@ function tohtml( d :: DataFrame )
     return String(take!(io))
 end
 
+abstract type Subsys end
+
+"""
+Simple min/max validation of a struct, using StructUtils annotations.
+return - dict with an entry for each error
+"""
+function tvalidate(x)::Dict{String,NamedTuple}
+    @argcheck isstructtype(typeof(x))
+    T = typeof( x )
+    tags = ftags( DefStyle(), T )
+    vnames = fieldnames(T)
+    n = length(vnames)
+    @assert n == length(tags)
+    d = Dict{String,NamedTuple}()
+    for i in eachindex(tags)
+        vname = vnames[i]
+        v = getproperty(x, vname )
+        tag = tags[i]
+        agroup = get( tag, :agroup, nothing )
+        label = tag.label
+        is_array = ! isnothing( agroup )
+        datatype = typeof( v )
+        if is_array
+            label = "$(agroup): $label"
+            datatype = eltype( v )
+        end
+        if v <: Number
+            minv = get( tag, :min, typemin(datatype))
+            maxv = get( tag, :max, typemax(datatype))
+            if is_array
+                for i in eachindex(v)
+                    if v[i] < minv
+                        d[vname] = (; minv, value=v[i], label, index=i, error="below minimum" )
+                    elseif v[i] > maxv
+                        d[vname] = (; maxv, value=v[i], label, index=i, error="above maximum" )
+                    end
+                end
+            else
+                if v < minv
+                    d[vname] = (; minv, value=v, label, error="below minimum" )
+                elseif v > maxv
+                    d[vname] = (; maxv, value=v, label, error="above maximum" )
+                end
+            end
+        end
+    end #
+    return d
+end
+
 """
 Make a struct annotated with StructUtils.@tag into a table.
 
@@ -24,7 +73,7 @@ function struct_to_labels( x )
         maxv = fill("",n),
         unit = fill("",n),
         is_array = fill( "N",n))
-    for i in 1:n
+    for i in eachindex( tags )
         vname = vnames[i]
         v = getproperty(x, vname )
         tag = tags[i]
@@ -54,6 +103,17 @@ end
 function structname( thestruct )
     @argcheck isstructtype( typeof(thestruct))
     return match( r"(.*?)({|$).*", string(typeof(thestruct)))[1]
+end
+
+function getq( T::DataType, req :: HTTP.Request, key :: String )
+    qp =  queryparams(req)
+    @show qp
+    vs = Base.get(qp,key,nothing)
+    v = if ! isnothing( vs )
+        parse( T, vs )
+    else
+        nothing
+    end
 end
 
 # TODO something to create and load db from StructUtils

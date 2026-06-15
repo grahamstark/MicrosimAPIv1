@@ -50,16 +50,10 @@ end
     edition::String,
     subsys::String,
     uid::Union{Nothing,Int}=nothing )
-    qp =  queryparams(req)
-    @show qp
-    uids = get(qp,"uid",nothing)
-    uid = if ! isnothing( uids )
-        parse( Int, uids )
-    else
-        nothing
-    end
+    uid = getq(Int, req, "uid") # ?? shouldn't be needed
+    @show uid
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-    return (; uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys])
+    return json((; uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys]))
 end
 
 @get "/params/set/{model_name}/{edition}/{subsys}" function(
@@ -71,7 +65,7 @@ end
     runid::Union{Nothing,Int}=nothing)
     qp =  queryparams(req)
     @show qp
-    uid = get(qp,"uid",nothing)
+    uid = getq(Int, req, "uid") # ?? shouldn't be needed
     @show uid
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     params = json(req, "params")
@@ -85,13 +79,24 @@ end
     subsys::String)
 end
 
+function get_sys(req::HTTP.Request,
+                 subsys::String)::Subsys
+    sys = try
+        T = eval(Symbol(subsys))
+        # .. or
+        json( req, T)
+        catch e
+        return json(e)
+    end
+    return tvalidate( sys )
+end
+
 @get "/params/validate/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
     model_name::String,
     edition::String,
-    subsys::String,
-    uid::Union{Nothing,Int}=nothing,
-    runid::Union{Nothing,Int}=nothing)
+    subsys::String)
+    uid = getq(Int, req, "uid") # ?? shouldn't be needed
     user, runrec = handle_middle( uid, model_name, edition, nothing )
 
 end
@@ -100,9 +105,7 @@ end
     req::HTTP.Request,
     model_name::String,
     edition::String,
-    subsys::Union{String,Nothing},
-    uid::Union{Nothing,Int}=nothing,
-    runid::Union{Nothing,Int}=nothing)
+    subsys::Union{String,Nothing}=nothing)
     user, runrec = handle_middle( uid, model_name, edition, nothing )
 end
 
@@ -133,13 +136,6 @@ end
     user, runrec = handle_middle( uid, model_name, edition, nothing )
 end
 
-@get "/output/items/{model_name}/{edition}/" function(
-    req::HTTP.Request,
-    model_name::String,
-    edition::String )
-    user, runrec = handle_middle( uid, model_name, edition, nothing )
-end
-
 @get "/output/phunpack/{model_name}/{edition}/" function(
     req::HTTP.Request,
     model_name::String,
@@ -152,8 +148,19 @@ end
     model_name::String,
     edition::String,
     format::String,
-    item::String,
-    uid::Union{Nothing,Int}=nothing,
-    runid::Union{Nothing,Int}=nothing)
+    item::String)
+    uid = getq(Int, req,"uid")
+    @show uid format item
     user, runrec = handle_middle( uid, model_name, edition, nothing )
+    outkey = OutputKey( item, format )
+    # @show keys(runrec.output)
+    item = runrec.output[outkey]
+    # fixme more idiomatic
+    return if format == "svg"
+        Oxygen.xml( item.data )
+    elseif format == "html"
+        Oxygen.html( item.data )
+    else
+        Oxygen.json( item.data )
+    end
 end

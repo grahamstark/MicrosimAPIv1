@@ -9,7 +9,7 @@ using Markdown
 using LibPQ
 using LoggingExtras
 using Observables
-using Oxygen
+using Oxygen; @oxidize # !!! for debugging
 using Parameters
 using PrettyTables
 using Random

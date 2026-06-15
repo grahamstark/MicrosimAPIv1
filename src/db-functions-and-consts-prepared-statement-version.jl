@@ -9,6 +9,13 @@ const DEFAULT_USER_ID = 2
 const DEFAULT_RUN_ID = 1
 const TEST_RUN_ID = 1234567890
 
+function makeps( query :: AbstractString ) :: LibPQ.Statement
+    conn = acquire( makeconn, CON_POOL )
+    ps = prepare( conn, query )
+    release(CON_POOL,conn)
+    return ps
+end
+
 struct User
     user_id :: Int
     email    :: String
@@ -61,15 +68,15 @@ mutable struct Run
     output :: Dict{OutputKey,OutputItem}
 end
 
-const user_queue_counts =
+const user_queue_counts = makeps(
     """
     select qstatus,count(*)  as qcount from runs where user_id=\$1 group by qstatus
-    """
+    """)
 
-const total_queue_counts =
+const total_queue_counts = makeps(
     """
     select qstatus,count(*) as qcount from runs group by qstatus
-    """
+    """)
 
 
 function get_avaliable_models_and_versions()::AbstractDataFrame
@@ -105,6 +112,7 @@ function get_queue_counts( user_id :: Union{Int,Nothing} = nothing )::Dict{Char,
     end
     return d;
 end
+
 
 """
 
@@ -169,7 +177,7 @@ function get_output_descriptions( model::String ) ## add edition???
     return r
 end
 
-const output_upsert =
+const output_upsert = makeps(
     """
     insert into run_results_cache( model_name, model_edition, param_hash, datatype, item, data ) values
            ( \$1, \$2 ,\$3 ,\$4, \$5, \$6 )
@@ -177,24 +185,24 @@ const output_upsert =
        do update
            set data = \$6
         returning *
-    """
+    """)
 
-const user_create =
+const user_create = makeps(
     """
     insert into users( user_id, email, password, description, created, expiry, is_temp ) values
         ( \$1, \$2, \$3, \$4, now(), now()+ interval '1 day', \$5 )
     returning user_id, email, password, description, created, expiry, is_temp
-    """
+    """)
 
-const update_user_expiry =
+const update_user_expiry = makeps(
     """
     update users set expiry = greatest( expiry, now() + interval '1 day') where user_id = \$1 returning *
-    """
+    """)
 
-const user_exists =
+const user_exists = makeps(
     """
     select count(*) as nusers from users where user_id = \$1
-    """
+    """)
 #=
 const run_exists = makeps(
     """
@@ -202,17 +210,17 @@ const run_exists = makeps(
     """)
 =#
 
-const run_in_state_exists =
+const run_in_state_exists = makeps(
     """
     select count(*) as nruns from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and qstatus = \$4
-    """
+    """)
 #=
 const get_latest_runs_in_state = makeps(
     """
     select * from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and qstatus = \$4 order by last_change
     """)
 =#
-const run_upsert =
+const run_upsert = makeps(
     """
        insert into runs( user_id, model_name, model_edition, run_id, run_name, created, last_change, qstatus, output_in_sync, working_dir ) values
            ( \$1, \$2 ,\$3 ,\$4, \$5, now(), now(), \$6, \$7, \$8 )
@@ -220,23 +228,23 @@ const run_upsert =
        do update
            set last_change = now(), qstatus=\$6, output_in_sync=\$7
         returning *
-    """
+    """)
 
-const next_free_run_id =
+const next_free_run_id = makeps(
     """
         select coalesce(max( run_id ),0) + 1 as next_free_run_id from runs where user_id=\$1 and model_name=\$2 and model_edition=\$3
-    """
+    """)
 
-const switch_run_state =
+const switch_run_state = makeps(
     """
         update runs set qstatus = \$1 where qstatus = \$2 and user_id=\$3 and model_name=\$4 and model_edition=\$5
-    """
+    """)
 
-const change_run_state =
+const change_run_state = makeps(
     """
         update runs set qstatus = \$5, output_in_sync=\$6 where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
-    """
-const params_upsert =
+    """)
+const params_upsert = makeps(
     """
        insert into run_params( user_id, model_name, model_edition, run_id, subsys,  data, errors ) values
            ( \$1, \$2 ,\$3 ,\$4, \$5, \$6, \$7 )
@@ -244,22 +252,22 @@ const params_upsert =
        do update
            set data=\$6
         returning *
-    """
+    """ )
 
-const retrieve_params =
+const retrieve_params = makeps(
     """
     select subsys,  data, errors from run_params where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
-    """
+    """)
 
-const run_state_upsert =
+const run_state_upsert = makeps(
     """
     insert into run_state( user_id, model_name, model_edition, run_id, thread_no, phase, completed, todo, timer )
     values(\$1, \$2,\$3, \$4, \$5, \$6, \$7, \$8, now() ) on conflict( user_id, model_name, model_edition, run_id, thread_no ) do
         update set phase=\$6, completed=\$7, todo=\$8, timer=now()
     returning *
-    """
+    """)
 
-const clear_run_states =
+const clear_run_states = makeps(
     """
     delete from run_state where
         user_id=\$1 and
@@ -268,18 +276,19 @@ const clear_run_states =
         run_id=\$4 and
         thread_no >= \$5
     """
+    )
 
-const retrieve_latest_run =
+const retrieve_latest_run = makeps(
     """
     select * from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and qstatus=\$4 order by last_change limit 1;
-    """
+    """)
 
-const retrieve_numbered_run =
+const retrieve_numbered_run = makeps(
     """
     select * from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and run_id =\$4
-    """
+    """)
 
-const retrieve_cached_output_item =
+const retrieve_cached_output_item = makeps(
     """
     select data from run_results_cache where
         model_name=\$1 and
@@ -287,9 +296,9 @@ const retrieve_cached_output_item =
         param_hash=\$3 and
         datatype=\$4 and
         item=\$5
-    """
+    """)
 
-const retrieve_cached_output =
+const retrieve_cached_output = makeps(
     """
     select run_results_cache.item,
         run_results_cache.datatype,
@@ -301,10 +310,10 @@ const retrieve_cached_output =
         run_results_cache.param_hash=\$3 and
         run_results_cache.datatype = result_description.datatype and
         run_results_cache.item = result_description.item
-    """
+    """)
 
 
-const hash_params =
+const hash_params = makeps(
     """
     select hashtextextended(string_agg(data,'' ORDER BY subsys),999) as param_hash from
         run_params where
@@ -312,38 +321,32 @@ const hash_params =
             model_name=\$2 and
             model_edition=\$3
             and run_id=\$4
-    """
+    """ )
 
-const run_is_cached =
+const run_is_cached = makeps(
     """
     select count(*) >= 1 as is_cached from run_results_cache where
     model_name=\$1 and
     model_edition=\$2 and
     param_hash=\$3
-    """
+    """ )
 
-const retrieve_model =
+const retrieve_model = makeps(
     """
     select models.model_name, models.description, model_editions.model_edition from models, model_editions where
         models.model_name=\$1 and model_editions.model_edition=\$2 and model_editions.model_name=models.model_name
-    """
-
-function execonn( statement::String, data::AbstractArray)
-    conn = acquire( makeconn, CON_POOL)
-    r = execute( conn, statement, data )
-    release(CON_POOL,conn)
-    return r
-end
+    """ )
 
 function make_param_hash( user_id :: Int, model_name::String, model_edition::String, run_id::Int)::BigInt
-    rc = rowtable( execonn( hash_params, [user_id, model_name, string(model_edition), run_id]))[1]
+    rc = rowtable( execute( hash_params, [user_id, model_name, string(model_edition), run_id]))[1]
     return rc.param_hash
 end
 
 function get_model( model_name :: String, edition :: String )::Model
-    r = rowtable( execonn( retrieve_model, [model_name, edition]))[1]
+    r = rowtable( execute( retrieve_model, [model_name, edition]))[1]
     return Model( r.model_name, r.description, String(r.model_edition ))
 end
+
 
 function update_progress(
     user_id::Integer,
@@ -351,11 +354,18 @@ function update_progress(
     edition::String,
     run_id::Integer,
     prog::Progress )
-    execonn( run_state_upsert, [user_id, model_name, edition, run_id, prog.thread, prog.phase, prog.count, prog.size])
+    #= thread_no, phase, completed, todo,
+    phase  :: String
+        thread :: Int
+        count  :: Int
+        step   :: Int
+        size   :: Int
+    =#
+    execute( run_state_upsert, [user_id, model_name, edition, run_id, prog.thread, prog.phase, prog.count, prog.size])
 end
 
 function clearup_run_states( run :: Run, delete_threads_above :: Int )
-    execonn( clear_run_states, [run.user_id, run.model_name, run.model_edition, run.run_id, delete_threads_above ])
+    execute( clear_run_states, [run.user_id, run.model_name, run.model_edition, run.run_id, delete_threads_above ])
 end
 
 """
@@ -363,11 +373,24 @@ for now, just cache SVG and HTML output
 """
 function cache_output( run :: Run, param_hash :: BigInt, allout :: AllOutput )
     model = get_model( run.model_name, run.model_edition )
+    #=
+    for k in keys( allout.summary )
+        if k == :gain_lose # gain-lose data is a sub-enum type - just the main tables here
+            for gk in [:children_gl, :dec_gl, :hhtype_gl, :ten_gl]
+                data = JSON3.write( allout.summary.gain_lose[2][gk]; allow_inf=true)
+                execute( output_upsert, [ run.model_name, run.model_edition, param_hash, "json", gk, data ] )
+            end
+        elseif k != :legalaid # skip Legalaid entirely
+            data = JSON3.write( allout.summary[k]; allow_inf=true)
+            execute( output_upsert, [ run.model_name, run.model_edition, param_hash, "json", k, data ] )
+        end
+    end
+    =#
     for k in keys( allout.html )
-        execonn( output_upsert, [ run.model_name, run.model_edition, param_hash,  "html", k, allout.html[k].data ] )
+        execute( output_upsert, [ run.model_name, run.model_edition, param_hash,  "html", k, allout.html[k].data ] )
     end
     for k in keys( allout.images )
-        execonn( output_upsert, [ run.model_name, run.model_edition, param_hash, "svg", k, mv.fig_to_svg_string(allout.images[k].data) ] )
+        execute( output_upsert, [ run.model_name, run.model_edition, param_hash, "svg", k, mv.fig_to_svg_string(allout.images[k].data) ] )
     end
 end
 
@@ -388,19 +411,21 @@ function get_user( user_id ::Union{Int,Nothing} )::User
         if isnothing( user_id )
             return true
         end
-        rs = execonn( "select count(*) as nusers from users where user_id = \$1", [user_id])
+        conn = acquire( makeconn, CON_POOL)
+        rs = execute( conn, "select count(*) as nusers from users where user_id = \$1", [user_id])
+        release(CON_POOL,conn)
         return columntable(rs).nusers[1] != 1
     end
 
     return if user_doesnt_exist()
         create_temp_user()
     else
-        rs_to_user(execonn( update_user_expiry, [user_id]))
+        rs_to_user(execute( update_user_expiry, [user_id]))
     end
 end
 
 function save_params( run :: Run, subsys::String, params :: String, errors :: String )
-    execonn( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, subsys, params, errors ])
+    execute( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, subsys, params, errors ])
 end
 
 function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
@@ -415,10 +440,10 @@ function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
         copy_run_id
     end
     @show user_id run_id
-    p = rowtable(execonn( retrieve_params, [user_id, run.model_name, run.model_edition, run_id]))
+    p = rowtable(execute( retrieve_params, [user_id, run.model_name, run.model_edition, run_id]))
     for r in p
         if (! isnothing(copy_run_id)) # we are copying in parameters from user_id
-            execonn( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, r.subsys, r.data, r.errors ])
+            execute( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, r.subsys, r.data, r.errors ])
         end
         run.params[r.subsys] = r.data
         run.errors[r.subsys] = r.errors
@@ -428,10 +453,10 @@ end
 function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
     user_id = coalesce( copy_user_id, run.user_id )
     run_id = coalesce( copy_run_id, run.run_id )
-    param_hash = rowtable(execonn( hash_params, [run.user_id, run.model_name, run.model_edition, run.run_id]))[1].param_hash
-    is_cached = rowtable(execonn( run_is_cached, [run.model_name, run.model_edition, param_hash]))[1].is_cached
+    param_hash = rowtable(execute( hash_params, [run.user_id, run.model_name, run.model_edition, run.run_id]))[1].param_hash
+    is_cached = rowtable(execute( run_is_cached, [run.model_name, run.model_edition, param_hash]))[1].is_cached
     if is_cached
-        p = rowtable(execonn( retrieve_cached_output, [run.model_name, run.model_edition, param_hash]))
+        p = rowtable(execute( retrieve_cached_output, [run.model_name, run.model_edition, param_hash]))
         for r in p
             k = OutputKey( r.item, r.datatype )
             v = OutputItem( r.info, r.data )
@@ -447,7 +472,7 @@ function initialise_scotben_default()
     no_errs = Dict{String,String}()
     for edition in editions.model_edition
         model = get_model( "scotben", edition )
-        rs = rowtable(execonn( run_upsert, [user.user_id, model.name, model.edition, DEFAULT_RUN_ID, "default $(model.name) run, edition $(model.edition).", "E",true,"nodir"] ))[1]
+        rs = rowtable(execute( run_upsert, [user.user_id, model.name, model.edition, DEFAULT_RUN_ID, "default $(model.name) run, edition $(model.edition).", "E",true,"nodir"] ))[1]
         @show rs
         run = Run(
             rs.user_id,
@@ -510,7 +535,7 @@ function get_run(
     end
 
     function get_next_free_run_id()::Int
-        r = execonn( next_free_run_id, [user_id, model_name, edition])
+        r = execute( next_free_run_id, [user_id, model_name, edition])
         return columntable(r).next_free_run_id[1]
     end
 
@@ -519,29 +544,29 @@ function get_run(
         d = joinpath( tempdir(), "$(user_id)", "$(model_name)", "$(edition)", "$(new_run_id)")
         path = mkpath(d)
         run_params = [user_id, model_name, edition, new_run_id, "", "E", false, path]
-        run = rowtable(execonn( run_upsert, run_params ))[1]|> rs_to_run
+        run = rowtable(execute( run_upsert, run_params ))[1]|> rs_to_run
         # run = rs_to_run( rs )
         copyrun = if isnothing( copy_from )
-            rs = rowtable(execonn( retrieve_numbered_run, [DEFAULT_USER_ID, model_name, edition, DEFAULT_RUN_ID]))[1]
+            rs = rowtable(execute( retrieve_numbered_run, [DEFAULT_USER_ID, model_name, edition, DEFAULT_RUN_ID]))[1]
             rs_to_run( rs )
         else
             @show  [user_id, model_name, edition, copy_from ]
-            rs = rowtable(execonn( retrieve_numbered_run, [user_id, model_name, edition, copy_from ]))[1]
+            rs = rowtable(execute( retrieve_numbered_run, [user_id, model_name, edition, copy_from ]))[1]
             rs_to_run( rs )
         end
         load_params!( run;  copy_user_id=copyrun.user_id, copy_run_id=copyrun.run_id )
         load_output!( run;  copy_user_id=copyrun.user_id, copy_run_id=copyrun.run_id )
         run.output_in_sync = true
-        execonn( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, 'E', true ])
+        execute( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, 'E', true ])
         # demote the copied run if not the default
         if(copyrun.user_id == run.user_id) && (copyrun.qstatus in ['E'])
-            execonn( change_run_state, [copyrun.user_id, copyrun.model_name, copyrun.model_edition, copyrun.run_id,'C', copyrun.output_in_sync])
+            exec( change_run_state, [copyrun.user_id, copyrun.model_name, copyrun.model_edition, copyrun.run_id,'C', copyrun.output_in_sync])
         end
         return run
     end # create run
 
 
-    rs = rowtable(execonn( retrieve_latest_run, [user_id, model_name, edition, 'E']))
+    rs = rowtable(execute( retrieve_latest_run, [user_id, model_name, edition, 'E']))
     l = length(rs)
     @assert l in 0:1
     return if l == 1 # there's a latest run in 'Edit' state
