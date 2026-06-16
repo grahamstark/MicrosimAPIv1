@@ -18,7 +18,7 @@ function tvalidate(x)::Dict{String,NamedTuple}
     n = length(vnames)
     @assert n == length(tags)
     d = Dict{String,NamedTuple}()
-    for i in eachindex(tags)
+    for i in 1:n
         vname = vnames[i]
         v = getproperty(x, vname )
         tag = tags[i]
@@ -73,13 +73,13 @@ function struct_to_labels( x )
         maxv = fill("",n),
         unit = fill("",n),
         is_array = fill( "N",n))
-    for i in eachindex( tags )
+    for i in 1:n
         vname = vnames[i]
         v = getproperty(x, vname )
         tag = tags[i]
         r = d[i,:]
         r.varname = vname
-        agroup = get( tag, :agroup, nothing )
+        agroup = Base.get( tag, :agroup, nothing )
         label = tag.label
         is_array = ! isnothing( agroup )
         datatype = typeof( v )
@@ -92,10 +92,10 @@ function struct_to_labels( x )
         end
         r.datatype = "$datatype"
         r.label = label
-        r.unit = get( tag, :unit, "" )
+        r.unit = Base.get( tag, :unit, "" )
         r.default = val
-        r.minv = string(get( tag, :min, "No Minimum" ))
-        r.maxv = string(get( tag, :max, "No Maximum" ))
+        r.minv = string(Base.get( tag, :min, "No Minimum" ))
+        r.maxv = string(Base.get( tag, :max, "No Maximum" ))
     end #
     return tohtml( d )
 end

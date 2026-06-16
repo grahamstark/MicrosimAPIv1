@@ -381,7 +381,7 @@ function get_user( user_id ::Union{Int,Nothing} )::User
     function create_temp_user()
         user_id = rand(50_000:typemax(Int))
         user_data = [user_id, "no-email", hash("user_id$user_id"), "user number $user_id",true]
-        rs_to_user(execute( user_create, user_data ))
+        rs_to_user(execonn( user_create, user_data ))
     end
 
     function user_doesnt_exist()
