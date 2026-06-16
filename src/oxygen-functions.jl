@@ -81,14 +81,8 @@ end
 
 function get_sys(req::HTTP.Request,
                  subsys::String)::Subsys
-    sys = try
-        T = eval(Symbol(subsys))
-        # .. or
-        json( req, T)
-        catch e
-        return json(e)
-    end
-    return tvalidate( sys )
+    T = eval(Symbol(subsys)){Float64}
+    return json( req, T)
 end
 
 @get "/params/validate/{model_name}/{edition}/{subsys}" function(
@@ -98,7 +92,12 @@ end
     subsys::String)
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-
+    return try
+        sys = get_sys( req, subsys )
+        json(tvalidate( sys )
+    catch e
+        json( Dict( "parse-exception"=>e))
+    end
 end
 
 @get "/params/initialise/{model_name}/{edition}/{subsys}" function(

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta charset="UTF-8">
     <title>A Budget for Scotland/Microsim API V1 Demo</title>
@@ -8,19 +10,13 @@
     <link rel="stylesheet" href="css/stb-bootstrap.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@latest"></script>
     <script type='text/javascript' src='js/jquery.js'></script>
     <script type='text/javascript' src='js/jquery.periodicalupdater.js'></script>
     <script type='text/javascript' src='js/jquery.validate.js'></script>
     <script type='text/javascript' src='js/jquery.number.js'></script>
     <script type='text/javascript' src='js/formatting-libs.js'></script>
-    <script type='text/javascript' src='js/graphics-libs.js'></script>
     <!-- bootstrap -->
     <script src="js/bootstrap.bundle.js"></script>
-    <!-- vega graphics -->
-    <script type="text/javascript" src="js/vega-lite.min.js"></script>
-    <script type="text/javascript" src="js/vega.js"></script>
-    <script type="text/javascript" src="js/vega-embed.min.js"></script>
     <!-- templates -->
     <script type='text/javascript' src="js/mustache.min.js"></script>
     <!-- FIXME add colours in bootstrap -->
@@ -30,19 +26,14 @@
         .modcon:hover {filter:brightness(0.6);}
     </style>
 
-</head>
-
-<body class='text-primary p-2'>
-
-</body>
 
 <script>
 
 const API = "http://localhost:9890";
 const UID = 4907240437919486244;
 const MODEL = "scotben";
-const EDITION = "simple-2026a"
-const SUBSET = ""
+const EDITION = "simple-2026a";
+const SUBSET = "SimpleParams"
 
 var sys = {
   "taxrates":[19.0,20.0,21.0,42.0,45.0,48.0],
@@ -59,10 +50,9 @@ var sys = {
 }
 
 function loadpars(sys,action,uid){
-    const url = [API,"params",action,MODEL,EDITION,SUBSET].join("/") + "?uid="+uid";
+    const url = [API,"params",action,MODEL,EDITION,SUBSET].join("/") + "?uid="+uid;
     console.log("url=|" + url + "|");
-    $.ajax(
-        { url: url,
+    $.ajax({ url: url,
         method: 'get',
         dataType: 'json',
         data: sys,
@@ -80,7 +70,12 @@ function loadpars(sys,action,uid){
     ); // fail
 }
 
-loadpars( sys, "validate", UID);
-
 </script>
+</head>
+
+<body class='text-primary p-2' onload="loadpars( sys, 'validate', UID)">
+<p>xx</p>
+</body>
+
+
 </html>
