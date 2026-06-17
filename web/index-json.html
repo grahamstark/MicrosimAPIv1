@@ -741,9 +741,9 @@ function params_set(){
             data: dataset,
             contentType: "application/json",
             }).done(
-                function( result ){                    
+                function( result ){
                     console.log( "load_parameters; results are ", result );
-                    populateForm( result.session_id, result.params, result.default );                    
+                    populateForm( result.session_id, result.params, result.default );
                 }
             ).fail(
                 function( jqXHR, textStatus, errorThrown ){
