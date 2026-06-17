@@ -1,4 +1,5 @@
-using MicrosimAPIv1
+import MicrosimAPIv1 as msa
+
 using Test
 using LibPQ
 using DataStructures

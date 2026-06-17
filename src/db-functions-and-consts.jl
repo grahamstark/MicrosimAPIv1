@@ -1,3 +1,11 @@
+#=
+Database functions in Julia.
+
+Initialise the microapt database with
+    `db/microapt.sql'
+then load Scotben stuff with 'initialise_database()' below.
+
+=#
 const DEFAULT_USER_ID = 2
 const DEFAULT_RUN_ID = 1
 const TEST_RUN_ID = 1234567890
@@ -6,6 +14,9 @@ function makeconn()::LibPQ.Connection
     return LibPQ.Connection("dbname=microapi user=postgres host=/var/run/postgresql")
 end
 
+"""
+Execute a statement with a throwaway connection
+"""
 function execonn( statement::String, data::AbstractArray)
     conn = makeconn()
     r = execute( conn, statement, data )
@@ -78,89 +89,6 @@ const total_queue_counts =
     """
     select qstatus,count(*) as qcount from runs group by qstatus
     """
-
-
-function get_avaliable_models_and_versions()::AbstractDataFrame
-    r = rowtable( execonn( """
-        select models.model_name, models.description as model_desc, model_edition, model_editions.description as edition_desc from model_editions, models where model_editions.model_name = models.model_name
-        """))
-    return DataFrame(r)
-end
-
-function  get_all_q_statuses()
-    r = columntable( execonn( "select qstatus from q_statuses"))
-    return map( x -> x[1], r.qstatus ) # this casts to Chars
-end
-
-const Q_STATUSES = get_all_q_statuses()
-
-function get_queue_counts( user_id :: Union{Int,Nothing} = nothing )::Dict{Char,Integer}
-    runs = if isnothing( user_id )
-        rowtable(execute( total_queue_counts ))
-    else
-        rowtable(execute( user_queue_counts, [user_id] ))
-    end
-    d = Dict{Char,Integer}()
-    for k in Q_STATUSES
-        d[k] = 0 # the [1] forces the key to be Char
-    end
-    for r in runs
-        d[r.qstatus[1]] = r.qcount
-    end
-    return d;
-end
-
-"""
-
-
-"""
-function load_parameter_description( model::String, edition::String, title::String, thestruct )::DataFrame
-    info = struct_to_labels(thestruct)
-     # use the type pf the strict as the subsys name, but strip e.g. "{Float64}" from the end
-    subsys = structname( thestruct )
-    r = DataFrame( execonn( """
-        insert into param_page_description values( \$1, \$2, \$3, \$4, \$5 )
-        on conflict( model_name, model_edition, subsys )
-        do update
-            set title = \$4, info=\$5
-        returning *
-    """, [model, edition, subsys, title, info]))
-    return r
-end
-
-"""
-NOTE: you need BASE_RESULTS = do_default_run() first if you're not loading MicrosimAPIv1
-"""
-function load_all_parameter_descriptions() # so far
-    load_parameter_description("scotben", "simple-2026a", "A Basic Set of SB Parameters", DEFAULT_MINI_PARAMS["SimpleParams"] )
-    load_parameter_description("scotben", "basic-income-2026a", "Basic Income Simulation Parameters", DEFAULT_MINI_PARAMS["UBIParams"] )
-end
-
-function get_available_models()::DataFrame
-    r = DataFrame( execonn( "select * from models"))
-    return r
-end
-
-function get_available_editions( model :: String )::DataFrame
-    r = DataFrame( execonn( "select * from model_editions where model_name=\$1", [model]))
-    return r
-end
-
-function get_available_subsystems( model::String, edition :: String )::DataFrame
-    r = DataFrame( execonn( "select * from param_page_description where model_name=\$1 and model_edition=\$2", [model,edition]))
-    return r
-end
-
-function get_parameter_descriptions( model::String, edition :: String, subsys :: String )
-    r = DataFrame( execonn( "select * from param_page_description where model_name=\$1 and model_edition=\$2 and subsys=\$3", [model,edition,subsys]))
-    return r
-end
-
-function get_output_descriptions( model::String ) ## add edition???
-    r = DataFrame( execonn( "select * from result_description where model_name=\$1 order by model_name,datatype,item", [model]))
-    return r
-end
-
 const output_upsert =
     """
     insert into run_results_cache( model_name, model_edition, param_hash, datatype, item, data ) values
@@ -284,7 +212,6 @@ const retrieve_cached_output =
         run_results_cache.item = result_description.item
     """
 
-
 const hash_params =
     """
     select hashtextextended(string_agg(data,'' ORDER BY subsys),999) as param_hash from
@@ -308,6 +235,89 @@ const retrieve_model =
     select models.model_name, models.description, model_editions.model_edition from models, model_editions where
         models.model_name=\$1 and model_editions.model_edition=\$2 and model_editions.model_name=models.model_name
     """
+
+
+function get_avaliable_models_and_versions()::AbstractDataFrame
+    r = rowtable( execonn( """
+        select models.model_name, models.description as model_desc, model_edition, model_editions.description as edition_desc from model_editions, models where model_editions.model_name = models.model_name
+        """))
+    return DataFrame(r)
+end
+
+function  get_all_q_statuses()
+    r = columntable( execonn( "select qstatus from q_statuses"))
+    return map( x -> x[1], r.qstatus ) # this casts to Chars
+end
+
+const Q_STATUSES = get_all_q_statuses()
+
+function get_queue_counts( user_id :: Union{Int,Nothing} = nothing )::Dict{Char,Integer}
+    runs = if isnothing( user_id )
+        rowtable(execute( total_queue_counts ))
+    else
+        rowtable(execute( user_queue_counts, [user_id] ))
+    end
+    d = Dict{Char,Integer}()
+    for k in Q_STATUSES
+        d[k] = 0 # the [1] forces the key to be Char
+    end
+    for r in runs
+        d[r.qstatus[1]] = r.qcount
+    end
+    return d;
+end
+
+"""
+
+
+"""
+function load_parameter_description( model::String, edition::String, title::String, thestruct )::DataFrame
+    info = struct_to_labels(thestruct)
+     # use the type pf the strict as the subsys name, but strip e.g. "{Float64}" from the end
+    subsys = structname( thestruct )
+    r = DataFrame( execonn( """
+        insert into param_page_description values( \$1, \$2, \$3, \$4, \$5 )
+        on conflict( model_name, model_edition, subsys )
+        do update
+            set title = \$4, info=\$5
+        returning *
+    """, [model, edition, subsys, title, info]))
+    return r
+end
+
+"""
+NOTE: you need BASE_RESULTS = do_default_run() first if you're not loading MicrosimAPIv1
+"""
+function load_all_parameter_descriptions() # so far
+    load_parameter_description("scotben", "simple-2026a", "A Basic Set of SB Parameters", DEFAULT_MINI_PARAMS["SimpleParams"] )
+    load_parameter_description("scotben", "basic-income-2026a", "Basic Income Simulation Parameters", DEFAULT_MINI_PARAMS["UBIParams"] )
+end
+
+function get_available_models()::DataFrame
+    r = DataFrame( execonn( "select * from models"))
+    return r
+end
+
+function get_available_editions( model :: String )::DataFrame
+    r = DataFrame( execonn( "select * from model_editions where model_name=\$1", [model]))
+    return r
+end
+
+function get_available_subsystems( model::String, edition :: String )::DataFrame
+    r = DataFrame( execonn( "select * from param_page_description where model_name=\$1 and model_edition=\$2", [model,edition]))
+    return r
+end
+
+function get_parameter_descriptions( model::String, edition :: String, subsys :: String )
+    r = DataFrame( execonn( "select * from param_page_description where model_name=\$1 and model_edition=\$2 and subsys=\$3", [model,edition,subsys]))
+    return r
+end
+
+function get_output_descriptions( model::String ) ## add edition???
+    r = DataFrame( execonn( "select * from result_description where model_name=\$1 order by model_name,datatype,item", [model]))
+    return r
+end
+
 
 function make_param_hash( user_id :: Int, model_name::String, model_edition::String, run_id::Int)::BigInt
     rc = rowtable( execonn( hash_params, [user_id, model_name, string(model_edition), run_id]))[1]
@@ -536,7 +546,14 @@ function clear_temp_users()
     execonn( "delete from users where is_temp");
 end
 
+"""
+Return a user and a run record for that user.
 
+If the user is `nothing` or a number not in the db, make a new temporary user and an initialised run with default outputs and parameters.
+
+Othewise, retrieve the user and its active run (might not actually have been run yet). The created run is a copy of `copy_from` if that exists (e.g.) the user's previous run, or else a copy of the default run.
+
+"""
 function handle_middle( user_id ::Union{Int,Nothing},
                         model_name::String,
                         edition :: String,
