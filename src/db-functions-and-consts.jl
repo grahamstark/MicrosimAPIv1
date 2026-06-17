@@ -554,6 +554,15 @@ function get_run(
     end
 end
 
+function clear_expired_temp_users()
+    execonn( "delete from users where is_temp and expiry < now()");
+end
+
+function clear_temp_users()
+    execonn( "delete from users where is_temp");
+end
+
+
 function handle_middle( user_id ::Union{Int,Nothing},
                         model_name::String,
                         edition :: String,

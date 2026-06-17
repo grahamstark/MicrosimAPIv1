@@ -102,7 +102,7 @@ end
 
 function structname( thestruct )
     @argcheck isstructtype( typeof(thestruct))
-    return match( r"(.*?)({|$).*", string(typeof(thestruct)))[1]
+    return match( r"(.*\.)?(.*?)({|$).*", string(typeof(thestruct)))[2]
 end
 
 function getq( T::DataType, req :: HTTP.Request, key :: String )
