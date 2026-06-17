@@ -1,4 +1,17 @@
+#=
 
+produces errors:
+"
+data = Any[]
+[error | LibPQ]: LibPQ.Errors.JLConnectionError("libpq could not allocate memory for connection info")
+basic db: Error During Test at /home/graham_s/julia/vw/MicrosimAPIv1/test/gentests.jl:1
+Got exception outside of a @test
+LibPQ.Errors.JLConnectionError("libpq could not allocate memory for connection info")
+Stacktrace:
+
+con't work this out so redo with open-close connections.
+
+=#
 function makeconn()::LibPQ.Connection
     return LibPQ.Connection("dbname=microapi user=postgres host=/var/run/postgresql")
 end

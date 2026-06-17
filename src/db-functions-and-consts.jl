@@ -1,13 +1,21 @@
+const DEFAULT_USER_ID = 2
+const DEFAULT_RUN_ID = 1
+const TEST_RUN_ID = 1234567890
 
 function makeconn()::LibPQ.Connection
     return LibPQ.Connection("dbname=microapi user=postgres host=/var/run/postgresql")
 end
 
-const CON_POOL = Pool{LibPQ.Connection}(30)
+function execonn( statement::String, data::AbstractArray)
+    conn = makeconn()
+    r = execute( conn, statement, data )
+    close(conn)
+    return r
+end
 
-const DEFAULT_USER_ID = 2
-const DEFAULT_RUN_ID = 1
-const TEST_RUN_ID = 1234567890
+function execonn( statement::String)
+    return execonn( statement, [] )
+end
 
 struct User
     user_id :: Int
@@ -73,18 +81,14 @@ const total_queue_counts =
 
 
 function get_avaliable_models_and_versions()::AbstractDataFrame
-    conn = acquire( makeconn, CON_POOL )
-    r = rowtable( execute( conn, """
+    r = rowtable( execonn( """
         select models.model_name, models.description as model_desc, model_edition, model_editions.description as edition_desc from model_editions, models where model_editions.model_name = models.model_name
         """))
-    release(CON_POOL,conn)
     return DataFrame(r)
 end
 
 function  get_all_q_statuses()
-    conn = acquire( makeconn, CON_POOL )
-    r = columntable( execute( conn, "select qstatus from q_statuses"))
-    release(CON_POOL,conn)
+    r = columntable( execonn( "select qstatus from q_statuses"))
     return map( x -> x[1], r.qstatus ) # this casts to Chars
 end
 
@@ -114,15 +118,13 @@ function load_parameter_description( model::String, edition::String, title::Stri
     info = struct_to_labels(thestruct)
      # use the type pf the strict as the subsys name, but strip e.g. "{Float64}" from the end
     subsys = structname( thestruct )
-    conn = acquire( makeconn, CON_POOL )
-    r = DataFrame( execute( conn, """
+    r = DataFrame( execonn( """
         insert into param_page_description values( \$1, \$2, \$3, \$4, \$5 )
         on conflict( model_name, model_edition, subsys )
         do update
             set title = \$4, info=\$5
         returning *
     """, [model, edition, subsys, title, info]))
-    release(CON_POOL,conn)
     return r
 end
 
@@ -135,37 +137,27 @@ function load_all_parameter_descriptions() # so far
 end
 
 function get_available_models()::DataFrame
-    conn = acquire( makeconn, CON_POOL )
-    r = DataFrame( execute( conn, "select * from models"))
-    release(CON_POOL,conn)
+    r = DataFrame( execonn( "select * from models"))
     return r
 end
 
 function get_available_editions( model :: String )::DataFrame
-    conn = acquire( makeconn, CON_POOL )
-    r = DataFrame( execute( conn, "select * from model_editions where model_name=\$1", [model]))
-    release(CON_POOL,conn)
+    r = DataFrame( execonn( "select * from model_editions where model_name=\$1", [model]))
     return r
 end
 
 function get_available_subsystems( model::String, edition :: String )::DataFrame
-    conn = acquire( makeconn, CON_POOL )
-    r = DataFrame( execute( conn, "select * from param_page_description where model_name=\$1 and model_edition=\$2", [model,edition]))
-    release(CON_POOL,conn)
+    r = DataFrame( execonn( "select * from param_page_description where model_name=\$1 and model_edition=\$2", [model,edition]))
     return r
 end
 
 function get_parameter_descriptions( model::String, edition :: String, subsys :: String )
-    conn = acquire( makeconn, CON_POOL )
-    r = DataFrame( execute( conn, "select * from param_page_description where model_name=\$1 and model_edition=\$2 and subsys=\$3", [model,edition,subsys]))
-    release(CON_POOL,conn)
+    r = DataFrame( execonn( "select * from param_page_description where model_name=\$1 and model_edition=\$2 and subsys=\$3", [model,edition,subsys]))
     return r
 end
 
 function get_output_descriptions( model::String ) ## add edition???
-    conn = acquire( makeconn, CON_POOL )
-    r = DataFrame( execute( conn, "select * from result_description where model_name=\$1 order by model_name,datatype,item", [model]))
-    release(CON_POOL,conn)
+    r = DataFrame( execonn( "select * from result_description where model_name=\$1 order by model_name,datatype,item", [model]))
     return r
 end
 
@@ -195,23 +187,12 @@ const user_exists =
     """
     select count(*) as nusers from users where user_id = \$1
     """
-#=
-const run_exists = makeps(
-    """
-    select count(*) as nruns from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and run_id = \$4
-    """)
-=#
 
 const run_in_state_exists =
     """
     select count(*) as nruns from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and qstatus = \$4
     """
-#=
-const get_latest_runs_in_state = makeps(
-    """
-    select * from runs where user_id = \$1 and model_name=\$2 and model_edition=\$3 and qstatus = \$4 order by last_change
-    """)
-=#
+
 const run_upsert =
     """
        insert into runs( user_id, model_name, model_edition, run_id, run_name, created, last_change, qstatus, output_in_sync, working_dir ) values
@@ -327,13 +308,6 @@ const retrieve_model =
     select models.model_name, models.description, model_editions.model_edition from models, model_editions where
         models.model_name=\$1 and model_editions.model_edition=\$2 and model_editions.model_name=models.model_name
     """
-
-function execonn( statement::String, data::AbstractArray)
-    conn = acquire( makeconn, CON_POOL)
-    r = execute( conn, statement, data )
-    release(CON_POOL,conn)
-    return r
-end
 
 function make_param_hash( user_id :: Int, model_name::String, model_edition::String, run_id::Int)::BigInt
     rc = rowtable( execonn( hash_params, [user_id, model_name, string(model_edition), run_id]))[1]

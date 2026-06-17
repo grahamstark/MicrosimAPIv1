@@ -10,19 +10,19 @@ abstract type Subsys end
 Simple min/max validation of a struct, using StructUtils annotations.
 return - dict with an entry for each error
 """
-function tvalidate(x)::Dict{String,NamedTuple}
+function tvalidate(x)::Dict
     @argcheck isstructtype(typeof(x))
     T = typeof( x )
     tags = ftags( DefStyle(), T )
     vnames = fieldnames(T)
     n = length(vnames)
     @assert n == length(tags)
-    d = Dict{String,NamedTuple}()
+    d = Dict() # {String,NamedTuple}()
     for i in 1:n
         vname = vnames[i]
         v = getproperty(x, vname )
         tag = tags[i]
-        agroup = get( tag, :agroup, nothing )
+        agroup = Base.get( tag, :agroup, nothing )
         label = tag.label
         is_array = ! isnothing( agroup )
         datatype = typeof( v )
@@ -30,22 +30,29 @@ function tvalidate(x)::Dict{String,NamedTuple}
             label = "$(agroup): $label"
             datatype = eltype( v )
         end
-        if v <: Number
-            minv = get( tag, :min, typemin(datatype))
-            maxv = get( tag, :max, typemax(datatype))
+        if datatype <: Number
+            minv = Base.get( tag, :min, typemin(datatype))
+            maxv = Base.get( tag, :max, typemax(datatype))
+            sname = string(vname)
             if is_array
                 for i in eachindex(v)
                     if v[i] < minv
-                        d[vname] = (; minv, value=v[i], label, index=i, error="below minimum" )
+                        if ! Base.haskey( d, sname )
+                            d[sname]=[]
+                        end
+                        push!(d[sname], (; minv, value=v[i], label, index=i, error="below minimum" ))
                     elseif v[i] > maxv
-                        d[vname] = (; maxv, value=v[i], label, index=i, error="above maximum" )
+                        if ! Base.haskey( d, sname )
+                            d[sname]=[]
+                        end
+                        push!( d[sname], (; maxv, value=v[i], label, index=i, error="above maximum" ))
                     end
                 end
             else
                 if v < minv
-                    d[vname] = (; minv, value=v, label, error="below minimum" )
+                    d[sname] = (; minv, value=v, label, error="below minimum" )
                 elseif v > maxv
-                    d[vname] = (; maxv, value=v, label, error="above maximum" )
+                    d[sname] = (; maxv, value=v, label, error="above maximum" )
                 end
             end
         end
