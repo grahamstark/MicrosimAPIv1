@@ -72,7 +72,7 @@ create table run_state(
     todo integer,
     timer timestamp,
     primary key( user_id, run_id, model_name, model_edition, thread_no ),
-    foreign key( user_id, run_id, model_name, model_edition) references runs );
+    foreign key( user_id, run_id, model_name, model_edition) references runs ) on delete cascade;
 
 create table param_page_description(
     model_name char(20) not null default 'scotben',

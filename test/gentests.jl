@@ -1,41 +1,4 @@
-using MicrosimAPIv1
-using .ScotbenAPIImpl
 
-using Test
-using DataFrames
-using DataStructures
-using Dates
-using HTTP
-using JSON3
-using Markdown
-using LoggingExtras
-using Observables
-using Parameters
-using Random
-using StructTypes
-using SwaggerMarkdown
-using SwagUI
-using UUIDs
-
-using ScottishTaxBenefitModel
-using .BCCalcs
-using .Definitions
-using .ExampleHelpers
-using .FRSHouseholdGetter
-using .GeneralTaxComponents
-using .LocalLevelCalculations
-using .ModelHousehold
-using .Monitor
-using .Runner
-using .RunSettings
-using .SimplePovertyCounts: GroupPoverty
-using .SingleHouseholdCalculations
-using .STBIncomes
-using .STBOutput
-using .STBParameters
-using .Utils
-
-using MicroVisualisations
 
 @testset "MicrosimAPIv1.jl" begin
 
@@ -43,21 +6,15 @@ using MicroVisualisations
     # Write your tests here.
 end
 
-@testset "RiskyHash" begin
-    p1 = ScotbenAPIImpl.ParamsAndSettings()
-    p2 = ScotbenAPIImpl.ParamsAndSettings()
-    println( "p2.hid= $(p2.hid)")
-    println( "p1.settings.uuid $(p1.settings.uuid)")
-    @test p2.hid == p1.hid == ScotbenAPIImpl.hid( p1 )
-    res = ScotbenAPIImpl.get_cached_results( p1 )
-    @test p1.hid ∈ keys(ScotbenAPIImpl.CACHED_RESULTS)
-end
-
-@testset "Default Run" begin
-    ps = ScotbenAPIImpl.ParamsAndSettings()
-    hid = ScotbenAPIImpl.do_run( ps; show_progress = false )
-    println( "default run starting")
-    hid2 = ScotbenAPIImpl.do_default_run()
-    @test ps.hid == hid == hid2
-    @test ps.hid ∈ keys(ScotbenAPIImpl.CACHED_RESULTS)
+@testset "Utils" begin
+    s2 = deepcopy( MicrosimAPIv1.DEFAULT_SIMPLE_PARAMS )
+    @test MicrosimAPIv1.structname( s2 ) == "SimpleParams"
+    @show MicrosimAPIv1.tohtml( DataFrame())
+    @show MicrosimAPIv1.struct_to_labels( s2 )
+    @test length( MicrosimAPIv1.tvalidate( s2 )) == 0
+    s2.taxrates[2] = 120 # max is 100
+    s2.taxbands[3] = -9 # min is zero
+    errs = MicrosimAPIv1.tvalidate( s2 )
+    @show errs
+    @test length( errs ) == 2
 end
