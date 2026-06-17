@@ -94,7 +94,7 @@ end
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     return try
         sys = get_sys( req, subsys )
-        json(tvalidate( sys )
+        json(tvalidate( sys ))
     catch e
         json( Dict( "parse-exception"=>e))
     end
