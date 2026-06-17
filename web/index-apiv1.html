@@ -35,7 +35,7 @@ const MODEL = "scotben";
 const EDITION = "simple-2026a";
 const SUBSET = "SimpleParams"
 
-var sys = {
+var sys = JSON.stringify({
   "taxrates":[19.0,20.0,21.0,42.0,45.0,48.0],
   "taxbands":[3967.0,16956.0,31092.0,62430.0,125140.0],
   "nirates":[0.0,0.0,8.0,2.0],
@@ -47,13 +47,13 @@ var sys = {
   "scp_age":15,
   "uc_single":424.9,
   "uc_taper":55.0
-}
+})
 
 function loadpars(sys,action,uid){
     const url = [API,"params",action,MODEL,EDITION,SUBSET].join("/") + "?uid="+uid;
     console.log("url=|" + url + "|");
     $.ajax({ url: url,
-        method: 'get',
+        method: 'post',
         dataType: 'json',
         data: sys,
         contentType: "application/json",

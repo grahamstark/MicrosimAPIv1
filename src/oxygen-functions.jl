@@ -1,3 +1,25 @@
+# CORS shit - see: https://github.com/OxygenFramework/Oxygen.jl#middleware
+const CORS_HEADERS = [
+    # "Access-Control-Allow-Origin" => "*",
+    "Access-Control-Allow-Headers" => "*",
+    "Access-Control-Allow-Methods" => "POST, GET, OPTIONS"
+]
+
+# https://juliaweb.github.io/HTTP.jl/stable/examples/#Cors-Server
+function CorsMiddleware(handler)
+    return function(req::HTTP.Request)
+        println("CORS middleware")
+        # determine if this is a pre-flight request from the browser
+        if HTTP.method(req)=="OPTIONS"
+            return HTTP.Response(200, CORS_HEADERS)
+        else
+            return handler(req) # passes the request to the AuthMiddleware
+        end
+    end
+end
+
+
+
 @get "/info/available-models" function(
     req::HTTP.Request )
     df = get_available_models()
@@ -56,7 +78,17 @@ end
     return json((; uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys]))
 end
 
-@get "/params/set/{model_name}/{edition}/{subsys}" function(
+function get_sys(req::HTTP.Request,
+                 subsys::String)::Subsys
+    T = eval(Symbol(subsys)){Float64}
+    @info " got type as " T
+    @info req
+    sys = json( req, T)
+    @info sys
+    return sys
+end
+
+@post "/params/set/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
     model_name::String,
     edition::String,
@@ -68,7 +100,7 @@ end
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     @show uid
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-    params = json(req, "params")
+
     return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys] )
 end
 
@@ -79,19 +111,14 @@ end
     subsys::String)
 end
 
-function get_sys(req::HTTP.Request,
-                 subsys::String)::Subsys
-    T = eval(Symbol(subsys)){Float64}
-    return json( req, T)
-end
-
-@get "/params/validate/{model_name}/{edition}/{subsys}" function(
+@post "/params/validate/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
     model_name::String,
     edition::String,
     subsys::String)
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     user, runrec = handle_middle( uid, model_name, edition, nothing )
+    @info string(req.body)
     return try
         sys = get_sys( req, subsys )
         json(tvalidate( sys ))
@@ -100,7 +127,7 @@ end
     end
 end
 
-@get "/params/initialise/{model_name}/{edition}/{subsys}" function(
+@post "/params/initialise/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
     model_name::String,
     edition::String,

@@ -12,8 +12,8 @@ const LIVE_PORT = 9090
 
 export doserve, testserve
 
-doserve() = serve(; port=LIVE_PORT)
-testserve() = serve(; port=TEST_PORT, revise=:greedy)
+doserve() = serve(; middleware=[CorsMiddleware], port=LIVE_PORT)
+testserve() = serve(; middleware=[CorsMiddleware], port=TEST_PORT, revise=:eager)
 
 function __init__()
 
