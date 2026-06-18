@@ -50,3 +50,20 @@ end
     @test user2.user_id == user.user_id
     @test runrec2.run_id == runrec.run_id
 end
+
+@testset "Model Run" begin
+    uid = nothing
+    no_errs = Dict()
+    edition = "simple-2026a"
+    subsys = "SimpleParams"
+    user, runrec = msa.handle_middle( uid, "scotben", edition, nothing )
+    minip = deepcopy( msa.DEFAULT_MINI_PARAMS )
+    minip.taxbands=[]
+    minip.taxrates=[25]
+    errs = msa.tvalidate( minip )
+    msa.save_params( runrec, subsys, JSON3.write( params ), JSON3.write( errs ))
+
+    sys = deepcopy( msa.DEFAULT_PARAMS )
+    map_simple_to_full!( sys, minip )
+
+end

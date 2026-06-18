@@ -1,9 +1,10 @@
 import MicrosimAPIv1 as msa
 
-using Test
-using LibPQ
-using DataStructures
-using DataFrames
 using ConcurrentUtilities.Pools
+using DataFrames
+using DataStructures
+using JSON3
+using LibPQ
+using Test
 
 include("gentests.jl")

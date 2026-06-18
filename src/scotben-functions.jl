@@ -251,6 +251,7 @@ function map_ubi_to_full!( sys ::  TaxBenefitSystem, ubi :: UBIParams )
     else
         ub_as_is
     end
+    sys.ubi.abolished = false
     sys.ubi.abolish_sickness_bens = ubi.abolish_sickness_bens
     sys.ubi.abolish_jsa_esa = ubi.abolish_jsa_esa
     sys.ubi.abolish_pensions = ubi.abolish_pensions
