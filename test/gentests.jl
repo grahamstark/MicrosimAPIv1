@@ -25,6 +25,7 @@ end
 @testset "DB Middleware" begin
     msa.initialise_database()
     models = msa.get_available_models()
+    sys = deepcopy( msa.DEFAULT_PARAMS )
     @test size(models)[1] >= 1 # at least 1 model
     for m in eachrow(models)
         editions = msa.get_available_editions( m.model_name )
@@ -35,7 +36,9 @@ end
             ss = msa.get_available_subsystems( model.name, e.model_edition )
             @test size(ss)[1] >= 1 # at least 1 subsystem
             for s in eachrow(ss)
-                @show s
+                minip=msa.DEFAULT_MINI_PARAMS[s.subsys]
+                @show minip
+                msa.map_simple_to_full!( sys, minip )
             end
         end
     end
@@ -57,13 +60,13 @@ end
     edition = "simple-2026a"
     subsys = "SimpleParams"
     user, runrec = msa.handle_middle( uid, "scotben", edition, nothing )
-    minip = deepcopy( msa.DEFAULT_MINI_PARAMS )
+    minip = deepcopy( msa.DEFAULT_MINI_PARAMS[subsys] )
     minip.taxbands=[]
     minip.taxrates=[25]
     errs = msa.tvalidate( minip )
     msa.save_params( runrec, subsys, JSON3.write( params ), JSON3.write( errs ))
 
     sys = deepcopy( msa.DEFAULT_PARAMS )
-    map_simple_to_full!( sys, minip )
+    msa.map_simple_to_full!( sys, minip )
 
 end

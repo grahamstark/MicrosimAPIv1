@@ -72,7 +72,7 @@ create table run_state(
     todo integer,
     timer timestamp,
     primary key( user_id, run_id, model_name, model_edition, thread_no ),
-    foreign key( user_id, run_id, model_name, model_edition) references runs ) on delete cascade;
+    foreign key( user_id, run_id, model_name, model_edition) references runs on delete cascade);
 
 create table param_page_description(
     model_name char(20) not null default 'scotben',
@@ -100,7 +100,7 @@ create table run_params(
     errors text,
     primary key( user_id, run_id, model_name, model_edition, subsys ),
     foreign key( user_id, run_id, model_name, model_edition ) references runs on delete cascade on update cascade,
-    foreign key( model_name, model_edition, subsys ) references param_page_description );
+    foreign key( model_name, model_edition, subsys ) references param_page_description on delete cascade );
 
 -- nb remove model_edition here on the assumption that any model edition can produce the same output
 create table result_description(

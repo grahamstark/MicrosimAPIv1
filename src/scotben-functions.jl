@@ -38,6 +38,7 @@ const BIG_A = 9999999999
 end
 
 @tags struct UBIParams{T} <: Subsys
+    abolished :: Bool & (edit=(; label="Don't Have A UBI (Please!)"))
     taxrates :: Vector{T} & (edit=(; label="Rates", min=0.0, max=100.0, group="Scottish Income Tax ", unit="%"))
     taxbands :: Vector{T} & (edit=(; label="Thresholds", min=0.0, agroup="Scottish Income Tax", unit="£s pa" ))
     nirates :: Vector{T} & (edit=(; label="Rates", min=0.0, max=100.0, group="Employee National Insurance", unit="%"))
@@ -147,6 +148,7 @@ function map_full_to_ubi( sys :: TaxBenefitSystem )::UBIParams
         false, true
     end
     return UBIParams(
+        false, # don't abolish by default if we get here at all
         itr,
         itb,
         nr,
@@ -234,7 +236,8 @@ function map_simple_to_full!( sys ::  TaxBenefitSystem, sm :: SimpleParams )
     sys.uc.work_allowance_no_housing = roundm( sys.uc.work_allowance_no_housing, p )
 end
 
-function map_ubi_to_full!( sys ::  TaxBenefitSystem, ubi :: UBIParams )
+function map_simple_to_full!( sys ::  TaxBenefitSystem, ubi :: UBIParams )
+    sys.ubi.abolished = ubi.abolished
     sys.it.non_savings_rates = copy(ubi.taxrates)
     br = sys.it.non_savings_basic_rate
     orig = DEFAULT_PARAMS.it.non_savings_rates[br]
@@ -251,7 +254,6 @@ function map_ubi_to_full!( sys ::  TaxBenefitSystem, ubi :: UBIParams )
     else
         ub_as_is
     end
-    sys.ubi.abolished = false
     sys.ubi.abolish_sickness_bens = ubi.abolish_sickness_bens
     sys.ubi.abolish_jsa_esa = ubi.abolish_jsa_esa
     sys.ubi.abolish_pensions = ubi.abolish_pensions
