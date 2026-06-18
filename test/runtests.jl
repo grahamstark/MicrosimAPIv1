@@ -7,4 +7,7 @@ using JSON3
 using LibPQ
 using Test
 
+using ScottishTaxBenefitModel
+using .STBParameters
+
 include("gentests.jl")

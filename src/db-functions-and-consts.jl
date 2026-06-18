@@ -498,6 +498,12 @@ function get_run(
         return columntable(r).next_free_run_id[1]
     end
 
+    function change_run_state!( run :: Run, status :: Char, output_in_sync :: Bool )
+        run.status = status
+        run.output_in_sync = output_in_sync
+        execonn( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, status, output_in_sync ])
+    end
+
     function create_run()
         new_run_id = get_next_free_run_id()
         d = joinpath( tempdir(), "$(user_id)", "$(model_name)", "$(edition)", "$(new_run_id)")

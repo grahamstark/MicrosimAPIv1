@@ -55,18 +55,20 @@ end
 end
 
 @testset "Model Run" begin
-    uid = nothing
-    no_errs = Dict()
     edition = "simple-2026a"
     subsys = "SimpleParams"
-    user, runrec = msa.handle_middle( uid, "scotben", edition, nothing )
+    user, runrec = msa.handle_middle( nothing, "scotben", edition, nothing )
+    msa.change_run_state!( runrec :: Run, 'Q', false )
     minip = deepcopy( msa.DEFAULT_MINI_PARAMS[subsys] )
-    minip.taxbands=[]
-    minip.taxrates=[25]
+    minip.taxrates[2]=25
     errs = msa.tvalidate( minip )
-    msa.save_params( runrec, subsys, JSON3.write( params ), JSON3.write( errs ))
-
+    msa.save_params( runrec, subsys, JSON3.write( minip ), JSON3.write( errs ))
     sys = deepcopy( msa.DEFAULT_PARAMS )
     msa.map_simple_to_full!( sys, minip )
-
+    weeklyise!(sys)
+    allout = msa.do_run( runrec.user_id, runrec.model_name, runrec.model_edition, runrec.run_id,
+                    update_progress=msa.update_progress,
+                    do_dumps=true  )
+    h = make_param_hash( runrec.user_id, runrec.model_name, runrec.model_edition, runrec.run_id )
+    cache_output( runrec, h, allout )
 end
