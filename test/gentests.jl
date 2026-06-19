@@ -66,9 +66,15 @@ end
     sys = deepcopy( msa.DEFAULT_PARAMS )
     msa.map_simple_to_full!( sys, minip )
     weeklyise!(sys)
+    msa.clear_expired_temp_users()
+
+    msa.change_run_state!( run, 'E', false )
     allout = msa.do_run( runrec.user_id, runrec.model_name, runrec.model_edition, runrec.run_id,
                     update_progress=msa.update_progress,
                     do_dumps=true  )
     h = make_param_hash( runrec.user_id, runrec.model_name, runrec.model_edition, runrec.run_id )
     cache_output( runrec, h, allout )
+    msa.load_output( run )
+    msa.change_run_state!( run, 'C', true )
+
 end

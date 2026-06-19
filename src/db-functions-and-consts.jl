@@ -355,6 +355,10 @@ function cache_output( run :: Run, param_hash :: BigInt, allout :: AllOutput )
     end
 end
 
+"""
+retrieve a User struct for user `user_id`. If that doesn't exist, create a new temp user. In either case,
+increment the expiry time for the user by 1 day.
+"""
 function get_user( user_id ::Union{Int,Nothing} )::User
 
     function rs_to_user( r )
@@ -409,13 +413,20 @@ function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
     end
 end
 
+
+param_hash( run :: Run )::Integer = rowtable(execonn(
+    hash_params,
+    [run.user_id, run.model_name, run.model_edition, run.run_id]))[1].param_hash
+
+output_is_cached( run :: Run, param_hash :: Integer )::Bool =
+    rowtable(execonn( run_is_cached, [run.model_name, run.model_edition, param_hash]))[1].is_cached
+
 function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
     user_id = coalesce( copy_user_id, run.user_id )
     run_id = coalesce( copy_run_id, run.run_id )
-    param_hash = rowtable(execonn( hash_params, [run.user_id, run.model_name, run.model_edition, run.run_id]))[1].param_hash
-    is_cached = rowtable(execonn( run_is_cached, [run.model_name, run.model_edition, param_hash]))[1].is_cached
-    if is_cached
-        p = rowtable(execonn( retrieve_cached_output, [run.model_name, run.model_edition, param_hash]))
+    hash = param_hash( run )
+    if output_is_cached( run, hash )
+        p = rowtable(execonn( retrieve_cached_output, [run.model_name, run.model_edition, hash]))
         for r in p
             k = OutputKey( r.item, r.datatype )
             v = OutputItem( r.info, r.data )
@@ -425,6 +436,9 @@ function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
      end
 end
 
+"""
+FIXME move to scotben-functions when we make that a SubModule
+"""
 function initialise_scotben_default()
     user = get_user( DEFAULT_USER_ID )
     editions = get_available_editions( "scotben" )
@@ -465,43 +479,47 @@ function initialise_database()
     initialise_scotben_default()
 end
 
-#=
+"""
+rs is a row from a rowtable. Convert this to a Run record. FIXME: argcheck that's what r really is somehow..
+"""
+function rs_to_run( rs )::Run
+    # @argcheck istable( rs )
+    return Run( rs.user_id,
+               rs.model_name,
+               rs.model_edition,
+               rs.run_id,
+               rs.run_name,
+               rs.created,
+               rs.last_change,
+               rs.qstatus[1],
+               rs.output_in_sync,
+               rs.working_dir,
+               RunState[],
+               Dict{String,String}(),
+               Dict{String,String}(),
+               Dict{String,String}())
+end
+
+function change_run_state!( run :: Run; qstatus :: Char, output_in_sync :: Bool )
+    run.qstatus = qstatus
+    run.output_in_sync = output_in_sync
+    execonn( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, status, output_in_sync ])
+end
+
+"""
 retrieve or create a run
 
 * @param copy_from: if no currently edited run, make a copy of the run with this id for the user, otherwise make a copy of the default for this model&edition
-=#
+"""
 function get_run(
                  user_id::Int,
                  model_name :: String,
                  edition :: String,
                  copy_from::Union{Int,Nothing}=nothing)::Run
 
-    function rs_to_run( rs )
-        return Run( rs.user_id,
-                    rs.model_name,
-                    rs.model_edition,
-                    rs.run_id,
-                    rs.run_name,
-                    rs.created,
-                    rs.last_change,
-                    rs.qstatus[1],
-                    rs.output_in_sync,
-                    rs.working_dir,
-                    RunState[],
-                    Dict{String,String}(),
-                    Dict{String,String}(),
-                    Dict{String,String}())
-    end
-
     function get_next_free_run_id()::Int
         r = execonn( next_free_run_id, [user_id, model_name, edition])
         return columntable(r).next_free_run_id[1]
-    end
-
-    function change_run_state!( run :: Run, status :: Char, output_in_sync :: Bool )
-        run.status = status
-        run.output_in_sync = output_in_sync
-        execonn( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, status, output_in_sync ])
     end
 
     function create_run()
@@ -530,7 +548,6 @@ function get_run(
         return run
     end # create run
 
-
     rs = rowtable(execonn( retrieve_latest_run, [user_id, model_name, edition, 'E']))
     l = length(rs)
     @assert l in 0:1
@@ -548,12 +565,8 @@ function clear_expired_temp_users()
     execonn( "delete from users where is_temp and expiry < now()");
 end
 
-function clear_temp_users()
-    execonn( "delete from users where is_temp");
-end
-
 """
-Return a user and a run record for that user.
+Return a user and a run record for that user, creating both if needed.
 
 If the user is `nothing` or a number not in the db, make a new temporary user and an initialised run with default outputs and parameters.
 
@@ -567,4 +580,16 @@ function handle_middle( user_id ::Union{Int,Nothing},
     user = get_user( user_id )
     runrec = get_run( user.user_id, model_name, edition, copy_from )
     return user, runrec
+end
+
+"""
+return the earliest queued run rec or nothing.
+"""
+function next_runnable_run()::Union{Run,Nothing}
+    r = rowtable(execonn( "select * from runs where qstatus='Q' order by last_change limit 1"))
+    return if length( r ) == 0
+        nothing
+    else
+        rs_to_run( r[1] )
+    end
 end
