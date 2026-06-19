@@ -20,9 +20,9 @@
             run.run_id,
             minip,
             update_progress=msa.update_progress, do_dumps=true  )
-        cache_output( run, h, allout )
+        msa.cache_output( run, h, allout )
     end
-    msa.load_output( run )
+    msa.load_output!( run )
     msa.change_run_state!( run; qstatus='C', output_in_sync=false )
 end
 
