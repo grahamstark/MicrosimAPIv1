@@ -419,7 +419,7 @@ output_is_cached( run :: Run, param_hash :: Integer )::Bool =
 function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
     user_id = coalesce( copy_user_id, run.user_id )
     run_id = coalesce( copy_run_id, run.run_id )
-    hash = make_param_hash( run.user_id, run.model_name, run.model_edition )
+    hash = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
     if output_is_cached( run, hash )
         p = rowtable(execonn( retrieve_cached_output, [run.model_name, run.model_edition, hash]))
         for r in p
