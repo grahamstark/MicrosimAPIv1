@@ -342,7 +342,7 @@ Overloaded by miniparam
 function do_run(
     user_id :: Integer,
     model_name :: String,
-    edition :: String,
+    model_edition :: String,
     run_id :: Integer,
     simple :: SimpleParams;
     update_progress::Function,
@@ -363,13 +363,13 @@ end
 function do_run(
     user_id :: Integer,
     model_name :: String,
-    edition :: String,
+    model_edition :: String,
     run_id :: Integer,
     ubi :: UBIParams;
     update_progress::Function,
     do_dumps :: Bool )::AllOutput
     sys = deepcopy( DEFAULT_PARAMS)
-    map_ubi_to_full!( sys, ubi )
+    map_simple_to_full!( sys, ubi )
     weeklyise!( sys )
     return do_run(
         user_id,

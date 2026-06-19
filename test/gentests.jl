@@ -1,10 +1,38 @@
+
+# 7100563188517401294
+@testset "Model Run" begin
+    msa.clear_expired_temp_users()
+    edition = "simple-2026a"
+    subsys = "SimpleParams"
+    user, run = msa.handle_middle( nothing, "scotben", edition, nothing )
+    msa.change_run_state!( run; qstatus='Q', output_in_sync=false )
+    minip = deepcopy( msa.DEFAULT_MINI_PARAMS[subsys] )
+    minip.taxrates[2]=25
+    errs = msa.tvalidate( minip )
+    msa.save_params( run, subsys, JSON3.write( minip ), JSON3.write( errs ))
+    h = msa.make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
+    if ! msa.output_is_cached( run, h )
+        msa.change_run_state!( run; qstatus='E', output_in_sync=false )
+        allout = msa.do_run(
+            run.user_id,
+            run.model_name,
+            run.model_edition,
+            run.run_id,
+            minip,
+            update_progress=msa.update_progress, do_dumps=true  )
+        cache_output( run, h, allout )
+    end
+    msa.load_output( run )
+    msa.change_run_state!( run; qstatus='C', output_in_sync=false )
+end
+
 @testset "basic db" begin
     #Random.seed!(1234);
     conn = msa.makeconn()
-	@test ! isnothing(conn)
-	@show conn
-	LibPQ.close(conn)
-	msa.clear_expired_temp_users()
+    @test ! isnothing(conn)
+    @show conn
+    LibPQ.close(conn)
+    msa.clear_expired_temp_users()
 end
 
 
@@ -51,31 +79,4 @@ end
     # check we've brought back the same user and run this time
     @test user2.user_id == user.user_id
     @test run2.run_id == run.run_id
-end
-# 7100563188517401294
-@testset "Model Run" begin
-    edition = "simple-2026a"
-    subsys = "SimpleParams"
-    user, run = msa.handle_middle( nothing, "scotben", edition, nothing )
-    msa.change_run_state!( run; qstate='Q', false )
-    minip = deepcopy( msa.DEFAULT_MINI_PARAMS[subsys] )
-    minip.taxrates[2]=25
-    errs = msa.tvalidate( minip )
-    msa.save_params( run, subsys, JSON3.write( minip ), JSON3.write( errs ))
-    sys = deepcopy( msa.DEFAULT_PARAMS )
-    msa.map_simple_to_full!( sys, minip )
-    weeklyise!(sys)
-    msa.clear_expired_temp_users()
-    h = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
-    if ! msa.output_is_cached( run, h )
-        msa.change_run_state!( run, 'E', false )
-        allout = msa.do_run( run.user_id, run.model_name, run.model_edition, run.run_id,
-                        update_progress=msa.update_progress,
-                        do_dumps=true  )
-        run.run_id )
-        cache_output( run, h, allout )
-    end
-    msa.load_output( run )
-    msa.change_run_state!( run, 'C', true )
-
 end

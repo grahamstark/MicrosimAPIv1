@@ -498,7 +498,7 @@ end
 function change_run_state!( run :: Run; qstatus :: Char, output_in_sync :: Bool )
     run.qstatus = qstatus
     run.output_in_sync = output_in_sync
-    execonn( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, status, output_in_sync ])
+    execonn( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, qstatus, output_in_sync ])
 end
 
 """
