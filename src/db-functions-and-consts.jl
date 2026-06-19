@@ -413,18 +413,13 @@ function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
     end
 end
 
-
-param_hash( run :: Run )::Integer = rowtable(execonn(
-    hash_params,
-    [run.user_id, run.model_name, run.model_edition, run.run_id]))[1].param_hash
-
 output_is_cached( run :: Run, param_hash :: Integer )::Bool =
     rowtable(execonn( run_is_cached, [run.model_name, run.model_edition, param_hash]))[1].is_cached
 
 function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
     user_id = coalesce( copy_user_id, run.user_id )
     run_id = coalesce( copy_run_id, run.run_id )
-    hash = param_hash( run )
+    hash = make_param_hash( run.user_id, run.model_name, run.model_edition )
     if output_is_cached( run, hash )
         p = rowtable(execonn( retrieve_cached_output, [run.model_name, run.model_edition, hash]))
         for r in p

@@ -1,10 +1,10 @@
 @testset "basic db" begin
+    #Random.seed!(1234);
     conn = msa.makeconn()
 	@test ! isnothing(conn)
 	@show conn
 	LibPQ.close(conn)
-	msa.clear_temp_users()
-
+	msa.clear_expired_temp_users()
 end
 
 
@@ -20,7 +20,6 @@ end
     @show errs
     @test length( errs ) == 2
 end
-
 
 @testset "DB Middleware" begin
     msa.initialise_database()
@@ -44,36 +43,38 @@ end
     end
     # middleware thing test
     uid = 123456
-    user, runrec = msa.handle_middle( uid, "scotben", "simple-2026a", nothing )
+    user, run = msa.handle_middle( uid, "scotben", "simple-2026a", nothing )
     @test user.user_id != uid
-    @test runrec.user_id == user.user_id
+    @test run.user_id == user.user_id
     # try again - should persist this time
-    user2, runrec2 = msa.handle_middle( user.user_id, runrec.model_name, runrec.model_edition, nothing )
+    user2, run2 = msa.handle_middle( user.user_id, run.model_name, run.model_edition, nothing )
     # check we've brought back the same user and run this time
     @test user2.user_id == user.user_id
-    @test runrec2.run_id == runrec.run_id
+    @test run2.run_id == run.run_id
 end
-
+# 7100563188517401294
 @testset "Model Run" begin
     edition = "simple-2026a"
     subsys = "SimpleParams"
-    user, runrec = msa.handle_middle( nothing, "scotben", edition, nothing )
-    msa.change_run_state!( runrec :: Run, 'Q', false )
+    user, run = msa.handle_middle( nothing, "scotben", edition, nothing )
+    msa.change_run_state!( run; qstate='Q', false )
     minip = deepcopy( msa.DEFAULT_MINI_PARAMS[subsys] )
     minip.taxrates[2]=25
     errs = msa.tvalidate( minip )
-    msa.save_params( runrec, subsys, JSON3.write( minip ), JSON3.write( errs ))
+    msa.save_params( run, subsys, JSON3.write( minip ), JSON3.write( errs ))
     sys = deepcopy( msa.DEFAULT_PARAMS )
     msa.map_simple_to_full!( sys, minip )
     weeklyise!(sys)
     msa.clear_expired_temp_users()
-
-    msa.change_run_state!( run, 'E', false )
-    allout = msa.do_run( runrec.user_id, runrec.model_name, runrec.model_edition, runrec.run_id,
-                    update_progress=msa.update_progress,
-                    do_dumps=true  )
-    h = make_param_hash( runrec.user_id, runrec.model_name, runrec.model_edition, runrec.run_id )
-    cache_output( runrec, h, allout )
+    h = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
+    if ! msa.output_is_cached( run, h )
+        msa.change_run_state!( run, 'E', false )
+        allout = msa.do_run( run.user_id, run.model_name, run.model_edition, run.run_id,
+                        update_progress=msa.update_progress,
+                        do_dumps=true  )
+        run.run_id )
+        cache_output( run, h, allout )
+    end
     msa.load_output( run )
     msa.change_run_state!( run, 'C', true )
 

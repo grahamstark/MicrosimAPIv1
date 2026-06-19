@@ -5,6 +5,7 @@ using DataFrames
 using DataStructures
 using JSON3
 using LibPQ
+using Random
 using Test
 
 using ScottishTaxBenefitModel
