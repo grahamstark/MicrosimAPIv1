@@ -80,6 +80,14 @@ mutable struct Run
     output :: Dict{OutputKey,OutputItem}
 end
 
+"""
+return true if run has no errors, & dict with errors for each subsys
+"""
+function has_no_errors( run :: Run )::Tuple
+    anyerrs = filter(x->length(x[2])>0,run.errors)
+    return length(anyerrs)==0, anyerrs
+end
+
 const user_queue_counts =
     """
     select qstatus,count(*)  as qcount from runs where user_id=\$1 group by qstatus

@@ -23,7 +23,7 @@
         msa.cache_output( run, h, allout )
     end
     msa.load_output!( run )
-    msa.change_run_state!( run; qstatus='C', output_in_sync=false )
+    msa.change_run_state!( run; qstatus='C', output_in_sync=true )
 end
 
 @testset "basic db" begin

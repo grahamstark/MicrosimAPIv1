@@ -92,16 +92,24 @@ end
     req::HTTP.Request,
     model_name::String,
     edition::String,
-    subsys::String,
-    uid::Union{Nothing,Int}=nothing,
-    runid::Union{Nothing,Int}=nothing)
+    subsys::String)
     qp =  queryparams(req)
     @show qp
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     @show uid
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-
-    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys] )
+    errs = Dict()
+    try
+        sys = get_sys( req, subsys )
+        errs = tvalidate( sys )
+        if length(errs) == 0
+            runrec.params[subsys] = sys
+        end
+        save_params( runrec, subsys, JSON3.write( sys), JSON3.write( errs ))
+    catch e
+        errs = json( Dict( "parse-exception"=>e))
+    end
+    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errs = errs )
 end
 
 @get "/params/helppage/{model_name}/{edition}/{subsys}" function(
@@ -109,6 +117,7 @@ end
     model_name::String,
     edition::String,
     subsys::String)
+    return html("<p>A helppage</p>")
 end
 
 @post "/params/validate/{model_name}/{edition}/{subsys}" function(
@@ -127,12 +136,16 @@ end
     end
 end
 
+
 @post "/params/initialise/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
     model_name::String,
     edition::String,
     subsys::Union{String,Nothing}=nothing)
     user, runrec = handle_middle( uid, model_name, edition, nothing )
+
+    load_params!( runrec, DEFAULT_USER_ID, DEFAULT_RUN_ID)
+    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errs = runrec.errors[subsys] )
 end
 
 @get "/run/submit/{model_name}/{edition}/" function(
@@ -142,6 +155,23 @@ end
     uid::Union{Nothing,Int}=nothing,
     runid::Union{Nothing,Int}=nothing)
     user, runrec = handle_middle( uid, model_name, edition, nothing )
+    if has_no_errors( runrec )
+        h = make_param_hash( runrec.user_id, runrec.model_name, runrec.model_edition, runrec.run_id )
+        state = "queued"
+        if output_is_cached( run, h )
+            state = "completed"
+            change_run_state!( runrec; qstatus='C', output_in_sync=true )
+        else
+            submit_job( runrec )
+        end
+        update_progress( runrec.user_id, runrec.model_name, runrec.edition,
+                        runrec.run_id,
+                        Progress( BASE_UUID, state, -99, -99, -99, -99 ))
+        return json( )
+    else
+
+    end
+    # 1 check no parameter errors
 end
 
 @get "/run/monitor/{model_name}/{edition}/" function(
