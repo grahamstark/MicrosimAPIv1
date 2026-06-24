@@ -72,7 +72,7 @@ mutable struct Run
     created :: DateTime
     last_change :: DateTime
     qstatus :: Char
-    output_in_sync :: Bool
+    output_is_cached :: Bool
     working_dir :: String
     state :: Vector{RunState}
     params :: Dict{String,String}
@@ -131,11 +131,11 @@ const run_in_state_exists =
 
 const run_upsert =
     """
-       insert into runs( user_id, model_name, model_edition, run_id, run_name, created, last_change, qstatus, output_in_sync, working_dir ) values
+       insert into runs( user_id, model_name, model_edition, run_id, run_name, created, last_change, qstatus, output_is_cached, working_dir ) values
            ( \$1, \$2 ,\$3 ,\$4, \$5, now(), now(), \$6, \$7, \$8 )
        on conflict( user_id, model_name, model_edition, run_id )
        do update
-           set last_change = now(), qstatus=\$6, output_in_sync=\$7
+           set last_change = now(), qstatus=\$6, output_is_cached=\$7
         returning *
     """
 
@@ -151,7 +151,7 @@ const switch_run_state =
 
 const change_run_state =
     """
-        update runs set qstatus = \$5, output_in_sync=\$6 where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
+        update runs set qstatus = \$5, output_is_cached=\$6 where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
     """
 const params_upsert =
     """
@@ -361,6 +361,7 @@ function cache_output( run :: Run, param_hash :: BigInt, allout :: AllOutput )
     for k in keys( allout.images )
         execonn( output_upsert, [ run.model_name, run.model_edition, param_hash, "svg", k, mv.fig_to_svg_string(allout.images[k].data) ] )
     end
+    run.output_is_cached = true
 end
 
 """
@@ -419,6 +420,8 @@ function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
         run.params[r.subsys] = r.data
         run.errors[r.subsys] = r.errors
     end
+    hash = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
+    run.output_is_cached = output_is_cached( run, hash )
 end
 
 output_is_cached( run :: Run, param_hash :: Integer )::Bool =
@@ -429,6 +432,7 @@ function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
     run_id = coalesce( copy_run_id, run.run_id )
     hash = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
     if output_is_cached( run, hash )
+        run.output_is_cached = true
         p = rowtable(execonn( retrieve_cached_output, [run.model_name, run.model_edition, hash]))
         for r in p
             k = OutputKey( r.item, r.datatype )
@@ -436,7 +440,9 @@ function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
             run.output[k] = v
         end
         # is displayed out
-     end
+    else
+        run.output_is_cached = false
+    end
 end
 
 """
@@ -459,7 +465,7 @@ function initialise_scotben_default()
             rs.created,
             rs.last_change,
             rs.qstatus[1],
-            rs.output_in_sync,
+            rs.output_is_cached,
             rs.working_dir,
             RunState[],
             Dict{String,String}(),
@@ -495,7 +501,7 @@ function rs_to_run( rs )::Run
                rs.created,
                rs.last_change,
                rs.qstatus[1],
-               rs.output_in_sync,
+               rs.output_is_cached,
                rs.working_dir,
                RunState[],
                Dict{String,String}(),
@@ -503,10 +509,10 @@ function rs_to_run( rs )::Run
                Dict{String,String}())
 end
 
-function change_run_state!( run :: Run; qstatus :: Char, output_in_sync :: Bool )
+function change_run_state!( run :: Run; qstatus :: Char, output_is_cached :: Bool )
     run.qstatus = qstatus
-    run.output_in_sync = output_in_sync
-    execonn( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, qstatus, output_in_sync ])
+    run.output_is_cached = output_is_cached
+    execonn( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, qstatus, output_is_cached ])
 end
 
 """
@@ -542,11 +548,11 @@ function get_run(
         end
         load_params!( run;  copy_user_id=copyrun.user_id, copy_run_id=copyrun.run_id )
         load_output!( run;  copy_user_id=copyrun.user_id, copy_run_id=copyrun.run_id )
-        run.output_in_sync = true
+        run.output_is_cached = true
         execonn( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, 'E', true ])
         # demote the copied run if not the default
         if(copyrun.user_id == run.user_id) && (copyrun.qstatus in ['E'])
-            execonn( change_run_state, [copyrun.user_id, copyrun.model_name, copyrun.model_edition, copyrun.run_id,'C', copyrun.output_in_sync])
+            execonn( change_run_state, [copyrun.user_id, copyrun.model_name, copyrun.model_edition, copyrun.run_id,'C', copyrun.output_is_cached])
         end
         return run
     end # create run

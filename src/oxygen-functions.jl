@@ -109,7 +109,7 @@ end
     catch e
         errs = json( Dict( "parse-exception"=>e))
     end
-    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errs = errs )
+    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errs = errs, output_is_cached=runrec.output_is_cached )
 end
 
 @get "/params/helppage/{model_name}/{edition}/{subsys}" function(
@@ -144,8 +144,13 @@ end
     subsys::Union{String,Nothing}=nothing)
     user, runrec = handle_middle( uid, model_name, edition, nothing )
 
-    load_params!( runrec, DEFAULT_USER_ID, DEFAULT_RUN_ID)
-    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errs = runrec.errors[subsys] )
+    load_params!( runrec; copy_user_id=DEFAULT_USER_ID, copy_run_id=DEFAULT_RUN_ID)
+
+    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errs = runrec.errors[subsys], output_is_cached=run.output_is_cached )
+end
+
+function submit_run( run :: Run )
+   @show "Submit!"
 end
 
 @get "/run/submit/{model_name}/{edition}/" function(
@@ -158,11 +163,11 @@ end
     if has_no_errors( runrec )
         h = make_param_hash( runrec.user_id, runrec.model_name, runrec.model_edition, runrec.run_id )
         state = "queued"
-        if output_is_cached( run, h )
+        if run.output_is_cached
             state = "completed"
             change_run_state!( runrec; qstatus='C', output_in_sync=true )
         else
-            submit_job( runrec )
+            submit_run( runrec )
         end
         update_progress( runrec.user_id, runrec.model_name, runrec.edition,
                         runrec.run_id,

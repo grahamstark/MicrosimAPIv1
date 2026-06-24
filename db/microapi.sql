@@ -51,7 +51,7 @@ create table runs(
     created timestamp,
     last_change timestamp,
     qstatus char(1) not null default 'E', -- E, Q,X,C
-    output_in_sync boolean default true,
+    output_is_cached boolean default false,
     -- is_edited boolean default false,
     working_dir text,
     primary key( user_id, run_id, model_name, model_edition ),
