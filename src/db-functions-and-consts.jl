@@ -574,6 +574,10 @@ function clear_expired_temp_users()
     execonn( "delete from users where is_temp and expiry < now()");
 end
 
+function clear_all_temp_users()
+    execonn( "delete from users where is_temp");
+end
+
 """
 Return a user and a run record for that user, creating both if needed.
 

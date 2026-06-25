@@ -1,18 +1,12 @@
-import MicrosimAPIv1 as msa
 
-using ConcurrentUtilities.Pools
-using DataFrames
-using DataStructures
-using HTTP
-using JSON3
-using LibPQ
-using Markdown
-using Oxygen
-using Random
+#=
+Not explicitly using the package is a bit unconventional, but, as Claude paints out,
+including the files directly is the only way we can invoke
+the Oxygen macros in test cases without actually starting a server.
+=#
+
 using Test
 
-using ScottishTaxBenefitModel
-using .STBParameters
-
-# include("gentests.jl")
+include( "../src/loadall.jl")
+# nclude("gentests.jl")
 include( "apitests.jl")

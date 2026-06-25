@@ -70,8 +70,7 @@ end
     req::HTTP.Request,
     model_name::String,
     edition::String,
-    subsys::String,
-    uid::Union{Nothing,Int}=nothing )
+    subsys::String )
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     @show uid
     user, runrec = handle_middle( uid, model_name, edition, nothing )
@@ -120,6 +119,12 @@ end
     return html("<p>A helppage</p>")
 end
 
+"""
+validates data but makes no attempt to load it or make things consistent
+return uid, a dict of errs - 0 length if zero errors
+"""
+
+
 @post "/params/validate/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
     model_name::String,
@@ -128,12 +133,13 @@ end
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     @info string(req.body)
-    return try
+    errs =  try
         sys = get_sys( req, subsys )
-        json(tvalidate( sys ))
+        tvalidate( sys )
     catch e
-        json( Dict( "parse-exception"=>e))
+        Dict( "parse-exception"=>e)
     end
+    return (;uid=user.user_id, errs = errs )
 end
 
 
