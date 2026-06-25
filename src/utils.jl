@@ -79,7 +79,8 @@ function struct_to_labels( x )
         minv = fill("",n),
         maxv = fill("",n),
         unit = fill("",n),
-        is_array = fill( "N",n))
+        is_array = fill( "N",n),
+        precision = fill("-", n ))
     for i in 1:n
         vname = vnames[i]
         v = getproperty(x, vname )
@@ -103,6 +104,13 @@ function struct_to_labels( x )
         r.default = val
         r.minv = string(Base.get( tag, :min, "No Minimum" ))
         r.maxv = string(Base.get( tag, :max, "No Maximum" ))
+        r.precision = if datatype <: AbstractFloat
+            string(Base.get( tag, :prec, 2 ))
+        elseif datatype <: Number
+            "0"
+        else
+            "-"
+        end
     end #
     return tohtml( d )
 end

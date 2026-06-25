@@ -72,7 +72,7 @@ end
     edition::String,
     subsys::String )
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
-    @show uid
+    @info uid
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     return json((; uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys]))
 end
@@ -93,20 +93,27 @@ end
     edition::String,
     subsys::String)
     qp =  queryparams(req)
-    @show qp
+    @info qp
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
-    @show uid
+    @info uid
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     errs = Dict()
     try
         sys = get_sys( req, subsys )
+        @info "set ; got sys as " sys
         errs = tvalidate( sys )
+        @info "set ; errs " errs
         if length(errs) == 0
-            runrec.params[subsys] = sys
+            @info "set params to " sys
+            jsys = JSON3.write( sys )
+            @info jsys
+            runrec.params[subsys] = jsys
+            @info "saving "
+            save_params( runrec, subsys, jsys, JSON3.write( errs ))
+            @info "saved OK"
         end
-        save_params( runrec, subsys, JSON3.write( sys), JSON3.write( errs ))
     catch e
-        errs = json( Dict( "parse-exception"=>e))
+        errs = Dict( "parse-exception"=>e)
     end
     return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errs = errs, output_is_cached=runrec.output_is_cached )
 end
@@ -133,7 +140,7 @@ return uid, a dict of errs - 0 length if zero errors
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     @info string(req.body)
-    errs =  try
+    errs = try
         sys = get_sys( req, subsys )
         tvalidate( sys )
     catch e
@@ -156,7 +163,7 @@ end
 end
 
 function submit_run( run :: Run )
-   @show "Submit!"
+   @info "Submit!"
 end
 
 @get "/run/submit/{model_name}/{edition}/" function(
@@ -217,10 +224,10 @@ end
     format::String,
     item::String)
     uid = getq(Int, req,"uid")
-    @show uid format item
+    @info uid format item
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     outkey = OutputKey( item, format )
-    # @show keys(runrec.output)
+    # @info keys(runrec.output)
     item = runrec.output[outkey]
     # fixme more idiomatic
     return if format == "svg"

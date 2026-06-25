@@ -23,6 +23,7 @@ end
 
 @testset "DB Middleware" begin
     initialise_database()
+    global uid
     models = get_available_models()
     sys = deepcopy( DEFAULT_PARAMS )
     @test size(models)[1] >= 1 # at least 1 model
@@ -42,10 +43,10 @@ end
         end
     end
     # middleware thing test
-    uid = 123456
     user, run = handle_middle( uid, "scotben", "simple-2026a", nothing )
-    @test user.user_id != uid
+    @test user.user_id != uid # should have a new uid, but keep it from now on.
     @test run.user_id == user.user_id
+    uid = user.user_id # save global user id
     # try again - should persist this time
     user2, run2 = handle_middle( user.user_id, run.model_name, run.model_edition, nothing )
     # check we've brought back the same user and run this time
@@ -54,10 +55,11 @@ end
 end
 
 @testset "Model Run" begin
+    global uid
     clear_expired_temp_users()
     edition = "simple-2026a"
     subsys = "SimpleParams"
-    user, run = handle_middle( nothing, "scotben", edition, nothing )
+    user, run = handle_middle( uid, "scotben", edition, nothing )
     change_run_state!( run; qstatus='Q', output_is_cached=false )
     minip = deepcopy( DEFAULT_MINI_PARAMS[subsys] )
     minip.taxrates[2]=25
@@ -75,6 +77,7 @@ end
             update_progress=update_progress, do_dumps=true  )
         cache_output( run, h, allout )
     end
+    uid = user.user_id
     load_output!( run )
     @test run.output_is_cached
     change_run_state!( run; qstatus='C', output_is_cached=true )

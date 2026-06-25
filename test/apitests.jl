@@ -129,8 +129,6 @@ const CHANGE_PARAMS = Dict( "UBIParams"=>UBIS_CHANGED, "SimpleParams"=>JPS_CHANG
 const FAIL_PARAMS = Dict( "UBIParams"=>"XSAxx:1", "SimpleParams"=>"Junk:22")
 const ALL_PARAMS = [(;data=GOOD_PARAMS,nerrs=0), (;data=OUT_OF_RANGE_PARAMS,nerrs=2), (;data=FAIL_PARAMS,nerrs=1), (;data=CHANGE_PARAMS,nerrs=0)]
 
-clear_all_temp_users()
-
 @testset "JSON Tests" begin
     p1 = JSON3.read( JPS, msa.SimpleParams{Float64})
     # doesn't work because of the array see: https://discourse.julialang.org/t/define-equality-for-struct-by-checking-all-fields/121325
@@ -226,12 +224,10 @@ end
 end
 # julia>
 
-uid = -123
-
 @testset "Get Params" begin
     ms = get_available_models()
     n = 0
-    global uid
+    global uid # share this user once created
     for m in eachrow(ms)
         es = get_available_editions( m.model_name )
         for e in eachrow( es )
@@ -255,7 +251,7 @@ end
 
 
 @testset "Validate Params" begin
-   ms = get_available_models()
+    ms = get_available_models()
     n = 0
     headers = []
     global uid
@@ -264,14 +260,13 @@ end
         for e in eachrow( es )
             ss = get_available_subsystems( e.model_name, e.model_edition )
             for s in eachrow(ss)
-                for p in ALL_PARAMS # = [(;data=GOOD_PARAMS,nerrs=0), (;data=OUT_OF_RAB=NGE_PARAMS,nerrs=2), (;data=FAIL_PARAMS,nerrs=1)]
+                for p in ALL_PARAMS # each set of parameters either validates, fails with 2 range errors or fails with a parse error, so...
                     req = HTTP.Request("POST", "/params/validate/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
                     resp = internalrequest(req)
-                    @test resp.status == 200
+                    @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
                     @test occursin("application/json", HTTP.header(resp, "Content-Type"))
                     jp = json(resp)
-                    @show jp["uid"]
-                    uid = jp["uid"]
+                    uid = jp["uid"] # set to the id of a temp user on 1st call, with user saved in db from that point on
                     errs = jp["errs"]
                     @show errs
                     @test length( errs ) == p.nerrs
@@ -284,6 +279,32 @@ end
 end
 
 @testset "Load Params" begin
+    ms = get_available_models()
+    n = 0
+    headers = []
+    global uid
+    for m in eachrow(ms)
+        es = get_available_editions( m.model_name )
+        for e in eachrow( es )
+            ss = get_available_subsystems( e.model_name, e.model_edition )
+            for s in eachrow(ss)
+                for p in ALL_PARAMS # each set of parameters either validates, fails with 2 range errors or fails with a parse error, so...
+                    req = HTTP.Request("POST", "/params/set/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
+                    resp = internalrequest(req)
+                    @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
+                    @test occursin("application/json", HTTP.header(resp, "Content-Type"))
+                    jp = json(resp)
+                    uid = jp["uid"] # set to the id of a temp user on 1st call, with user saved in db from that point on
+                    errs = jp["errs"]
+                    @show errs
+                    @show jp["params"]
+                    @test length( errs ) == p.nerrs
+                    n += 1
+                end
+            end
+        end
+    end
+    @test n > 0
 
 
 end
