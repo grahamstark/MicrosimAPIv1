@@ -150,7 +150,7 @@ return uid, a dict of errs - 0 length if zero errors
 end
 
 
-@post "/params/initialise/{model_name}/{edition}/{subsys}" function(
+@get "/params/initialise/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
     model_name::String,
     edition::String,

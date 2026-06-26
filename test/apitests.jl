@@ -305,6 +305,43 @@ end
         end
     end
     @test n > 0
+end
 
+@testset "Initialise Params" begin
+    ms = get_available_models()
+    n = 0
+    headers = []
+    global uid
+    for m in eachrow(ms)
+        es = get_available_editions( m.model_name )
+        for e in eachrow( es )
+            ss = get_available_subsystems( e.model_name, e.model_edition )
+            for s in eachrow(ss)
+                for p in ALL_PARAMS # each set of parameters either validates, fails with 2 range errors or fails with a parse error, so...
+                    req = HTTP.Request("POST", "/params/set/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
+                    resp = internalrequest(req)
+                    @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
+                    @test occursin("application/json", HTTP.header(resp, "Content-Type"))
+                    jp = json(resp)
+                    uid = jp["uid"] # set to the id of a temp user on 1st call, with user saved in db from that point on
+                    errs = jp["errs"]
+                    @show errs
+                    @show jp["params"]
+                    @test length( errs ) == p.nerrs
+                    req = HTTP.Request("GET", "/params/initialise/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers )
+                    resp = internalrequest(req)
+                    @test resp.status == 200 # even a parse error shouldn't raise an HTTP
+                    jp = json(resp)
+                    errs = jp["errs"]
+                    @test jp["params"] == JSON3.read( DEFAULT_MINI_PARAMS[ subsys ])
+                    uid2 = jp["uid"] # set to the id of a temp user on 1st call, with user
+                    @test uid2 == uid1
+                    @test length( errs ) == 0
+                    n += 1
+                end
+            end
+        end
+    end
+    @test n > 0
 
 end
