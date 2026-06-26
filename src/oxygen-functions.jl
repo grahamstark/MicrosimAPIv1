@@ -156,10 +156,8 @@ end
     edition::String,
     subsys::Union{String,Nothing}=nothing)
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-
     load_params!( runrec; copy_user_id=DEFAULT_USER_ID, copy_run_id=DEFAULT_RUN_ID)
-
-    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errs = runrec.errors[subsys], output_is_cached=run.output_is_cached )
+    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errs = runrec.errors[subsys], output_is_cached=runrec.output_is_cached )
 end
 
 function submit_run( run :: Run )

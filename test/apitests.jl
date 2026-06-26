@@ -324,24 +324,49 @@ end
                     @test occursin("application/json", HTTP.header(resp, "Content-Type"))
                     jp = json(resp)
                     uid = jp["uid"] # set to the id of a temp user on 1st call, with user saved in db from that point on
-                    errs = jp["errs"]
+                    errs = JSON3.read(string(jp["errs"]),Dict)
                     @show errs
                     @show jp["params"]
                     @test length( errs ) == p.nerrs
-                    req = HTTP.Request("GET", "/params/initialise/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers )
-                    resp = internalrequest(req)
+                    req2 = HTTP.Request("GET", "/params/initialise/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers )
+                    resp2 = internalrequest(req2)
                     @test resp.status == 200 # even a parse error shouldn't raise an HTTP
-                    jp = json(resp)
-                    errs = jp["errs"]
-                    @test jp["params"] == JSON3.read( DEFAULT_MINI_PARAMS[ subsys ])
-                    uid2 = jp["uid"] # set to the id of a temp user on 1st call, with user
-                    @test uid2 == uid1
-                    @test length( errs ) == 0
+                    jp2 = json(resp2)
+                    errs2 = JSON3.read(jp2["errs"],Dict)
+                    # params should always be reset to base, but in JSON
+                    @test jp2["params"] == JSON3.write( DEFAULT_MINI_PARAMS[ s.subsys ])
+                    uid2 = jp2["uid"] # set to the id of a temp user on 1st call, with user
+                    @test uid2 == uid
+                    @show errs2
+                    @test length( errs2 ) == 0
                     n += 1
                 end
             end
         end
     end
     @test n > 0
+end
+
+@testset "Submit Run" begin
+
+
+end
+
+@testset "Abort Run" begin
+
+
+end
+
+@testset "Monitor Run" begin
+
+
+end
+
+@testset "Output Fetch" begin
+
+
+end
+
+@teststet "Phunpack Search" begin
 
 end
