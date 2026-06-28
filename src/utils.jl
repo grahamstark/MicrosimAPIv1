@@ -4,6 +4,21 @@ function tohtml( d :: DataFrame )
     return String(take!(io))
 end
 
+"""
+really just for testing: {} isn't  parsed back by json3 to a dict, so ...
+"""
+function to_dict(s)::Dict
+    @show s
+    #s = string(s)
+    #@show s
+    return if s == "{}" || length(s) == 0
+        Dict()
+    else
+        JSON3.read(s,Dict)
+    end
+end
+
+
 abstract type Subsys end
 
 """
