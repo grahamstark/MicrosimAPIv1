@@ -267,7 +267,7 @@ end
                     @test occursin("application/json", HTTP.header(resp, "Content-Type"))
                     jp = json(resp)
                     uid = jp["uid"] # set to the id of a temp user on 1st call, with user saved in db from that point on
-                    errs = jp["errs"]
+                    errs = jp["errors"]
                     @show errs
                     @test length( errs ) == p.nerrs
                     n += 1
@@ -295,7 +295,7 @@ end
                     @test occursin("application/json", HTTP.header(resp, "Content-Type"))
                     jp = json(resp)
                     uid = jp["uid"] # set to the id of a temp user on 1st call, with user saved in db from that point on
-                    errs = jp["errs"]
+                    errs = jp["errors"]
                     @show errs
                     @show jp["params"]
                     @test length( errs ) == p.nerrs
@@ -328,7 +328,7 @@ end
                     jp = json(resp)
                     # jp = JSON3.read(string(resp))
                     uid = jp["uid"] # set to the id of a temp user on 1st call, with user saved in db from that point on
-                    #errs = to_dict(jp["errs"])
+                    #errs = to_dict(jp["errors"])
                     #@show errs
                     @show jp["params"]
                     #@test length( errs ) == p.nerrs

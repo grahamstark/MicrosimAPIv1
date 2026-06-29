@@ -133,7 +133,7 @@ end
     catch e
         errs = Dict( "parse-exception"=>e)
     end
-    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errs = errs, output_is_cached=runrec.output_is_cached )
+    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errors = errs, output_is_cached=runrec.output_is_cached )
 end
 
 @get "/params/helppage/{model_name}/{edition}/{subsys}" function(
@@ -164,7 +164,7 @@ return uid, a dict of errs - 0 length if zero errors
     catch e
         Dict( "parse-exception"=>e)
     end
-    return (;uid=user.user_id, errs = errs )
+    return (;uid=user.user_id, errors = errs )
 end
 
 
@@ -175,7 +175,7 @@ end
     subsys::Union{String,Nothing}=nothing)
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     load_params!( runrec; copy_user_id=DEFAULT_USER_ID, copy_run_id=DEFAULT_RUN_ID)
-    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errs = runrec.errors[subsys], output_is_cached=runrec.output_is_cached )
+    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errors = runrec.errors[subsys], output_is_cached=runrec.output_is_cached )
 end
 
 @swagger"""
@@ -189,7 +189,7 @@ if output_is_cached ....
     uid = getq(Int, req, "uid")
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     errs = Dict()
-    if has_no_errors( runrec )
+    if has_no_errors( runrec )[1] # return bool and list of errors
         state = "queued"
         if run.output_is_cached
             state = "completed"
@@ -201,9 +201,9 @@ if output_is_cached ....
                         runrec.run_id,
                         Progress( BASE_UUID, state, -99, -99, -99, -99 ))
     else
-        errs = runrec.errs # FIXME poss > 1 record here
+        errs = runrec.errors # FIXME poss > 1 record here
     end
-    return (;uid=user.user_id, runid=runrec.run_id, errs=errs, output_is_cached=runrec.output_is_cached )
+    return (;uid=user.user_id, runid=runrec.run_id, errors=errs, output_is_cached=runrec.output_is_cached )
 end
 
 @swagger"""
@@ -215,7 +215,7 @@ return progress as an array (poss 0 length) of named tuples
     edition::String )
     uid = getq(Int, req, "uid")
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-    return json( get_run_progress( run))
+    return json( get_run_progress( runrec ))
 end
 
 @swagger"""
