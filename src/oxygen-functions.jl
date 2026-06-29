@@ -22,32 +22,44 @@ end
 
 @get "/info/available-models" function(
     req::HTTP.Request )
-    df = get_available_models()
+    df = get_available_models()[1]
     return tohtml( df )
 end
 
+@swagger"""
+
+TODO pass preferred format
+
+"""
 @get "/info/available-editions/{model_name}" function(
     req::HTTP.Request,
     model_name::String )
-    df = get_available_editions( model_name )
+
+    df = get_available_editions( model_name )[1]
     return tohtml( df[!, 2:end] )
 end
 
+@swagger"""
+TODO pass preferred format
+"""
 @get "/info/available-subsystems/{model_name}/{edition}" function(
     req::HTTP.Request,
     model_name::String,
     edition::String )
-    df = get_available_subsystems( model_name, edition )
+    df = get_available_subsystems( model_name, edition )[1]
     return tohtml( df[!,1:3] )
 end
 
+@swagger"""
+TODO pass preferred format
+"""
 function list_params(
     req::HTTP.Request,
     model_name::String,
     edition::String,
     subsys::Union{String,Nothing})
     # if ... or somewhere in db
-    df = get_parameter_descriptions( model_name, edition, subsys )
+    df = get_parameter_descriptions( model_name, edition, subsys )[1]
     @assert size(df)[1] == 1 # TODO return error
     return df[1,:info]
 end
@@ -56,13 +68,19 @@ function list_outputs(
     req::HTTP.Request,
     model_name::String,
     edition::String )
-    return tohtml(get_output_descriptions( model_name ))
+    return tohtml(get_output_descriptions( model_name )[1])
 end
 
 # synonyms
+@swagger"""
+TODO pass preferred format html/json
+"""
 @get "/info/params-description/{model_name}/{edition}/{subsys}" list_params
 @get "/params/info/{model_name}/{edition}/{subsys}" list_params
 # synonyms
+@swagger"""
+TODO pass preferred format html/json
+"""
 @get "/info/available-outputs/{model_name}/{edition}" list_outputs
 @get "/output/info/{model_name}/{edition}" list_outputs
 
@@ -160,59 +178,67 @@ end
     return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errs = runrec.errors[subsys], output_is_cached=runrec.output_is_cached )
 end
 
-function submit_run( run :: Run )
-   @info "Submit!"
-end
-
+@swagger"""
+Submit the active run.
+if output_is_cached ....
+"""
 @get "/run/submit/{model_name}/{edition}/" function(
     req::HTTP.Request,
     model_name::String,
-    edition::String,
-    uid::Union{Nothing,Int}=nothing,
-    runid::Union{Nothing,Int}=nothing)
+    edition::String)
+    uid = getq(Int, req, "uid")
     user, runrec = handle_middle( uid, model_name, edition, nothing )
+    errs = Dict()
     if has_no_errors( runrec )
-        h = make_param_hash( runrec.user_id, runrec.model_name, runrec.model_edition, runrec.run_id )
         state = "queued"
         if run.output_is_cached
             state = "completed"
             change_run_state!( runrec; qstatus='C', output_in_sync=true )
         else
-            submit_run( runrec )
+            change_run_state!( runrec; qstatus='Q', output_in_sync=false )
         end
         update_progress( runrec.user_id, runrec.model_name, runrec.edition,
                         runrec.run_id,
                         Progress( BASE_UUID, state, -99, -99, -99, -99 ))
-        return json( )
     else
-
+        errs = runrec.errs # FIXME poss > 1 record here
     end
-    # 1 check no parameter errors
+    return (;uid=user.user_id, runid=runrec.run_id, errs=errs, output_is_cached=runrec.output_is_cached )
 end
 
+@swagger"""
+return progress as an array (poss 0 length) of named tuples
+"""
 @get "/run/monitor/{model_name}/{edition}/" function(
     req::HTTP.Request,
     model_name::String,
-    edition::String,
-    uid::Union{Nothing,Int}=nothing,
-    runid::Union{Nothing,Int}=nothing)
+    edition::String )
+    uid = getq(Int, req, "uid")
     user, runrec = handle_middle( uid, model_name, edition, nothing )
+    return json( get_run_progress( run))
 end
 
+@swagger"""
+THIS CURRENTLY DOES NOTHING
+"""
 @get "/run/abort/{model_name}/{edition}/" function(
     req::HTTP.Request,
     model_name::String,
-    edition::String,
-    uid::Union{Nothing,Int}=nothing,
-    runid::Union{Nothing,Int}=nothing)
+    edition::String)
+    uid = getq(Int, req, "uid")
     user, runrec = handle_middle( uid, model_name, edition, nothing )
 end
 
+@swagger"""
+Retrieve a complete zipfile
+"""
 @get "/output/phunpack/{model_name}/{edition}/" function(
     req::HTTP.Request,
     model_name::String,
     edition::String )
+    uid = getq(Int, req, "uid")
     user, runrec = handle_middle( uid, model_name, edition, nothing )
+
 end
 
 @get "/output/fetch/{model_name}/{edition}/{format}/{item}" function(

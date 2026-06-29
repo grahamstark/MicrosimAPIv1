@@ -155,7 +155,7 @@ end
 end
 
 @testset "available editions" begin
-    df = get_available_models()
+    df = get_available_models()[1]
     n = 0
     for d in eachrow(df)
         req = HTTP.Request("GET", "/info/available-editions/$(d.model_name)")
@@ -169,10 +169,10 @@ end
 end
 
 @testset "available subsystems" begin
-    ms = get_available_models()
+    ms = get_available_models()[1]
     n = 0
     for m in eachrow(ms)
-        es = get_available_editions( m.model_name )
+        es = get_available_editions( m.model_name )[1]
         for e in eachrow( es )
             ed = get_available_subsystems( e.model_name, e.model_edition )
             req = HTTP.Request("GET", "/info/available-subsystems/$(e.model_name)/$(e.model_edition)")
@@ -187,12 +187,12 @@ end
 end
 
 @testset "List Params" begin
-    ms = get_available_models()
+    ms = get_available_models()[1]
     n = 0
     for m in eachrow(ms)
-        es = get_available_editions( m.model_name )
+        es = get_available_editions( m.model_name )[1]
         for e in eachrow( es )
-            ss = get_available_subsystems( e.model_name, e.model_edition )
+            ss = get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
                 req = HTTP.Request("GET", "/info/params-description/$(s.model_name)/$(s.model_edition)/$(s.subsys)")
                 resp = internalrequest(req)
@@ -207,10 +207,10 @@ end
 end
 
 @testset "List Outputs" begin
-    ms = get_available_models()
+    ms = get_available_models()[1]
     n = 0
     for m in eachrow(ms)
-        es = get_available_editions( m.model_name )
+        es = get_available_editions( m.model_name )[1]
         for e in eachrow( es )
                 req = HTTP.Request("GET", "/info/available-outputs/$(e.model_name)/$(e.model_edition)/")
                 resp = internalrequest(req)
@@ -225,13 +225,13 @@ end
 # julia>
 
 @testset "Get Params" begin
-    ms = get_available_models()
+    ms = get_available_models()[1]
     n = 0
     global uid # share this user once created
     for m in eachrow(ms)
-        es = get_available_editions( m.model_name )
+        es = get_available_editions( m.model_name )[1]
         for e in eachrow( es )
-            ss = get_available_subsystems( e.model_name, e.model_edition )
+            ss = get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
                 req = HTTP.Request("GET", "/params/get/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)")
                 resp = internalrequest(req)
@@ -251,14 +251,14 @@ end
 
 
 @testset "Validate Params" begin
-    ms = get_available_models()
+    ms = get_available_models()[1]
     n = 0
     headers = []
     global uid
     for m in eachrow(ms)
-        es = get_available_editions( m.model_name )
+        es = get_available_editions( m.model_name )[1]
         for e in eachrow( es )
-            ss = get_available_subsystems( e.model_name, e.model_edition )
+            ss = get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
                 for p in ALL_PARAMS # each set of parameters either validates, fails with 2 range errors or fails with a parse error, so...
                     req = HTTP.Request("POST", "/params/validate/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
@@ -279,14 +279,14 @@ end
 end
 
 @testset "Load Params" begin
-    ms = get_available_models()
+    ms = get_available_models()[1]
     n = 0
     headers = []
     global uid
     for m in eachrow(ms)
-        es = get_available_editions( m.model_name )
+        es = get_available_editions( m.model_name )[1]
         for e in eachrow( es )
-            ss = get_available_subsystems( e.model_name, e.model_edition )
+            ss = get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
                 for p in ALL_PARAMS # each set of parameters either validates, fails with 2 range errors or fails with a parse error, so...
                     req = HTTP.Request("POST", "/params/set/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
@@ -308,14 +308,14 @@ end
 end
 
 @testset "Initialise Params" begin
-    ms = get_available_models()
+    ms = get_available_models()[1]
     n = 0
     headers = []
     global uid
     for m in eachrow(ms)
-        es = get_available_editions( m.model_name )
+        es = get_available_editions( m.model_name )[1]
         for e in eachrow( es )
-            ss = get_available_subsystems( e.model_name, e.model_edition )
+            ss = get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
                 for p in ALL_PARAMS # each set of parameters either validates, fails with 2 range errors or fails with a parse error, so...
                     req = HTTP.Request("POST", "/params/set/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
@@ -353,18 +353,55 @@ end
 end
 
 @testset "Submit Run" begin
-
-
+    ms = get_available_models()[1]
+    n = 0
+    headers = []
+    global uid
+    for m in eachrow(ms)
+        es = get_available_editions( m.model_name )[1]
+        for e in eachrow( es )
+            ss = get_available_subsystems( e.model_name, e.model_edition )[1]
+            for s in eachrow(ss)
+                for p in ALL_PARAMS # each set of parameters either validates, fails with 2 range errors or fails with a parse error, so...
+                    req = HTTP.Request("GET", "/run/submit/$(s.model_name)/$(s.model_edition)/?uid=$(uid)", headers,  p.data[s.subsys])
+                    resp = internalrequest(req)
+                    @show resp
+                    @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
+                    @test occursin("application/json", HTTP.header(resp, "Content-Type"))
+                    n += 1
+                end
+            end
+        end
+    end
+    @test n > 0
 end
 
 @testset "Abort Run" begin
-
-
+# FIXME not implemented
 end
 
 @testset "Monitor Run" begin
-
-
+    ms = get_available_models()[1]
+    n = 0
+    headers = []
+    global uid
+    for m in eachrow(ms)
+        es = get_available_editions( m.model_name )[1]
+        for e in eachrow( es )
+            ss = get_available_subsystems( e.model_name, e.model_edition )[1]
+            for s in eachrow(ss)
+                for p in ALL_PARAMS # each set of parameters either validates, fails with 2 range errors or fails with a parse error, so...
+                    req = HTTP.Request("GET", "/run/monitor/$(s.model_name)/$(s.model_edition)/?uid=$(uid)", headers,  p.data[s.subsys])
+                    resp = internalrequest(req)
+                    @show resp
+                    @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
+                    @test occursin("application/json", HTTP.header(resp, "Content-Type"))
+                    n += 1
+                end
+            end
+        end
+    end
+    @test n > 0
 end
 
 @testset "Output Fetch" begin

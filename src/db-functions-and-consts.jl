@@ -168,6 +168,11 @@ const retrieve_params =
     select subsys,  data, errors from run_params where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
     """
 
+const get_run_state = """
+    select * from run_state where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
+"""
+
+
 const run_state_upsert =
     """
     insert into run_state( user_id, model_name, model_edition, run_id, thread_no, phase, completed, todo, timer )
@@ -301,31 +306,30 @@ function load_all_parameter_descriptions() # so far
     load_parameter_description("scotben", "basic-income-2026a", "Basic Income Simulation Parameters", DEFAULT_MINI_PARAMS["UBIParams"] )
 end
 
-function get_available_models()::DataFrame
-    r = DataFrame( execonn( "select * from models"))
-    return r
+function get_available_models()::Tuple
+    r = execonn( "select * from models")
+    return DataFrame( r ), rowtable(r)
 end
 
-function get_available_editions( model :: String )::DataFrame
-    r = DataFrame( execonn( "select * from model_editions where model_name=\$1", [model]))
-    return r
+function get_available_editions( model :: String )::Tuple
+    r = execonn( "select * from model_editions where model_name=\$1", [model])
+    return DataFrame(r), rowtable(r)
 end
 
-function get_available_subsystems( model::String, edition :: String )::DataFrame
-    r = DataFrame( execonn( "select * from param_page_description where model_name=\$1 and model_edition=\$2", [model,edition]))
-    return r
+function get_available_subsystems( model::String, edition :: String )::Tuple
+    r = execonn( "select * from param_page_description where model_name=\$1 and model_edition=\$2", [model,edition])
+    return DataFrame( r ), rowtable( r )
 end
 
-function get_parameter_descriptions( model::String, edition :: String, subsys :: String )
-    r = DataFrame( execonn( "select * from param_page_description where model_name=\$1 and model_edition=\$2 and subsys=\$3", [model,edition,subsys]))
-    return r
+function get_parameter_descriptions( model::String, edition :: String, subsys :: String )::Tuple
+    r = execonn( "select * from param_page_description where model_name=\$1 and model_edition=\$2 and subsys=\$3", [model,edition,subsys])
+    return DataFrame( r ), rowtable(r)
 end
 
 function get_output_descriptions( model::String ) ## add edition???
-    r = DataFrame( execonn( "select * from result_description where model_name=\$1 order by model_name,datatype,item", [model]))
-    return r
+    r = execonn( "select * from result_description where model_name=\$1 order by model_name,datatype,item", [model])
+    return DataFrame( r ), rowtable(r)
 end
-
 
 function make_param_hash( user_id :: Int, model_name::String, model_edition::String, run_id::Int)::BigInt
     rc = rowtable( execonn( hash_params, [user_id, model_name, string(model_edition), run_id]))[1]
@@ -450,7 +454,7 @@ FIXME move to scotben-functions when we make that a SubModule
 """
 function initialise_scotben_default()
     user = get_user( DEFAULT_USER_ID )
-    editions = get_available_editions( "scotben" )
+    editions = get_available_editions( "scotben" )[1]
     no_errs = Dict{String,String}()
     for edition in editions.model_edition
         model = get_model( "scotben", edition )
@@ -471,7 +475,7 @@ function initialise_scotben_default()
             Dict{String,String}(),
             Dict{String,String}(),
             Dict{String,String}())
-        for subsys in eachrow(get_available_subsystems( "scotben", edition ))
+        for subsys in eachrow(get_available_subsystems( "scotben", edition )[1])
             params = DEFAULT_MINI_PARAMS[ subsys.subsys ]
             save_params( run, subsys.subsys, JSON3.write( params ),JSON3.write( no_errs ))
         end
@@ -605,4 +609,11 @@ function next_runnable_run()::Union{Run,Nothing}
     else
         rs_to_run( r[1] )
     end
+end
+
+"""
+return progress as an array (poss 0 length) of named tuples
+"""
+function get_run_progress( run :: Run )
+    return rowtable(execonn( get_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id]))
 end

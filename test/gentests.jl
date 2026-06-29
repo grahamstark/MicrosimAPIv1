@@ -24,16 +24,16 @@ end
 @testset "DB Middleware" begin
     initialise_database()
     global uid
-    models = get_available_models()
+    models = get_available_models()[1]
     sys = deepcopy( DEFAULT_PARAMS )
     @test size(models)[1] >= 1 # at least 1 model
     for m in eachrow(models)
-        editions = get_available_editions( m.model_name )
+        editions = get_available_editions( m.model_name )[1]
         @test size(editions)[1] >= 1 # at least 1 model
         for e in eachrow( editions )
             model = get_model( m.model_name, e.model_edition )
             @test model.name == m.model_name
-            ss = get_available_subsystems( model.name, e.model_edition )
+            ss = get_available_subsystems( model.name, e.model_edition )[1]
             @test size(ss)[1] >= 1 # at least 1 subsystem
             for s in eachrow(ss)
                 minip=DEFAULT_MINI_PARAMS[s.subsys]

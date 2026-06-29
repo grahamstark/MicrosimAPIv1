@@ -17,6 +17,7 @@ using Random
 using StatsBase
 using StructTypes
 using StructUtils
+using SwaggerMarkdown
 using Tables
 using UUIDs
 
