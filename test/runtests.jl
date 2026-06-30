@@ -16,4 +16,5 @@ clear_all_temp_users()
 uid = -123
 
 include("gentests.jl")
+include( "dbtests.jl")
 include( "apitests.jl")
