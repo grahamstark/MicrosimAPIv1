@@ -365,6 +365,8 @@ function cache_output( run :: Run, param_hash :: BigInt, allout :: AllOutput )
     for k in keys( allout.images )
         execonn( output_upsert, [ run.model_name, run.model_edition, param_hash, "svg", k, mv.fig_to_svg_string(allout.images[k].data) ] )
     end
+    # just the filename of the phunpack, not the zip data
+    execonn( output_upsert, [ run.model_name, run.model_edition, param_hash, "zip", "phunpack", allout.phunpack ])
     run.output_is_cached = true
 end
 
@@ -404,6 +406,10 @@ function save_params( run :: Run, subsys::String, params :: String, errors :: St
     execonn( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, subsys, params, errors ])
 end
 
+
+output_is_cached( run :: Run, param_hash :: Integer )::Bool =
+    rowtable(execonn( run_is_cached, [run.model_name, run.model_edition, param_hash]))[1].is_cached
+
 function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
     user_id = if isnothing(copy_user_id)
         run.user_id
@@ -428,9 +434,6 @@ function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
     run.output_is_cached = output_is_cached( run, hash )
 end
 
-output_is_cached( run :: Run, param_hash :: Integer )::Bool =
-    rowtable(execonn( run_is_cached, [run.model_name, run.model_edition, param_hash]))[1].is_cached
-
 function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
     user_id = coalesce( copy_user_id, run.user_id )
     run_id = coalesce( copy_run_id, run.run_id )
@@ -447,49 +450,6 @@ function load_output!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
     else
         run.output_is_cached = false
     end
-end
-
-"""
-FIXME move to scotben-functions when we make that a SubModule
-"""
-function initialise_scotben_default()
-    user = get_user( DEFAULT_USER_ID )
-    editions = get_available_editions( "scotben" )[1]
-    no_errs = Dict{String,String}()
-    for edition in editions.model_edition
-        model = get_model( "scotben", edition )
-        rs = rowtable(execonn( run_upsert, [user.user_id, model.name, model.edition, DEFAULT_RUN_ID, "default $(model.name) run, edition $(model.edition).", "E",true,"nodir"] ))[1]
-        @show rs
-        run = Run(
-            rs.user_id,
-            rs.model_name,
-            rs.model_edition,
-            rs.run_id,
-            rs.run_name,
-            rs.created,
-            rs.last_change,
-            rs.qstatus[1],
-            rs.output_is_cached,
-            rs.working_dir,
-            RunState[],
-            Dict{String,String}(),
-            Dict{String,String}(),
-            Dict{String,String}())
-        for subsys in eachrow(get_available_subsystems( "scotben", edition )[1])
-            params = DEFAULT_MINI_PARAMS[ subsys.subsys ]
-            save_params( run, subsys.subsys, JSON3.write( params ),JSON3.write( no_errs ))
-        end
-        allout = do_run( run.user_id, run.model_name, run.model_edition, run.run_id, DEFAULT_WEEKLY_PARAMS;
-                        update_progress=update_progress,
-                        do_dumps=true  )
-        h = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
-        cache_output( run, h, allout )
-    end
-end
-
-function initialise_database()
-    load_all_parameter_descriptions()
-    initialise_scotben_default()
 end
 
 """
@@ -552,7 +512,6 @@ function get_run(
         end
         load_params!( run;  copy_user_id=copyrun.user_id, copy_run_id=copyrun.run_id )
         load_output!( run;  copy_user_id=copyrun.user_id, copy_run_id=copyrun.run_id )
-        run.output_is_cached = true
         execonn( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, 'E', true ])
         # demote the copied run if not the default
         if(copyrun.user_id == run.user_id) && (copyrun.qstatus in ['E'])

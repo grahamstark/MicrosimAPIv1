@@ -189,9 +189,11 @@ if output_is_cached ....
     uid = getq(Int, req, "uid")
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     errs = Dict()
-    if has_no_errors( runrec )[1] # return bool and list of errors
+    no_errors = has_no_errors( runrec )[1]
+    @info no_errors
+    if no_errors # return bool and list of errors
         state = "queued"
-        if run.output_is_cached
+        if runrec.output_is_cached
             state = "completed"
             change_run_state!( runrec; qstatus='C', output_in_sync=true )
         else
@@ -238,7 +240,17 @@ Retrieve a complete zipfile
     edition::String )
     uid = getq(Int, req, "uid")
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-
+    item = runrec.output["phunpack"]
+    zip_bytes = read(item.data)
+    filename = "phunpack-$(runrec.model_name)-$(runrec.model_edition)-$(runrec.run_id).zip"
+    return HTTP.Response(
+        200,
+        [
+            "Content-Type"        => "application/zip",
+            "Content-Disposition" => "attachment; filename=\"$filename\""
+        ],
+        body = zip_bytes
+    )
 end
 
 @get "/output/fetch/{model_name}/{edition}/{format}/{item}" function(

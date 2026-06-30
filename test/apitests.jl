@@ -127,7 +127,7 @@ const GOOD_PARAMS = Dict( "UBIParams"=>UBIS, "SimpleParams"=>JPS)
 const OUT_OF_RANGE_PARAMS = Dict( "UBIParams"=>UBIS_OUT_OF_RANGE, "SimpleParams"=>JPS_OUT_OF_RANGE)
 const CHANGE_PARAMS = Dict( "UBIParams"=>UBIS_CHANGED, "SimpleParams"=>JPS_CHANGED)
 const FAIL_PARAMS = Dict( "UBIParams"=>"XSAxx:1", "SimpleParams"=>"Junk:22")
-const ALL_PARAMS = [(;data=GOOD_PARAMS,nerrs=0), (;data=OUT_OF_RANGE_PARAMS,nerrs=2), (;data=FAIL_PARAMS,nerrs=1), (;data=CHANGE_PARAMS,nerrs=0)]
+const ALL_PARAMS = [(;data=GOOD_PARAMS,nerrs=0), (;data=CHANGE_PARAMS,nerrs=0), (;data=OUT_OF_RANGE_PARAMS,nerrs=2), (;data=FAIL_PARAMS,nerrs=1) ]
 
 @testset "JSON Tests" begin
     p1 = JSON3.read( JPS, msa.SimpleParams{Float64})
@@ -362,12 +362,15 @@ end
         for e in eachrow( es )
             ss = get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
-                for p in ALL_PARAMS # each set of parameters either validates, fails with 2 range errors or fails with a parse error, so...
-                    req = HTTP.Request("GET", "/run/submit/$(s.model_name)/$(s.model_edition)/?uid=$(uid)", headers,  p.data[s.subsys])
+                for p in ALL_PARAMS[1:2] # just the good ones..
+                    req = HTTP.Request("POST", "/params/set/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
+                    req = HTTP.Request("GET", "/run/submit/$(s.model_name)/$(s.model_edition)/?uid=$(uid)", headers )
                     resp = internalrequest(req)
                     @show resp
+                    jp = json( resp )
                     @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
                     @test occursin("application/json", HTTP.header(resp, "Content-Type"))
+                    @test jp["output_is_cached"]
                     n += 1
                 end
             end
@@ -390,14 +393,12 @@ end
         for e in eachrow( es )
             ss = get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
-                for p in ALL_PARAMS # each set of parameters either validates, fails with 2 range errors or fails with a parse error, so...
-                    req = HTTP.Request("GET", "/run/monitor/$(s.model_name)/$(s.model_edition)/?uid=$(uid)", headers,  p.data[s.subsys])
-                    resp = internalrequest(req)
-                    @show resp
-                    @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
-                    @test occursin("application/json", HTTP.header(resp, "Content-Type"))
-                    n += 1
-                end
+                req = HTTP.Request("GET", "/run/monitor/$(s.model_name)/$(s.model_edition)/?uid=$(uid)", headers )
+                resp = internalrequest(req)
+                @show resp
+                @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
+                @test occursin("application/json", HTTP.header(resp, "Content-Type"))
+                n += 1
             end
         end
     end

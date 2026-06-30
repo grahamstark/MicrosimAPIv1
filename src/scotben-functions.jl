@@ -23,7 +23,7 @@ using UUIDs
 
 const BIG_A = 9999999999
 
-@tags struct SimpleParams{T} <: Subsys
+@tags mutable struct SimpleParams{T} <: Subsys
     taxrates :: Vector{T} & (edit=(; label="Rates", min=0.0, max=100.0, agroup="Scottish Income Tax ", unit="%", prec=2))
     taxbands :: Vector{T} & (edit=(; label="Thresholds", min=0.0, agroup="Scottish Income Tax", unit="£s pa", prec=0 ))
     nirates :: Vector{T} & (edit=(; label="Rates", min=0.0, max=100.0, agroup="Employee National Insurance", unit="%", prec=2))
@@ -37,7 +37,7 @@ const BIG_A = 9999999999
     uc_taper :: T & (edit=(; label="Universal Credit: Withdrawal Rate", min=0.0, max=100.0, unit="%", prec=2))
 end
 
-@tags struct UBIParams{T} <: Subsys
+@tags mutable struct UBIParams{T} <: Subsys
     abolished :: Bool & (edit=(; label="Don't Have A UBI (Please!)"))
     taxrates :: Vector{T} & (edit=(; label="Rates", min=0.0, max=100.0, group="Scottish Income Tax ", unit="%", prec=2))
     taxbands :: Vector{T} & (edit=(; label="Thresholds", min=0.0, agroup="Scottish Income Tax", unit="£s pa", prec=0 ))

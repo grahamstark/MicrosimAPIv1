@@ -131,6 +131,8 @@ insert into result_description( model_name, item, datatype, info ) values
 ('scotben', 'run_settings_summary', 'html', 'Highlights from the run settings' ),
 ('scotben', 'detailed_costs', 'html', 'Huge dump of all incomes and case counts from the run.' ),
 
+('scotben', 'phunpack', 'zip', 'Zipfile of everything.' ),
+
 ('scotben', 'summary_graphs', 'svg', '4 quadrant summary graph' ),
 ('scotben', 'summary_graphs_v2', 'svg', '4 quadrant summary graph, 2nd version' ),
 ('scotben', 'taxable_graph', 'svg', 'Graph showing taxable income in bands against marginal tax rates' ),
