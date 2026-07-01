@@ -122,8 +122,8 @@ Set parameters for the given model/edition/subsys. Send a json representation of
     catch e
         errs = Dict( "parse-exception"=>e)
     end
-    save_run( run )
-    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errors = errs, output_is_cached=runrec.output_is_cached )
+    save_run( runrec )
+    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss], errors = errs, output_is_cached=runrec.output_is_cached )
 end
 
 @get "/params/helppage/{model_name}/{edition}/{subsys}" function(
@@ -173,9 +173,10 @@ Reset app parameters for the given subsys back to the defaults.
     edition::String,
     subsys::Union{String,Nothing}=nothing)
     user, runrec = handle_middle( uid, model_name, edition, nothing )
+    ss = Symbol( subsys )
     load_params!( runrec; copy_user_id=DEFAULT_USER_ID, copy_run_id=DEFAULT_RUN_ID)
     save_run( runrec )
-    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errors = runrec.errors[subsys], output_is_cached=runrec.output_is_cached )
+    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss], errors = runrec.errors[ss], output_is_cached=runrec.output_is_cached )
 end
 
 @swagger"""
@@ -199,7 +200,7 @@ if output_is_cached ....
         else
             change_run_state!( runrec; qstatus='Q', output_is_cached=false )
         end
-        update_progress( runrec.user_id, runrec.model_name, runrec.edition,
+        update_progress( runrec.user_id, runrec.model_name, runrec.model_edition,
                         runrec.run_id,
                         Progress( BASE_UUID, state, -99, -99, -99, -99 ))
     else

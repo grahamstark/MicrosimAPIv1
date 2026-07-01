@@ -138,11 +138,10 @@ const run_upsert =
            set last_change = now(), qstatus=\$6, output_is_cached=\$7
         returning *
     """
-const run_insert =
+const run_update =
     """
-       insert into runs( run_name, last_change, qstatus, output_is_cached, working_dir ) values
-           ( \$1, now(), \$2 ,\$3 ,\$4 ) where user_id=\$5 and model_name=\$6 and model_edition=\$7 and run_id=\$8
-        returning *
+       update runs set run_name=\$1, last_change=now(), qstatus=\$2, output_is_cached=\$3, working_dir=\$4
+           where user_id=\$5 and model_name=\$6 and model_edition=\$7 and run_id=\$8 returning *
     """
 
 const next_free_run_id =
@@ -559,20 +558,13 @@ end
 Save the run and parameters, but not output and the run_states. Not an upsert so only works if run exists in DB.
 """
 function save_run( run :: Run )
-
     for (k,v) in run.params
         err = Base.get( run.errors, k, Dict())
         # errs = JSON.json( err )
         save_params( run, k, v, err )
     end
-    # save
-    run_params = [run.run_name, run.run_state, run.run_is_cached, run.working_dir, run.user_id, run.model_name, run.edition, run.run_id ]
-    execonn( run_insert, run_params )
-    #=
-    for prog in run.state
-        execonn( run_state_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, prog.thread_no, prog.phase, prog.completed, prog.todo])
-    end
-    =#
+    run_params = [run.run_name, run.qstatus, run.output_is_cached, run.working_dir, run.user_id, run.model_name, run.model_edition, run.run_id ]
+    execonn( run_update, run_params )
 end
 
 function clear_expired_temp_users()

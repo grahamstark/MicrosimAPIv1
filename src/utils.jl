@@ -18,6 +18,24 @@ function to_dict(s)::Dict
     end
 end
 
+"""
+Returns the base type of a variable some parameterised type reparameterised with `newtype`.
+
+e.g if you have: 
+    struct A{T}
+        a :: T
+    end
+    x = A{Any}("xxx")
+
+then:
+    retype(x,Float64) -> A{Float64}
+    Claude did this .. Obscure but useful for the API
+
+"""
+function retype(a, newtype::Type)::Type
+    T = Base.typename(typeof(a)).wrapper
+    return T{newtype}
+end
 
 abstract type Subsys end
 

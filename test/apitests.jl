@@ -271,7 +271,8 @@ end
                     # errs = jp["errors"]
                     errs = jparse( jp, "errors", Dict )
                     @show errs
-                    @test length( errs ) == p.nerrs
+                    @show p.nerrs
+                    @test length( errs ) == p.nerrs 
                     n += 1
                 end
             end
@@ -372,6 +373,7 @@ end
                     jp = json( resp )
                     @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
                     @test occursin("application/json", HTTP.header(resp, "Content-Type"))
+                    @show jp
                     @test jp["output_is_cached"]
                     n += 1
                 end
