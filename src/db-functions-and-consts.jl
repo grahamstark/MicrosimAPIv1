@@ -71,12 +71,12 @@ mutable struct Run
     run_name :: String
     created :: DateTime
     last_change :: DateTime
-    qstatus :: Char
     output_is_cached :: Bool
+
     working_dir :: String
     state :: Vector{RunState}
-    params :: Dict{String,String}
-    errors :: Dict{String,String}
+    params :: Dict{Symbol,Subsys}
+    errors :: Dict{Symbol,Dict}
     output :: Dict{OutputKey,OutputItem}
 end
 
@@ -136,6 +136,12 @@ const run_upsert =
        on conflict( user_id, model_name, model_edition, run_id )
        do update
            set last_change = now(), qstatus=\$6, output_is_cached=\$7
+        returning *
+    """
+const run_insert =
+    """
+       insert into runs( run_name, last_change, qstatus, output_is_cached, working_dir ) values
+           ( \$1, now(), \$2 ,\$3 ,\$4 ) where user_id=\$5 and model_name=\$6 and model_edition=\$7 and run_id=\$8
         returning *
     """
 
@@ -410,6 +416,14 @@ end
 output_is_cached( run :: Run, param_hash :: Integer )::Bool =
     rowtable(execonn( run_is_cached, [run.model_name, run.model_edition, param_hash]))[1].is_cached
 
+function all_errs( run :: Run )
+    merge( values( run.errs ))
+end
+
+"""
+Load parameters into the run rec. if copy_user_id and copy_run_id are both not nothing, copy in parameters
+from that run, otherwise load whatever parameters have already been stored for the run.
+"""
 function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
     user_id = if isnothing(copy_user_id)
         run.user_id
@@ -424,11 +438,16 @@ function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
     @show user_id run_id
     p = rowtable(execonn( retrieve_params, [user_id, run.model_name, run.model_edition, run_id]))
     for r in p
-        if (! isnothing(copy_run_id)) # we are copying in parameters from user_id
+        if (! isnothing(copy_run_id)) # we are copying in parameters from user_id, FIXME maybe don't bother doing this yer
             execonn( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, r.subsys, r.data, r.errors ])
         end
-        run.params[r.subsys] = r.data
-        run.errors[r.subsys] = r.errors
+        T = eval( Symbol( r.subsys ))
+        run.params[r.subsys] = JSON3.read( r.data, T )
+        run.errors[r.subsys] = try
+            JSON3.read( r.errors, Dict )
+        catch e
+            Dict()
+        end
     end
     hash = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
     run.output_is_cached = output_is_cached( run, hash )
@@ -533,6 +552,26 @@ function get_run(
     end
 end
 
+"""
+Save the run and parameters, but not output and the run_states. Not an upsert so only works if run exists in DB.
+"""
+function save_run( run :: Run )
+
+    for (k,v) in run.params
+        err = Base.get( run.errors, k, Dict())
+        errs = JSON3.write( err )
+        save_params( run, string(k), JSON3.write(v), errs )
+    end
+    # save
+    run_params = [run.run_name, run.run_state, run.run_is_cached, run.working_dir, run.user_id, run.model_name, run.edition, run.run_id ]
+    execonn( run_insert, run_params )
+    #=
+    for prog in run.state
+        execonn( run_state_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, prog.thread_no, prog.phase, prog.completed, prog.todo])
+    end
+    =#
+end
+
 function clear_expired_temp_users()
     execonn( "delete from users where is_temp and expiry < now()");
 end
@@ -557,6 +596,8 @@ function handle_middle( user_id ::Union{Int,Nothing},
     runrec = get_run( user.user_id, model_name, edition, copy_from )
     return user, runrec
 end
+
+
 
 """
 return the earliest queued run rec or nothing.

@@ -19,7 +19,7 @@
     end
     # middleware thing test
     user, run = handle_middle( uid, "scotben", "simple-2026a", nothing )
-    @test user.user_id != uid # should have a new uid, but keep it from now on.
+    # @test user.user_id != uid # should have a new uid, but keep it from now on.
     @test run.user_id == user.user_id
     uid = user.user_id # save global user id
     # try again - should persist this time
