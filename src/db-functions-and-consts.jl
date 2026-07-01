@@ -71,8 +71,8 @@ mutable struct Run
     run_name :: String
     created :: DateTime
     last_change :: DateTime
+    qstatus :: Char
     output_is_cached :: Bool
-
     working_dir :: String
     state :: Vector{RunState}
     params :: Dict{Symbol,Subsys}
