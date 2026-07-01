@@ -267,9 +267,9 @@ function map_simple_to_full!( sys ::  TaxBenefitSystem, ubi :: UBIParams )
     sys.ubi.retirement_age = ubi.retirement_age
 end
 
-const DEFAULT_MINI_PARAMS = Dict([
-    "SimpleParams" => map_full_to_simple( DEFAULT_PARAMS ),
-    "UBIParams"    => map_full_to_ubi( DEFAULT_PARAMS )])
+const DEFAULT_MINI_PARAMS = Dict{Symbol,Subsys}([
+    :SimpleParams => map_full_to_simple( DEFAULT_PARAMS ),
+    :UBIParams    => map_full_to_ubi( DEFAULT_PARAMS )])
 
 #
 # Foolish decision to index runs by UUIDs...

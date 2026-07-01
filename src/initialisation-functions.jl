@@ -26,8 +26,8 @@ function initialise_scotben_default()
             Dict{String,String}(),
             Dict{String,String}())
         for subsys in eachrow(get_available_subsystems( "scotben", edition )[1])
-            params = DEFAULT_MINI_PARAMS[ subsys.subsys ]
-            save_params( run, subsys.subsys, JSON3.write( params ),JSON3.write( no_errs ))
+            params = DEFAULT_MINI_PARAMS[ Symbol(subsys.subsys) ]
+            save_params( run, Symbol(subsys.subsys), params,no_errs )
         end
         allout = do_run( run.user_id, run.model_name, run.model_edition, run.run_id, DEFAULT_WEEKLY_PARAMS;
                         update_progress=update_progress,

@@ -2,7 +2,6 @@
 
 import MicrosimAPIv1 as msa
 
-# julia> sj = JSON3.write(msa.DEFAULT_MINI_PARAMS)
 const JPS = """
 {
     \"taxrates\":[19.0,20.0,21.0,42.0,45.0,48.0],

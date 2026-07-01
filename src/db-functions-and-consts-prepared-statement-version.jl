@@ -424,9 +424,7 @@ function get_user( user_id ::Union{Int,Nothing} )::User
         if isnothing( user_id )
             return true
         end
-        conn = acquire( makeconn, CON_POOL)
-        rs = execute( conn, "select count(*) as nusers from users where user_id = \$1", [user_id])
-        release(CON_POOL,conn)
+        rs = execonn( "select count(*) as nusers from users where user_id = \$1", [user_id])
         return columntable(rs).nusers[1] != 1
     end
 

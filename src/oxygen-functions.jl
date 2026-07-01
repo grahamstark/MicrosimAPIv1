@@ -18,8 +18,6 @@ function CorsMiddleware(handler)
     end
 end
 
-
-
 @get "/info/available-models" function(
     req::HTTP.Request )
     df = get_available_models()[1]
@@ -95,16 +93,9 @@ TODO pass preferred format html/json
     return json((; uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys]))
 end
 
-function get_sys(req::HTTP.Request,
-                 subsys::String)::Subsys
-    T = eval(Symbol(subsys)){Float64}
-    @info " got type as " T
-    @info req
-    sys = json( req, T)
-    @info sys
-    return sys
-end
-
+@swagger"""
+Set parameters for the given model/edition/subsys. Send a json representation of the subsys as payload.
+"""
 @post "/params/set/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
     model_name::String,
@@ -116,23 +107,21 @@ end
     @info uid
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     errs = Dict()
+    ss = Symbol( subsys )
     try
-        sys = get_sys( req, subsys )
+        T = typeof( runrec.params[ss])
+        sys = json( req, T)
         @info "set ; got sys as " sys
         errs = tvalidate( sys )
         @info "set ; errs " errs
         if length(errs) == 0
             @info "set params to " sys
-            jsys = JSON3.write( sys )
-            @info jsys
-            runrec.params[subsys] = jsys
-            @info "saving "
-            save_params( runrec, subsys, jsys, JSON3.write( errs ))
-            @info "saved OK"
+            runrec.params[ss] = sys            
         end
     catch e
         errs = Dict( "parse-exception"=>e)
     end
+    save_run( run )
     return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errors = errs, output_is_cached=runrec.output_is_cached )
 end
 
@@ -144,12 +133,10 @@ end
     return html("<p>A helppage</p>")
 end
 
-"""
+@swagger"""
 validates data but makes no attempt to load it or make things consistent
 return uid, a dict of errs - 0 length if zero errors
 """
-
-
 @post "/params/validate/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
     model_name::String,
@@ -157,9 +144,11 @@ return uid, a dict of errs - 0 length if zero errors
     subsys::String)
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     user, runrec = handle_middle( uid, model_name, edition, nothing )
+    ss = Symbol( subsys )
+    T = typeof( runrec.params[ss])
     @info string(req.body)
     errs = try
-        sys = get_sys( req, subsys )
+        sys = json( req, T)
         tvalidate( sys )
     catch e
         Dict( "parse-exception"=>e)
@@ -167,7 +156,11 @@ return uid, a dict of errs - 0 length if zero errors
     return (;uid=user.user_id, errors = errs )
 end
 
+@swagger"""
 
+Reset app parameters for the given subsys back to the defaults.
+
+"""
 @get "/params/initialise/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
     model_name::String,
@@ -175,6 +168,7 @@ end
     subsys::Union{String,Nothing}=nothing)
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     load_params!( runrec; copy_user_id=DEFAULT_USER_ID, copy_run_id=DEFAULT_RUN_ID)
+    save_run( runrec )
     return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys], errors = runrec.errors[subsys], output_is_cached=runrec.output_is_cached )
 end
 
@@ -195,9 +189,9 @@ if output_is_cached ....
         state = "queued"
         if runrec.output_is_cached
             state = "completed"
-            change_run_state!( runrec; qstatus='C', output_in_sync=true )
+            change_run_state!( runrec; qstatus='C', output_is_cached=true )
         else
-            change_run_state!( runrec; qstatus='Q', output_in_sync=false )
+            change_run_state!( runrec; qstatus='Q', output_is_cached=false )
         end
         update_progress( runrec.user_id, runrec.model_name, runrec.edition,
                         runrec.run_id,
@@ -205,6 +199,7 @@ if output_is_cached ....
     else
         errs = runrec.errors # FIXME poss > 1 record here
     end
+    save_run( runrec )
     return (;uid=user.user_id, runid=runrec.run_id, errors=errs, output_is_cached=runrec.output_is_cached )
 end
 

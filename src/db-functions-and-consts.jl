@@ -71,8 +71,8 @@ mutable struct Run
     run_name :: String
     created :: DateTime
     last_change :: DateTime
+    qstatus :: Char 
     output_is_cached :: Bool
-
     working_dir :: String
     state :: Vector{RunState}
     params :: Dict{Symbol,Subsys}
@@ -308,8 +308,8 @@ end
 NOTE: you need BASE_RESULTS = do_default_run() first if you're not loading MicrosimAPIv1
 """
 function load_all_parameter_descriptions() # so far
-    load_parameter_description("scotben", "simple-2026a", "A Basic Set of SB Parameters", DEFAULT_MINI_PARAMS["SimpleParams"] )
-    load_parameter_description("scotben", "basic-income-2026a", "Basic Income Simulation Parameters", DEFAULT_MINI_PARAMS["UBIParams"] )
+    load_parameter_description("scotben", "simple-2026a", "A Basic Set of SB Parameters", DEFAULT_MINI_PARAMS[:SimpleParams] )
+    load_parameter_description("scotben", "basic-income-2026a", "Basic Income Simulation Parameters", DEFAULT_MINI_PARAMS[:UBIParams] )
 end
 
 function get_available_models()::Tuple
@@ -408,8 +408,8 @@ function get_user( user_id ::Union{Int,Nothing} )::User
     end
 end
 
-function save_params( run :: Run, subsys::String, params :: String, errors :: String )
-    execonn( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, subsys, params, errors ])
+function save_params( run :: Run, subsys::Symbol, params :: Subsys, errors :: AbstractDict )
+    execonn( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, string(subsys), JSON3.write( params ), JSON3.write( errors ) ])
 end
 
 
@@ -422,7 +422,8 @@ end
 
 """
 Load parameters into the run rec. if copy_user_id and copy_run_id are both not nothing, copy in parameters
-from that run, otherwise load whatever parameters have already been stored for the run.
+from that run, otherwise load whatever parameters have already been stored for the run. Sets output_is_cached
+as a side-effect.
 """
 function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, copy_run_id::Union{Nothing,Int}=nothing )
     user_id = if isnothing(copy_user_id)
@@ -441,9 +442,10 @@ function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
         if (! isnothing(copy_run_id)) # we are copying in parameters from user_id, FIXME maybe don't bother doing this yer
             execonn( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, r.subsys, r.data, r.errors ])
         end
-        T = eval( Symbol( r.subsys ))
-        run.params[r.subsys] = JSON3.read( r.data, T )
-        run.errors[r.subsys] = try
+        ss = Symbol( r.subsys )
+        T = eval( ss )
+        run.params[ss] = JSON3.read( r.data, T )
+        run.errors[ss] = try
             JSON3.read( r.errors, Dict )
         catch e
             Dict()
@@ -476,20 +478,21 @@ rs is a row from a rowtable. Convert this to a Run record. FIXME: argcheck that'
 """
 function rs_to_run( rs )::Run
     # @argcheck istable( rs )
-    return Run( rs.user_id,
-               rs.model_name,
-               rs.model_edition,
-               rs.run_id,
-               rs.run_name,
-               rs.created,
-               rs.last_change,
-               rs.qstatus[1],
-               rs.output_is_cached,
-               rs.working_dir,
-               RunState[],
-               Dict{String,String}(),
-               Dict{String,String}(),
-               Dict{String,String}())
+    return Run( 
+        rs.user_id,
+        rs.model_name,
+        rs.model_edition,
+        rs.run_id,
+        rs.run_name,
+        rs.created,
+        rs.last_change,
+        rs.qstatus[1],
+        rs.output_is_cached,
+        rs.working_dir,
+        RunState[],
+        Dict{Symbol,Subsys}(),
+        Dict{Symbol,Subsys}(),
+        Dict{Symbol,Subsys}())
 end
 
 function change_run_state!( run :: Run; qstatus :: Char, output_is_cached :: Bool )
@@ -559,8 +562,8 @@ function save_run( run :: Run )
 
     for (k,v) in run.params
         err = Base.get( run.errors, k, Dict())
-        errs = JSON3.write( err )
-        save_params( run, string(k), JSON3.write(v), errs )
+        # errs = JSON3.write( err )
+        save_params( run, k, v, err )
     end
     # save
     run_params = [run.run_name, run.run_state, run.run_is_cached, run.working_dir, run.user_id, run.model_name, run.edition, run.run_id ]

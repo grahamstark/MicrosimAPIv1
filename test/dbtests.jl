@@ -13,7 +13,7 @@
             ss = get_available_subsystems( model.name, e.model_edition )[1]
             @test size(ss)[1] >= 1 # at least 1 subsystem
             for s in eachrow(ss)
-                minip=DEFAULT_MINI_PARAMS[s.subsys]
+                minip=DEFAULT_MINI_PARAMS[Symbol(s.subsys)]
             end
         end
     end
@@ -30,13 +30,13 @@
 end
 
 @testset "output cache tests" begin
-    subsys = "SimpleParams"
+    subsys = :SimpleParams
     minip=deepcopy(DEFAULT_MINI_PARAMS[subsys])
     user, run = handle_middle( uid, "scotben", "simple-2026a", nothing )
     @test run.output_is_cached # default
     minip.taxrates .+= rand()
     run.params[subsys] = JSON3.write( minip )
-    save_params( run, subsys, run.params[subsys], "{}" )
+    save_params( run, subsys, run.params[subsys], Dict() )
     user, run = handle_middle( uid, "scotben", "simple-2026a", nothing )
     @test ! run.output_is_cached
 end
