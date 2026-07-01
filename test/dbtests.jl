@@ -35,7 +35,7 @@ end
     user, run = handle_middle( uid, "scotben", "simple-2026a", nothing )
     @test run.output_is_cached # default
     minip.taxrates .+= rand()
-    run.params[subsys] = JSON3.write( minip )
+    run.params[subsys] = minip
     save_params( run, subsys, run.params[subsys], Dict() )
     user, run = handle_middle( uid, "scotben", "simple-2026a", nothing )
     @test ! run.output_is_cached

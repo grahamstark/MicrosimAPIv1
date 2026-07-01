@@ -129,11 +129,8 @@ const FAIL_PARAMS = Dict( "UBIParams"=>"XSAxx:1", "SimpleParams"=>"Junk:22")
 const ALL_PARAMS = [(;data=GOOD_PARAMS,nerrs=0), (;data=CHANGE_PARAMS,nerrs=0), (;data=OUT_OF_RANGE_PARAMS,nerrs=2), (;data=FAIL_PARAMS,nerrs=1) ]
 
 @testset "JSON Tests" begin
-    p1 = JSON3.read( JPS, msa.SimpleParams{Float64})
-    # doesn't work because of the array see: https://discourse.julialang.org/t/define-equality-for-struct-by-checking-all-fields/121325
-    # @test p1 == msa.DEFAULT_MINI_PARAMS["SimpleParams"]
-    p2 = JSON3.read( UBIS, msa.UBIParams{Float64})
-    # @test p2 == msa.DEFAULT_MINI_PARAMS["UBIParams"]
+    p1 = JSON.parse( JPS, msa.SimpleParams{Float64})
+    p2 = JSON.parse( UBIS, msa.UBIParams{Float64})
 end
 
 # from oxygen's testcases
@@ -223,6 +220,12 @@ end
 end
 # julia>
 
+
+# convoluted, but works - no real explanation why
+jparse( jp, k, T::Type ) = JSON.parse( JSON.json(jp[k]), T )
+# convoluted, but works - no real explanation why
+jparse( jp, k, T::String ) = JSON.parse( JSON.json(jp[k]), eval( Symbol( T )))
+
 @testset "Get Params" begin
     ms = get_available_models()[1]
     n = 0
@@ -239,7 +242,7 @@ end
                 jp = json(resp)
                 @show jp["uid"]
                 uid = jp["uid"]
-                rec = JSON3.read( jp["params"], eval( Symbol(s.subsys)))
+                rec = jparse( jp, "params", s.subsys)
                 @show rec
                 n += 1
             end
@@ -247,7 +250,6 @@ end
     end
     @test n > 0
 end
-
 
 @testset "Validate Params" begin
     ms = get_available_models()[1]
@@ -266,7 +268,8 @@ end
                     @test occursin("application/json", HTTP.header(resp, "Content-Type"))
                     jp = json(resp)
                     uid = jp["uid"] # set to the id of a temp user on 1st call, with user saved in db from that point on
-                    errs = jp["errors"]
+                    # errs = jp["errors"]
+                    errs = jparse( jp, "errors", Dict )
                     @show errs
                     @test length( errs ) == p.nerrs
                     n += 1
@@ -325,7 +328,7 @@ end
                     #  parsing problems with errs as '{}' that I don't understand - comment out for now & move on ...
                     # json(resp) parses {} as blank, this as '{}'
                     jp = json(resp)
-                    # jp = JSON3.read(string(resp))
+                    # jp = JSON.parse(string(resp))
                     uid = jp["uid"] # set to the id of a temp user on 1st call, with user saved in db from that point on
                     #errs = to_dict(jp["errors"])
                     #@show errs
@@ -335,7 +338,7 @@ end
                     resp2 = internalrequest(req2)
                     @test resp.status == 200 # even a parse error shouldn't raise an HTTP
                     jp2 = json(resp)
-                    # jp2 = JSON3.read(string(resp2))
+                    # jp2 = JSON.parse(string(resp2))
                     #errs2 = to_dict(jp2["errs"])
                     # params should always be reset to base, but in JSON
                     # @test jp2["params"] == JSON3.write( DEFAULT_MINI_PARAMS[ s.subsys ])

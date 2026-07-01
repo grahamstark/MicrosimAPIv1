@@ -409,7 +409,7 @@ function get_user( user_id ::Union{Int,Nothing} )::User
 end
 
 function save_params( run :: Run, subsys::Symbol, params :: Subsys, errors :: AbstractDict )
-    execonn( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, string(subsys), JSON3.write( params ), JSON3.write( errors ) ])
+    execonn( params_upsert, [run.user_id, run.model_name, run.model_edition, run.run_id, string(subsys), JSON.json( params ), JSON.json( errors ) ])
 end
 
 
@@ -444,9 +444,9 @@ function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
         end
         ss = Symbol( r.subsys )
         T = eval( ss )
-        run.params[ss] = JSON3.read( r.data, T )
+        run.params[ss] = JSON.parse( r.data, T{Float64} )
         run.errors[ss] = try
-            JSON3.read( r.errors, Dict )
+            JSON.parse( r.errors, Dict )
         catch e
             Dict()
         end
@@ -562,7 +562,7 @@ function save_run( run :: Run )
 
     for (k,v) in run.params
         err = Base.get( run.errors, k, Dict())
-        # errs = JSON3.write( err )
+        # errs = JSON.json( err )
         save_params( run, k, v, err )
     end
     # save

@@ -89,8 +89,9 @@ TODO pass preferred format html/json
     subsys::String )
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     @info uid
+    ss = Symbol( subsys )
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-    return json((; uid=user.user_id, runid=runrec.run_id, params=runrec.params[subsys]))
+    return json((; uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss]))
 end
 
 @swagger"""
@@ -146,13 +147,18 @@ return uid, a dict of errs - 0 length if zero errors
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     ss = Symbol( subsys )
     T = typeof( runrec.params[ss])
+    @info "validate " T
     @info string(req.body)
     errs = try
         sys = json( req, T)
-        tvalidate( sys )
+        @show "validate " sys
+        x = tvalidate( sys )
+        @show x
+        x
     catch e
         Dict( "parse-exception"=>e)
     end
+    @info "validate errors = " errs
     return (;uid=user.user_id, errors = errs )
 end
 

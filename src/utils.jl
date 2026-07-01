@@ -14,7 +14,7 @@ function to_dict(s)::Dict
     return if s == "{}" || length(s) == 0
         Dict()
     else
-        JSON3.read(s,Dict)
+        JSON.parse(s,Dict)
     end
 end
 

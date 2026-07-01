@@ -23,27 +23,27 @@ using UUIDs
 
 const BIG_A = 9999999999
 
-@tags mutable struct SimpleParams{T} <: Subsys
-    taxrates :: Vector{T} & (edit=(; label="Rates", min=0.0, max=100.0, agroup="Scottish Income Tax ", unit="%", prec=2))
-    taxbands :: Vector{T} & (edit=(; label="Thresholds", min=0.0, agroup="Scottish Income Tax", unit="£s pa", prec=0 ))
-    nirates :: Vector{T} & (edit=(; label="Rates", min=0.0, max=100.0, agroup="Employee National Insurance", unit="%", prec=2))
-    nibands :: Vector{T} & (edit=(; label="Bands", min=0.0, agroup="Employee National Insurance", unit="£a pw", prec=2))
-    taxallowance :: T  & (edit=(; label="Income Tax Allowance", min=0.0, unit="£s pa", prec=0))
-    child_benefit :: T & (edit=(; label="Child Benefit (1st Child)", min=0.0, unit="£s pw", prec=2))
-    pension :: T & (edit=(; label="New State Pension", min=0.0, unit="£s pw", prec=2))
-    scottish_child_payment :: T & (edit=(; label="Scottish Child Payment (Per Child))", min=0.0, unit="£s pw", prec=2))
+@tags mutable struct SimpleParams{Float64} <: Subsys
+    taxrates :: Vector{Float64} & (edit=(; label="Rates", min=0.0, max=100.0, agroup="Scottish Income Tax ", unit="%", prec=2))
+    taxbands :: Vector{Float64} & (edit=(; label="Thresholds", min=0.0, agroup="Scottish Income Tax", unit="£s pa", prec=0 ))
+    nirates :: Vector{Float64} & (edit=(; label="Rates", min=0.0, max=100.0, agroup="Employee National Insurance", unit="%", prec=2))
+    nibands :: Vector{Float64} & (edit=(; label="Bands", min=0.0, agroup="Employee National Insurance", unit="£a pw", prec=2))
+    taxallowance :: Float64  & (edit=(; label="Income Tax Allowance", min=0.0, unit="£s pa", prec=0))
+    child_benefit :: Float64 & (edit=(; label="Child Benefit (1st Child)", min=0.0, unit="£s pw", prec=2))
+    pension :: Float64 & (edit=(; label="New State Pension", min=0.0, unit="£s pw", prec=2))
+    scottish_child_payment :: Float64 & (edit=(; label="Scottish Child Payment (Per Child))", min=0.0, unit="£s pw", prec=2))
     scp_age :: Int & (edit=(; label="Scottish Child Payment Maximum Age", min=0, max=18, unit="Years", prec=2))
-    uc_single :: T & (edit=(; label="Universal Credit: Allowance for Single Person", min=0.0, unit="£s pm", prec=2))
-    uc_taper :: T & (edit=(; label="Universal Credit: Withdrawal Rate", min=0.0, max=100.0, unit="%", prec=2))
+    uc_single :: Float64 & (edit=(; label="Universal Credit: Allowance for Single Person", min=0.0, unit="£s pm", prec=2))
+    uc_taper :: Float64 & (edit=(; label="Universal Credit: Withdrawal Rate", min=0.0, max=100.0, unit="%", prec=2))
 end
 
-@tags mutable struct UBIParams{T} <: Subsys
+@tags mutable struct UBIParams{Float64} <: Subsys
     abolished :: Bool & (edit=(; label="Don't Have A UBI (Please!)"))
-    taxrates :: Vector{T} & (edit=(; label="Rates", min=0.0, max=100.0, group="Scottish Income Tax ", unit="%", prec=2))
-    taxbands :: Vector{T} & (edit=(; label="Thresholds", min=0.0, agroup="Scottish Income Tax", unit="£s pa", prec=0 ))
-    nirates :: Vector{T} & (edit=(; label="Rates", min=0.0, max=100.0, group="Employee National Insurance", unit="%", prec=2))
-    nibands :: Vector{T} & (edit=(; label="Bands", min=0.0, agroup="Employee National Insurance", unit="£s pw", prec=2))
-    taxallowance :: T  & (edit=(; label="Income Tax Allowance", min=0.0, unit="£s pa", prec=0))
+    taxrates :: Vector{Float64} & (edit=(; label="Rates", min=0.0, max=100.0, group="Scottish Income Tax ", unit="%", prec=2))
+    taxbands :: Vector{Float64} & (edit=(; label="Thresholds", min=0.0, agroup="Scottish Income Tax", unit="£s pa", prec=0 ))
+    nirates :: Vector{Float64} & (edit=(; label="Rates", min=0.0, max=100.0, group="Employee National Insurance", unit="%", prec=2))
+    nibands :: Vector{Float64} & (edit=(; label="Bands", min=0.0, agroup="Employee National Insurance", unit="£s pw", prec=2))
+    taxallowance :: Float64  & (edit=(; label="Income Tax Allowance", min=0.0, unit="£s pa", prec=0))
 
     abolish_uc :: Bool & (edit=(; label="Abolish Universal Credit"))
     abolish_sickness_bens :: Bool & (edit=(; label="Abolish Sickness and Disablement Benefits?"))
@@ -55,9 +55,9 @@ end
     ubi_as_mt_income :: Bool & (edit=(; label="Treat The UBI As Income for Means-Tested Benefits?"))
     ubi_taxable :: Bool & (edit=(; label="Make the UBI Taxable?"))
 
-    adult_amount :: T & (edit=(; label="UBI: Amount Per Adult", min=0.0, unit="£s pw", prec=2))
-    child_amount :: T & (edit=(; label="UBI: Amount Per Child", min=0.0, unit="£s pw", prec=2))
-    universal_pension :: T & (edit=(; label="UBI: Amount Per Pension Age Person", min=0.0, unit="£s pw", prec=2))
+    adult_amount :: Float64 & (edit=(; label="UBI: Amount Per Adult", min=0.0, unit="£s pw", prec=2))
+    child_amount :: Float64 & (edit=(; label="UBI: Amount Per Child", min=0.0, unit="£s pw", prec=2))
+    universal_pension :: Float64 & (edit=(; label="UBI: Amount Per Pension Age Person", min=0.0, unit="£s pw", prec=2))
     adult_age :: Int & (edit=(; label="UBI: Age of Adulthood", min=0, max=21, unit="Years"))
     retirement_age :: Int & (edit=(; label="UBI: Age of Retirement", min=50, unit="Years"))
     # mt_bens_treatment :: UBEntitlement & (edit=(; label="UBI: How to treat Means-Tested Benefits", options=["1"])
@@ -85,7 +85,6 @@ mutable struct AllOutput
     # progress :: Progress
 end
 
-
 function weeklyparams() :: TaxBenefitSystem
     pars = deepcopy( DEFAULT_PARAMS )
     weeklyise!( pars )
@@ -93,7 +92,6 @@ function weeklyparams() :: TaxBenefitSystem
 end
 
 const DEFAULT_PARAMS ::  TaxBenefitSystem = loaddefs()
-
 const DEFAULT_WEEKLY_PARAMS :: TaxBenefitSystem = weeklyparams()
 
 """
