@@ -415,5 +415,17 @@ end
 end
 
 @testset "Phunpack Fetch" begin
-
+    ms = get_available_models()[1]
+    n = 0
+    headers = []
+    global uid
+    for m in eachrow(ms)
+        es = get_available_editions( m.model_name )[1]
+        for e in eachrow( es )
+            req = HTTP.Request("GET", "/output/phunpack/$(e.model_name)/$(e.model_edition)/?uid=$(uid)", headers )            
+            resp = internalrequest(req)
+            @test resp.status == 200
+            @show resp
+        end 
+    end
 end

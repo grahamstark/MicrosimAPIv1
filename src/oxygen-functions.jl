@@ -242,7 +242,9 @@ Retrieve a complete zipfile
     edition::String )
     uid = getq(Int, req, "uid")
     user, runrec = handle_middle( uid, model_name, edition, nothing )
-    item = runrec.output["phunpack"]
+    outkey = OutputKey( "phunpack", "zip")
+    item = runrec.output[outkey]
+    @info keys( runrec.output )
     zip_bytes = read(item.data)
     filename = "phunpack-$(runrec.model_name)-$(runrec.model_edition)-$(runrec.run_id).zip"
     return HTTP.Response(
