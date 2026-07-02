@@ -1,4 +1,5 @@
-function grab_runs_from_queue(i::Integer)
+function grab_runs_from_queue() # i::Integer)
+    i = rand(1:10)
     while true
         # FIXME can we simplify this
         run = next_runnable_run()
@@ -27,14 +28,22 @@ function grab_runs_from_queue(i::Integer)
     end
 end
 
-const NUM_HANDLERS = 3 #
-
 #
 # Run the job queues
 #
-function start_scotben_queues(num_handlers=NUM_HANDLERS)
+#=
+function start_scotben_queues(num_handlers=3)
     for i in 1:num_handlers # start n tasks to process requests in parallel
         @info "starting handler $i"
         errormonitor( @async grab_runs_from_queue(i))
+    end
+end
+=#
+
+function start_scotben_queues(num_handlers=3)
+    for i in 1:num_handlers # start n tasks to process requests in parallel
+        @info "starting handler $i"
+        t = @task grab_runs_from_queue()
+        schedule(t)
     end
 end
