@@ -410,10 +410,26 @@ end
 end
 
 @testset "Output Fetch" begin
-
-
+    ms = get_available_models()[1]
+    n = 0
+    headers = []
+    global uid
+    for m in eachrow(ms)
+        es = get_available_editions( m.model_name )[1]
+        outputs = get_output_descriptions( m.model_name )[1]
+        for e in eachrow( es )
+            for o in eachrow( outputs )
+                req = HTTP.Request("GET", "/output/fetch/$(e.model_name)/$(e.model_edition)/$(o.datatype)/$(o.item)/?uid=$(uid)", headers )
+                resp = internalrequest(req)
+                @test resp.status == 200
+                @show resp
+                n += 1
+            end
+        end
+    end
+    @test n > 0
 end
-
+#=
 @testset "Phunpack Fetch" begin
     ms = get_available_models()[1]
     n = 0
@@ -422,10 +438,11 @@ end
     for m in eachrow(ms)
         es = get_available_editions( m.model_name )[1]
         for e in eachrow( es )
-            req = HTTP.Request("GET", "/output/phunpack/$(e.model_name)/$(e.model_edition)/?uid=$(uid)", headers )            
+            req = HTTP.Request("GET", "/output/fetch/$(e.model_name)/$(e.model_edition)/zip/phunpack?uid=$(uid)", headers )
             resp = internalrequest(req)
             @test resp.status == 200
             @show resp
         end 
     end
 end
+=#

@@ -16,8 +16,4 @@ export doserve, testserve
 doserve() = serve(; middleware=[CorsMiddleware], port=LIVE_PORT)
 testserve() = serve(; middleware=[CorsMiddleware], port=TEST_PORT, revise=:eager)
 
-function __init__()
-
-end
-
 end # module
