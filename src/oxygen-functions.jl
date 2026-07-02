@@ -233,18 +233,10 @@ THIS CURRENTLY DOES NOTHING
     user, runrec = handle_middle( uid, model_name, edition, nothing )
 end
 
-@swagger"""
-Retrieve a complete zipfile
-"""
-@get "/output/phunpack/{model_name}/{edition}/" function(
-    req::HTTP.Request,
-    model_name::String,
-    edition::String )
-    uid = getq(Int, req, "uid")
-    user, runrec = handle_middle( uid, model_name, edition, nothing )
+function get_phunpack(
+    runrec :: Run )
     outkey = OutputKey( "phunpack", "zip")
     item = runrec.output[outkey]
-    @info keys( runrec.output )
     zip_bytes = read(item.data)
     filename = "phunpack-$(runrec.model_name)-$(runrec.model_edition)-$(runrec.run_id).zip"
     return HTTP.Response(
@@ -257,6 +249,9 @@ Retrieve a complete zipfile
     )
 end
 
+@swagger"""
+Retrieve a single item. Note phunpack treated seperately.
+"""
 @get "/output/fetch/{model_name}/{edition}/{format}/{item}" function(
     req::HTTP.Request,
     model_name::String,
@@ -266,8 +261,15 @@ end
     uid = getq(Int, req,"uid")
     @info uid format item
     user, runrec = handle_middle( uid, model_name, edition, nothing )
+    # special handling for phunpack
+    if item == "phunpack" && format == "zip"
+        return get_phunpack( runrec )
+    end
     outkey = OutputKey( item, format )
     # @info keys(runrec.output)
+    if ! haskey(runrec.output, outkey )
+       return HTTP.Response( 404; body="Unable to find $item in format $format for $model_name / $model_edition" )
+    end
     item = runrec.output[outkey]
     # fixme more idiomatic
     return if format == "svg"
