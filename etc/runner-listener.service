@@ -12,7 +12,7 @@ EnvironmentFile=/etc/systemd/user/gks_environment
 PIDFile=/run/MicrosimAPI.pid
 WorkingDirectory=/home/graham_s/julia/vw/MicrosimAPIv1/
 
-ExecStart=/home/graham_s/.juliaup/bin/julia --project=. --startup-file=no -t auto /home/graham_s/julia/vw/MicrosimAPIv1/bin/start-listener.jl
+ExecStart=/home/graham_s/.juliaup/bin/julia --project=. --startup-file=no -t auto /home/graham_s/julia/vw/MicrosimAPIv1/bin/runner-listener.jl
 ExecStop=/bin/kill -WINCH ${MAINPID}
 KillSignal=SIGKILL
 PrivateTmp=true

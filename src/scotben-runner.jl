@@ -1,6 +1,5 @@
 function grab_runs_from_queue(i::Integer)
     while true
-        # FIXME can we simplify this
         run = next_runnable_run()
         if ! isnothing( run )
             @info "run $(run.run_id) for user $(run.user_id) started in handler $(i)"
@@ -17,8 +16,6 @@ function grab_runs_from_queue(i::Integer)
                 cache_output( run, h, allout )
             end
             load_output!( run )
-            # FIXME add a version that doesn't change output_is_cached
-            # FIXME we don't actually ever need to load the output into the run record?
             change_run_state!( run; qstatus='C', output_is_cached=true )
         else
             @info "no runnable runs for handler $(i)"
@@ -27,10 +24,10 @@ function grab_runs_from_queue(i::Integer)
     end
 end
 
-#
-# Run the job queues
-#
-
+"""
+ create a vector of num_handlers job queue handlers
+ see bin/run-listener.jl|sh for how to use the queue
+"""
 function create_scotben_queues(num_handlers=3)
     tasks = Task[]
     for i in 1:num_handlers # start n tasks to process requests in parallel
