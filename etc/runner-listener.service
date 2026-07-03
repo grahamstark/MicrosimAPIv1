@@ -15,5 +15,6 @@ ExecStop=/bin/kill -WINCH ${MAINPID}
 KillSignal=SIGKILL
 PrivateTmp=true
 TimeoutStartSec=360
+Restart=on-failure
 [Install]
 WantedBy=multi-user.target
