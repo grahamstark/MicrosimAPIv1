@@ -4,15 +4,13 @@ After=network.target remote-fs.target nss-lookup.target
 
 [Service]
 # Type=forking
-User=graham_s
-# note this now includes GINI_ENV=prod to use production environment
+User=apiuser
 EnvironmentFile=/etc/systemd/user/gks_environment
 # The PID file is optional, but recommended in the manpage
 # "so that systemd can identify the main process of the daemon"
-PIDFile=/run/MicrosimAPI.pid
-WorkingDirectory=/home/graham_s/julia/vw/MicrosimAPIv1/
-
-ExecStart=/home/graham_s/.juliaup/bin/julia --project=. --startup-file=no -t auto /home/graham_s/julia/vw/MicrosimAPIv1/bin/runner-listener.jl
+PIDFile=/run/RunnerListener.pid
+WorkingDirectory=/opt/api/package/MicrosimAPIv1/
+ExecStart=/opt/api/julia/bin/julia --project=. --startup-file=no -t auto /opt/api/package/MicrosimAPIv1/bin/runner-listener.jl
 ExecStop=/bin/kill -WINCH ${MAINPID}
 KillSignal=SIGKILL
 PrivateTmp=true

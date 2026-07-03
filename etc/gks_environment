@@ -1,4 +1,4 @@
-JULIA=/home/graham_s/.juliaup/
+JULIA=/opt/api/julia/
 STB_HOME=/home/graham_s/julia/vw/ScottishTaxBenefitModel/
-# GENIE_ENV=prod
+# or: prod
 GENIE_END=dev
