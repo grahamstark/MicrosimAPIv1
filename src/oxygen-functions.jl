@@ -203,10 +203,11 @@ if output_is_cached ....
         update_progress( runrec.user_id, runrec.model_name, runrec.model_edition,
                         runrec.run_id,
                         Progress( BASE_UUID, state, -99, -99, -99, -99 ))
+        # despite the name, this creates a new run 
+        runrec = get_run( user.user_id, runrec.model_name, runrec.model_edition, runrec.run_id )
     else
         errs = runrec.errors # FIXME poss > 1 record here
     end
-    save_run( runrec )
     return (;uid=user.user_id, runid=runrec.run_id, errors=errs, output_is_cached=runrec.output_is_cached )
 end
 

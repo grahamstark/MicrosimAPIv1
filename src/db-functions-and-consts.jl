@@ -90,7 +90,7 @@ end
 
 const user_queue_counts =
     """
-    select qstatus,count(*)  as qcount from runs where user_id=\$1 group by qstatus
+    select qstatus,count(*) as qcount from runs where user_id=\$1 group by qstatus
     """
 
 const total_queue_counts =
