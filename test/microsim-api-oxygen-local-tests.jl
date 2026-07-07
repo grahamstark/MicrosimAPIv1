@@ -191,7 +191,7 @@ end
             ss = get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
                 req = HTTP.Request("GET", "/info/params-description/$(s.model_name)/$(s.model_edition)/$(s.subsys)")
-                resp = internalrequest(req)
+                resp = HTTP.get(req)
                 @test resp.status == 200
                 @show resp.body
                 @test occursin("text/html", HTTP.header(resp, "Content-Type"))
