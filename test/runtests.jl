@@ -7,8 +7,6 @@ the Oxygen macros in test cases without actually starting a server.
 
 using Test
 
-
-
 include( "../src/loadall.jl")
 
 # this global user id means we can share a temp user between all the tests from the 1st time one is created
@@ -17,4 +15,5 @@ uid = -123
 
 include("gentests.jl")
 include( "dbtests.jl")
-include( "apitests.jl")
+include( "microsim-api-oxygen-local-tests.jl")
+include( "microsim-api-oxygen-network-tests.jl")
