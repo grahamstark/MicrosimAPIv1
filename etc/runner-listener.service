@@ -5,7 +5,7 @@ After=network.target remote-fs.target nss-lookup.target
 [Service]
 # Type=forking
 User=apiuser
-EnvironmentFile=/etc/systemd/user/gks_environment
+EnvironmentFile=/opt/api/package/MicrosimAPIv1/etc/environment
 # The PID file is optional, but recommended in the manpage
 # "so that systemd can identify the main process of the daemon"
 PIDFile=/run/RunnerListener.pid
