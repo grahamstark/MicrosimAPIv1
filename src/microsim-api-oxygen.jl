@@ -269,7 +269,7 @@ Retrieve a single item. Note phunpack treated seperately.
     outkey = OutputKey( item, format )
     # @info keys(runrec.output)
     if ! haskey(runrec.output, outkey )
-       return HTTP.Response( 404; body="Unable to find $item in format $format for $model_name / $model_edition" )
+       return HTTP.Response( 404; body="Unable to find $item in format $format for $model_name / $edition" )
     end
     item = runrec.output[outkey]
     # fixme more idiomatic
