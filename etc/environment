@@ -1,4 +1,2 @@
 JULIA=/opt/api/julia/
 STB_HOME=/home/graham_s/julia/vw/ScottishTaxBenefitModel/
-# or: prod
-GENIE_END=dev
