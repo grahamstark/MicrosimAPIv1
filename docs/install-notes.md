@@ -33,7 +33,6 @@ sudo systemctl status -n200 runner-listener.service
 
 Likewise for etc/microapi.service:
 
-
 ```sh
 sudo cp etc/microapi.service /usr/lib/systemd/system/
 sudo systemctl daemon-reload
@@ -57,7 +56,7 @@ In `/opt/api` as `apiuser`:
 mkdir `run` and `bin` at top-level
 Julia update script `api_updater.sh` in `bin`
 
-Directory structure for apiuser in `/opt/api`:
+Directory structure for apiuser in `/opt/api/`:
 
     julia/ <- via juliaup. FIXME maybe .julia would be as good?
     package/MicrosimAPIv1 
@@ -66,6 +65,24 @@ Directory structure for apiuser in `/opt/api`:
 TODO: make a script that creates all the files, sending `/opt/api` as an iterpolated variable.
 
 Apache: redirect port to 9091 for no-revise version.
+
+## Initialising the database
+
+```sql
+drop database microapi;
+create database microapi;
+\c microapi;
+\i db/microapi.sql
+```
+
+.. then load default results and page descriptions:
+
+```julia 
+
+import MicrosimAPIv1 as msa
+msa.initialise_database()
+
+```
 
 
     

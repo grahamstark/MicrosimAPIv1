@@ -10,7 +10,7 @@ const TEST_URL = "http://microapi-local/"
 # or http://localhost:LIVE_PORT|TEST_PORT
 
 @testset "valid model name returns 200" begin
-    resp = HTTP.request("GET", "$TEST_URL/info/available-models/")
+    resp = HTTP.request("GET", "$(TEST_URL)/info/available-models/")
     
     @test resp.status == 200
     @show resp.body
@@ -21,7 +21,7 @@ end
     df = msa.get_available_models()[1]
     n = 0
     for d in eachrow(df)
-        resp = HTTP.request("GET", "$TEST_URL/info/available-editions/$(d.model_name)")
+        resp = HTTP.request("GET", "$(TEST_URL)/info/available-editions/$(d.model_name)")
         @test resp.status == 200
         @show resp.body
         @test occursin("text/html", HTTP.header(resp, "Content-Type"))
@@ -37,7 +37,7 @@ end
         es = msa.get_available_editions( m.model_name )[1]
         for e in eachrow( es )
             ed = msa.get_available_subsystems( e.model_name, e.model_edition )
-            resp = HTTP.request("GET", "$TEST_URL/info/available-subsystems/$(e.model_name)/$(e.model_edition)")
+            resp = HTTP.request("GET", "$(TEST_URL)/info/available-subsystems/$(e.model_name)/$(e.model_edition)")
             @test resp.status == 200
             @show resp.body
             @test occursin("text/html", HTTP.header(resp, "Content-Type"))
@@ -55,7 +55,7 @@ end
         for e in eachrow( es )
             ss = msa.get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
-                resp = HTTP.request("GET", "$TEST_URL/info/params-description/$(s.model_name)/$(s.model_edition)/$(s.subsys)")
+                resp = HTTP.request("GET", "$(TEST_URL)/info/params-description/$(s.model_name)/$(s.model_edition)/$(s.subsys)")
                 @test resp.status == 200
                 @show resp.body
                 @test occursin("text/html", HTTP.header(resp, "Content-Type"))
@@ -72,7 +72,7 @@ end
     for m in eachrow(ms)
         es = msa.get_available_editions( m.model_name )[1]
         for e in eachrow( es )
-                resp = HTTP.request("GET", "$TEST_URL/info/available-outputs/$(e.model_name)/$(e.model_edition)/")
+                resp = HTTP.request("GET", "$(TEST_URL)/info/available-outputs/$(e.model_name)/$(e.model_edition)/")
                 @test resp.status == 200
                 @show resp.body
                 @test occursin("text/html", HTTP.header(resp, "Content-Type"))
@@ -98,7 +98,7 @@ jparse( jp, k, T::String ) = JSON.parse( JSON.json(jp[k]), eval( Symbol( T )))
         for e in eachrow( es )
             ss = msa.get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
-                resp = HTTP.request("GET", "$TEST_URL/params/get/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)")
+                resp = HTTP.request("GET", "$(TEST_URL)/params/get/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)")
                 @test resp.status == 200
                 @test occursin("application/json", HTTP.header(resp, "Content-Type"))
                 jp = json(resp)
@@ -124,7 +124,7 @@ end
             ss = msa.get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
                 for p in ALL_PARAMS # each set of parameters either validates, fails with 2 range errors or fails with a parse error, so...
-                    resp = HTTP.request("POST", "$TEST_URL/params/validate/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
+                    resp = HTTP.request("POST", "$(TEST_URL)/params/validate/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
                     @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
                     @test occursin("application/json", HTTP.header(resp, "Content-Type"))
                     jp = json(resp)
@@ -153,7 +153,7 @@ end
             ss = msa.get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
                 for p in ALL_PARAMS # each set of parameters either validates, fails with 2 range errors or fails with a parse error, so...
-                    resp = HTTP.request("POST", "$TEST_URL/params/set/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
+                    resp = HTTP.request("POST", "$(TEST_URL)/params/set/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
                     @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
                     @test occursin("application/json", HTTP.header(resp, "Content-Type"))
                     jp = json(resp)
@@ -181,14 +181,14 @@ end
             ss = msa.get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
                 for p in ALL_PARAMS # each set of parameters either validates, fails with 2 range errors or fails with a parse error, so...
-                    resp = HTTP.request("POST", "$TEST_URL/params/set/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
+                    resp = HTTP.request("POST", "$(TEST_URL)/params/set/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
                     @show resp
                     @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
                     @test occursin("application/json", HTTP.header(resp, "Content-Type"))
                     jp = json(resp)
                     uid = jp["uid"] # set to the id of a temp user on 1st call, with user saved in db from that point on
                     @show jp["params"]
-                    req2 = HTTP.Request("GET", "$TEST_URL/params/initialise/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers )
+                    req2 = HTTP.Request("GET", "$(TEST_URL)/params/initialise/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers )
                     resp2 = internalrequest(req2)
                     @test resp.status == 200 # even a parse error shouldn't raise an HTTP
                     jp2 = json(resp)
@@ -213,8 +213,8 @@ end
             ss = msa.get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
                 for p in ALL_PARAMS[1:2] # just the good ones..
-                    resp = HTTP.request("POST", "$TEST_URL/params/set/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
-                    resp = HTTP.request("GET", "$TEST_URL/run/submit/$(s.model_name)/$(s.model_edition)/?uid=$(uid)", headers )
+                    resp = HTTP.request("POST", "$(TEST_URL)/params/set/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
+                    resp = HTTP.request("GET", "$(TEST_URL)/run/submit/$(s.model_name)/$(s.model_edition)/?uid=$(uid)", headers )
                     @show resp
                     jp = json( resp )
                     @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
@@ -243,7 +243,7 @@ end
         for e in eachrow( es )
             ss = msa.get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
-                resp = HTTP.request("GET", "$TEST_URL/run/monitor/$(s.model_name)/$(s.model_edition)/?uid=$(uid)", headers )
+                resp = HTTP.request("GET", "$(TEST_URL)/run/monitor/$(s.model_name)/$(s.model_edition)/?uid=$(uid)", headers )
                 @show resp
                 @test resp.status == 200 # even a parse error shouldn't raise an HTTP error
                 @test occursin("application/json", HTTP.header(resp, "Content-Type"))
@@ -264,7 +264,7 @@ end
         outputs = get_output_descriptions( m.model_name )[1]
         for e in eachrow( es )
             for o in eachrow( outputs )
-                resp = HTTP.request("GET", "$TEST_URL/output/fetch/$(e.model_name)/$(e.model_edition)/$(o.datatype)/$(o.item)/?uid=$(uid)", headers )
+                resp = HTTP.request("GET", "$(TEST_URL)/output/fetch/$(e.model_name)/$(e.model_edition)/$(o.datatype)/$(o.item)/?uid=$(uid)", headers )
                 @test resp.status == 200
                 @show resp
                 n += 1

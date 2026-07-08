@@ -306,7 +306,7 @@ function do_run(
     @info "do_run entered"
     settings = Settings()
     # jam on a writable output dir since the network version may have /tmp/ blocked.
-    settings.output_dir = joinpath( homedir(), "model-runs")
+    settings.output_dir = joinpath( homedir(), "model-runs", model_name, edition )
     update_progress( user_id, model_name, edition, run_id, Progress( settings.uuid, "starting", 0, 0, 0, 0 ))
     obs = Observable( Progress(settings.uuid, "",0,0,0,0))
     tot = 0
