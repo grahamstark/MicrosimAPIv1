@@ -258,7 +258,7 @@ Retrieve a single item. Note phunpack treated seperately.
     model_name::String,
     edition::String,
     format::String,
-    item::String)
+    item::String )
     uid = getq(Int, req,"uid")
     @info uid format item
     user, runrec = handle_middle( uid, model_name, edition, nothing )
