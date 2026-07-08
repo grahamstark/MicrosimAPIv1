@@ -25,9 +25,22 @@ sh juliaup.sh -p /opt/api/julia/
 ??? Make a package that imports MicrosimAPIv1 and use Pkg.update(".") rather than `git pull` ??
 
 ```sh
-sudo cp runner-listener.service /usr/lib/systemd/system/
+sudo cp etc/runner-listener.service /usr/lib/systemd/system/
+sudo systemctl daemon-reload
 sudo systemctl start runner-listener.service
 sudo systemctl status -n200 runner-listener.service
+```
+
+Likewise for etc/microapi.service:
+
+
+```sh
+sudo cp etc/microapi.service /usr/lib/systemd/system/
+sudo systemctl daemon-reload
+
+sudo systemctl stop microapi.service
+sudo systemctl start microapi.service
+sudo systemctl status -n200 microapi.service
 ```
 
 Homedir for `apiuser` - this is getting painful..
@@ -36,5 +49,23 @@ Homedir for `apiuser` - this is getting painful..
 
 ```bash
 chmod 775 bin/api-updater.sh 
-su apiuser -c "bin/api-updater.sh"    
+su apiuser -c "bin/api-updater.sh"   
 ```
+
+In `/opt/api` as `apiuser`:
+
+mkdir `run` and `bin` at top-level
+Julia update script `api_updater.sh` in `bin`
+
+Directory structure for apiuser in `/opt/api`:
+
+    julia/ <- via juliaup. FIXME maybe .julia would be as good?
+    package/MicrosimAPIv1 
+    model-runs/  <- working dir for runs since /tmp/ might be blocked when starting from systemd. This is referenced as joinpath(homedir(),"run")
+    
+TODO: make a script that creates all the files, sending `/opt/api` as an iterpolated variable.
+
+Apache: redirect port to 9091 for no-revise version.
+
+
+    
