@@ -7,6 +7,7 @@ include( "scotben-functions.jl")
 include( "db-functions-and-consts.jl")
 include( "microsim-api-oxygen.jl")
 include( "scotben-runner.jl")
+include( "initialisation-functions.jl")
 
 const TEST_PORT = 8999
 const LIVE_PORT = 9091
