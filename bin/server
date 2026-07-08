@@ -1,2 +1,0 @@
-#!/bin/sh
-/home/graham_s/.juliaup/bin/julia -t auto --startup-file no  --heap-size-hint=2G --color=no --depwarn=no --project=@. -q -i -- $(dirname $0)/../bootstrap.jl -s=true "$@"
