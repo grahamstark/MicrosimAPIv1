@@ -435,7 +435,7 @@ function load_params!( run :: Run;  copy_user_id::Union{Nothing,Int}=nothing, co
     else
         copy_run_id
     end
-    @show user_id run_id
+    @debug user_id run_id
     p = rowtable(execonn( retrieve_params, [user_id, run.model_name, run.model_edition, run_id]))
     for r in p
         if (! isnothing(copy_run_id)) # we are copying in parameters from user_id, FIXME maybe don't bother doing this yer
@@ -527,7 +527,7 @@ function get_run(
             rs = rowtable(execonn( retrieve_numbered_run, [DEFAULT_USER_ID, model_name, edition, DEFAULT_RUN_ID]))[1]
             rs_to_run( rs )
         else
-            @show  [user_id, model_name, edition, copy_from ]
+            @debug  [user_id, model_name, edition, copy_from ]
             rs = rowtable(execonn( retrieve_numbered_run, [user_id, model_name, edition, copy_from ]))[1]
             rs_to_run( rs )
         end

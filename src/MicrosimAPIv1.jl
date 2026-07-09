@@ -14,7 +14,16 @@ const LIVE_PORT = 9091
 
 export doserve, testserve
 
+
 doserve() = serve(; middleware=[CorsMiddleware], port=LIVE_PORT)
 testserve() = serve(; middleware=[CorsMiddleware], port=TEST_PORT, revise=:eager)
+
+function __init__()
+    datestring = Dates.format(now(), "dd-u-YYYY")
+    io = open( joinpath( homedir(), "api-logging", "MicrosimAPI-$(datestring).log"), "w+")
+    base_logger = SimpleLogger(io)
+    logger = FlushingLogger(base_logger, io)
+    global_logger(logger)
+end
 
 end # module

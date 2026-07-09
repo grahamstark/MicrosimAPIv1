@@ -18,7 +18,7 @@ function grab_runs_from_queue(i::Integer)
             load_output!( run )
             change_run_state!( run; qstatus='C', output_is_cached=true )
         else
-            @info "no runnable runs for handler $(i)"
+            @debug "no runnable runs for handler $(i)"
             sleep(1)
         end
     end

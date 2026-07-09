@@ -8,6 +8,7 @@ using HTTP
 using JSON
 using Markdown
 using LibPQ
+using Logging
 using LoggingExtras
 using Observables
 using Oxygen; @oxidize # !!! for debugging

@@ -1,3 +1,2 @@
 #!/bin/sh
 /bin/cp -rf web/* /var/www/scotben-2026/
-# /bin/cp -rf web/* /var/www/microapi-local/ 

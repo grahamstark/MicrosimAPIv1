@@ -61,7 +61,8 @@ Directory structure for apiuser in `/opt/api/`:
     julia/ <- via juliaup. FIXME maybe .julia would be as good?
     package/MicrosimAPIv1 
     model-runs/  <- working dir for runs since /tmp/ might be blocked when starting from systemd. This is referenced as joinpath(homedir(),"run")
-    
+    api-logging/
+
 TODO: make a script that creates all the files, sending `/opt/api` as an iterpolated variable.
 
 Apache: redirect port to 9091 for no-revise version.

@@ -151,9 +151,9 @@ return uid, a dict of errs - 0 length if zero errors
     @info string(req.body)
     errs = try
         sys = json( req, T)
-        @show "validate " sys
+        @info "validate " sys
         x = tvalidate( sys )
-        @show x
+        @info x
         x
     catch e
         Dict( "parse-exception"=>e)

@@ -193,3 +193,21 @@ end
     <input id='scottish_child_payment' type='number' name="scottish_child_payment" min='0' max='400' value='' step='0.01' size="10" class='form-control w-50'/>
 </div>
 """
+
+#=
+Claude did this bit ... Logger that writes without flushing.
+=#
+
+struct FlushingLogger <: AbstractLogger
+    logger::AbstractLogger
+    io::IO
+end
+
+Logging.min_enabled_level(fl::FlushingLogger) = Logging.min_enabled_level(fl.logger)
+Logging.shouldlog(fl::FlushingLogger, args...) = Logging.shouldlog(fl.logger, args...)
+Logging.catch_exceptions(fl::FlushingLogger) = Logging.catch_exceptions(fl.logger)
+
+function Logging.handle_message(fl::FlushingLogger, args...; kwargs...)
+    Logging.handle_message(fl.logger, args...; kwargs...)
+    flush(fl.io)
+end
