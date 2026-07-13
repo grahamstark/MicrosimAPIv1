@@ -65,10 +65,10 @@ function setUID( uid ){
 }
 
 
-function get_output_item( uid, item, datatype ){
+async function get_output_item( uid, item, datatype ){
     const url = [API,"output","fetch",MODEL,EDITION,datatype,item].join("/") + "?uid="+uid;
     console.log( "get_output_item; fetching " + url )
-    fetch(url)
+    await fetch(url)
         .then( response=>response.text())
         .then( data => {
             // console.log(data);
@@ -77,7 +77,7 @@ function get_output_item( uid, item, datatype ){
         });
 }
 
-function get_output( uid ){
+async function get_output( uid ){
     get_output_item( uid, 'children_gl', 'html');
     get_output_item( uid, 'hhtype_gl', 'html');
     get_output_item( uid, 'ten_gl', 'html');
@@ -103,14 +103,14 @@ function setVal( id, val, def ){
     }
 }
 
-function initialise(){
+async function initialise(){
     const nin = parseInt($('#ni-n').val());
     console.log( "nin=" + nin );
     var uid = getUID();
-    # initial parameters
+    // initial parameters
     const url = [API,"params","get",MODEL,EDITION,SUBSYS].join("/") + "?uid="+uid;
     console.log( "initialise; fetching " + url )
-    fetch(url)
+    await fetch(url)
         .then( response=>response.json())
         .then( data => {
             console.log("fetch params got data as " + data.uid);
