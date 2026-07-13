@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang='en-GB'>
 <head>
 
 
@@ -10,22 +10,17 @@
     <link rel="stylesheet" href="css/stb-bootstrap.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
 
-    <script type='text/javascript' src='js/jquery.js'></script>
-    <script type='text/javascript' src='js/jquery.periodicalupdater.js'></script>
-    <script type='text/javascript' src='js/jquery.validate.js'></script>
-    <script type='text/javascript' src='js/jquery.number.js'></script>
-    <script type='text/javascript' src='js/formatting-libs.js'></script>
-    <!-- bootstrap -->
+    <script src='js/jquery.js'></script>
+    <script src='js/jquery.periodicalupdater.js'></script>
+    <script src='js/jquery.validate.js'></script>
+    <script src='js/jquery.number.js'></script>
     <script src="js/bootstrap.bundle.js"></script>
-    <!-- templates -->
-    <script type='text/javascript' src="js/mustache.min.js"></script>
-    <!-- FIXME add colours in bootstrap -->
-    <style type="text/css">
+    <script src="js/mustache.min.js"></script>
+    <style>
         .bg-purple {background:#cdf;}
         .bg-orange {background:#fec;}
         .modcon:hover {filter:brightness(0.6);}
     </style>
-
 
 <script>
 
@@ -33,7 +28,7 @@ const API = "http://microapi-local/";
 const UID =  -1 //4907240437919486244;
 const MODEL = "scotben";
 const EDITION = "simple-2026a";
-const SUBSET = "SimpleParams"
+const SUBSYS = "SimpleParams"
 
 var sys = JSON.stringify({
   "taxrates":[19.0,20.0,21.0,42.0,45.0,48.0],
@@ -49,35 +44,120 @@ var sys = JSON.stringify({
   "uc_taper":55.0
 })
 
-function loadpars(sys,action,uid){
-    const url = [API,"params",action,MODEL,EDITION,SUBSET].join("/") + "?uid="+uid;
-    console.log("url=|" + url + "|");
-    $.ajax({ url: url,
-        method: 'post',
-        dataType: 'json',
-        data: sys,
-        contentType: "application/json",
-    }).done(
-            function( result ){
-                console.log( "load_parameters; results are ", result );
-                // populateForm( result.session_id, result.params, result.default );
-            }
-    ).fail(
-            function( jqXHR, textStatus, errorThrown ){
-                console.log( "failed with " + textStatus + " errorThrown "+errorThrown );
-                console.log( "jqXHR.statusCode" + jqXHR.status + " text" + jqXHR.statusText );
-            }
-    ); // fail
+
+
+function getUID(){
+    var uid = localStorage.getItem( "scotben-uid");
+    if(uid == null){
+        uid = parseInt($( "#uid" ).val());
+        if(uid !== null){
+            localStorage.setItem( "scotben-uid", uid );
+        }
+    }
+    console.log( "getUID; got id as ", uid );
+    return uid;
 }
 
+function setUID( uid ){
+    // localStorage.setItem( "uid", uid );
+    $( "#uid" ).val( uid );
+    localStorage.setItem("scotben-uid", uid );
+}
+
+
+function get_output_item( uid, item, datatype ){
+    const url = [API,"output","fetch",MODEL,EDITION,datatype,item].join("/") + "?uid="+uid;
+    console.log( "get_output_item; fetching " + url )
+    fetch(url)
+        .then( response=>response.text())
+        .then( data => {
+            // console.log(data);
+            const container = document.getElementById(item);
+            container.innerHTML = data;
+        });
+}
+
+function get_output( uid ){
+    get_output_item( uid, 'children_gl', 'html');
+    get_output_item( uid, 'hhtype_gl', 'html');
+    get_output_item( uid, 'ten_gl', 'html');
+    get_output_item( uid, 'dec_gl', 'html');
+
+    get_output_item( uid, 'summary_graphs', 'svg');
+    get_output_item( uid, 'taxable_graph', 'svg');
+    get_output_item( uid, 'hbai', 'svg');
+    get_output_item( uid, 'lorenz_curve', 'svg');
+    get_output_item( uid, 'deciles', 'svg');
+    get_output_item( uid, 'metrs', 'svg');
+    get_output_item( uid, 'metrs_hist', 'svg');
+}
+
+
+function setVal( id, val, def ){
+    $( "#"+id ).val( val );
+    console.log( "setVal for #%s val=%s def=%s", id, val, def )
+    if( val != def ){
+        $( "#"+id ).addClass( 'changed');
+    } else {
+        $( "#"+id ).removeClass( 'changed');
+    }
+}
+
+function initialise(){
+    const nin = parseInt($('#ni-n').val());
+    console.log( "nin=" + nin );
+    var uid = getUID();
+    # initial parameters
+    const url = [API,"params","get",MODEL,EDITION,SUBSYS].join("/") + "?uid="+uid;
+    console.log( "initialise; fetching " + url )
+    fetch(url)
+        .then( response=>response.json())
+        .then( data => {
+            console.log("fetch params got data as " + data.uid);
+            if(uid != data.uid){
+                uid = data.uid;
+                setUID( uid );
+            }
+    });
+    console.log( "uid=" + uid );
+    get_output( uid );
+}
+
+
+$(document).ready(function(){
+    // load default params ..
+    console.log( "ready - initialise")
+    initialise();
+});
+
 </script>
+
 </head>
 
-<body class='text-primary p-2' onload="loadpars( sys, 'validate', UID)">
+<body class='text-primary p-2'>
+
+    <a href='' onclick='get_phunpack()'>Phunpack</a>
+
+    <p>SKSKSK</p>
+    <form id='mainform' action="thing" method="POST">
+        <input type="hidden" id="ni-n" name="ni-n" value="-1">
+        <input type="hidden" id="uid" name="uid" value="-1">
+    </form>
+
+    <svg id='summary_graphs' height="625" width='1008' viewBox="0 0 2100 1297"></svg>
+    <svg id='taxable_graph' height="625" width='1008' viewBox="0 0 2100 1297"></svg>
+    <svg id='hbai' height="625" width='1008' viewBox="0 0 2100 1297"></svg>
+    <svg id='lorenz_curve' height="625" width='1008' viewBox="0 0 2100 1297"></svg>
+    <svg id='deciles' height="625" width='1008' viewBox="0 0 2100 1297"></svg>
+    <svg id='metrs' height="625" width='1008' viewBox="0 0 2100 1297"></svg>
+    <svg id='metrs_hist' height="625" width='1008' viewBox="0 0 2100 1297"></svg>
+
+    <div id='children_gl'></div>
+    <div id='hhtype_gl'></div>
+    <div id='ten_gl'></div>
+    <div id='dec_gl'></div>
 
 
-<p>xx</p>
 </body>
-
 
 </html>
