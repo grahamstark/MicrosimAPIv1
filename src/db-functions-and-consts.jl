@@ -9,6 +9,9 @@ then load Scotben stuff with 'initialise_database()' below.
 const DEFAULT_USER_ID = 2
 const DEFAULT_RUN_ID = 1
 const TEST_RUN_ID = 1234567890
+# see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
+# needed for json conversions that js can handle
+const JS_MAX_SAFE_INTEGER = 2^53-1
 
 function makeconn()::LibPQ.Connection
     return LibPQ.Connection("dbname=microapi user=postgres host=/var/run/postgresql")
@@ -387,7 +390,7 @@ function get_user( user_id ::Union{Int,Nothing} )::User
     end
 
     function create_temp_user()
-        user_id = rand(50_000:typemax(Int))
+        user_id = Int(rand(50_000:JS_MAX_SAFE_INTEGER)) # int32 is for json/javascript
         user_data = [user_id, "no-email", hash("user_id$user_id"), "user number $user_id",true]
         rs_to_user(execonn( user_create, user_data ))
     end
