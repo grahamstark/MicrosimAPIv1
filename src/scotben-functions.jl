@@ -77,6 +77,7 @@ end
 
 mutable struct AllOutput
     summary  :: NamedTuple
+    headlines :: NamedTuple
     images   :: NamedTuple
     html     :: NamedTuple
     typst    :: NamedTuple
@@ -324,6 +325,7 @@ function do_run(
     insert!( results.income, 1, base_results.income[1] )
     insert!( results.behavioural_results, 1, base_results.behavioural_results[1] )
     summaries = summarise_frames!( results, settings )
+    headlines = mv.format_headline_numbers( summaries.headline_figures[2] )
     exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys, settings )
     html_tabs = mv.construct_tables( settings, results, summaries, mv.MV_HTML())
     typst_tabs = mv.construct_tables( settings, results, summaries, mv.MV_TYPST())
@@ -333,7 +335,7 @@ function do_run(
     path, zippath = mv.phunpackify( settings, graphs, typst_tabs, html_tabs, summaries )
     update_progress( user_id, model_name, edition, run_id,
         Progress( settings.uuid, "completed", -99, -99, -99, -99 ))
-    return AllOutput( summaries, graphs, html_tabs, typst_tabs, zippath, exres )
+    return AllOutput( summaries, headlines, graphs, html_tabs, typst_tabs, zippath, exres )
 end
 
 """

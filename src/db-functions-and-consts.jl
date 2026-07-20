@@ -363,7 +363,7 @@ function clearup_run_states( run :: Run, delete_threads_above :: Int )
 end
 
 """
-for now, just cache SVG and HTML output
+for now, just cache SVG and HTML output, the location of the phunpak and the json headlines
 """
 function cache_output( run :: Run, param_hash :: BigInt, allout :: AllOutput )
     model = get_model( run.model_name, run.model_edition )
@@ -373,6 +373,8 @@ function cache_output( run :: Run, param_hash :: BigInt, allout :: AllOutput )
     for k in keys( allout.images )
         execonn( output_upsert, [ run.model_name, run.model_edition, param_hash, "svg", k, mv.fig_to_svg_string(allout.images[k].data) ] )
     end
+    # json version of up/down headlines
+    execonn( output_upsert, [ run.model_name, run.model_edition, param_hash,  "json", "headlines", allout.headlines ] )
     # just the filename of the phunpack, not the zip data
     execonn( output_upsert, [ run.model_name, run.model_edition, param_hash, "zip", "phunpack", allout.phunpack ])
     run.output_is_cached = true

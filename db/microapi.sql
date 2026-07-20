@@ -133,6 +133,8 @@ insert into result_description( model_name, item, datatype, info ) values
 
 ('scotben', 'phunpack', 'zip', 'Zipfile of everything.' ),
 
+('scotben', 'headlines', 'json', 'Headlines summarised in json, with arrows, numbers and text.' ),
+
 ('scotben', 'summary_graphs', 'svg', '4 quadrant summary graph' ),
 ('scotben', 'summary_graphs_v2', 'svg', '4 quadrant summary graph, 2nd version' ),
 ('scotben', 'taxable_graph', 'svg', 'Graph showing taxable income in bands against marginal tax rates' ),
