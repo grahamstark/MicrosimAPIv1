@@ -8,7 +8,7 @@ const CORS_HEADERS = [
 # https://juliaweb.github.io/HTTP.jl/stable/examples/#Cors-Server
 function CorsMiddleware(handler)
     return function(req::HTTP.Request)
-        println("CORS middleware")
+        @debug "CORS middleware"
         # determine if this is a pre-flight request from the browser
         if HTTP.method(req)=="OPTIONS"
             return HTTP.Response(200, CORS_HEADERS)
@@ -88,7 +88,7 @@ TODO pass preferred format html/json
     edition::String,
     subsys::String )
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
-    @info uid
+    @debug uid
     ss = Symbol( subsys )
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     return json((; uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss]))
@@ -105,18 +105,18 @@ Set parameters for the given model/edition/subsys. Send a json representation of
     qp =  queryparams(req)
     @info qp
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
-    @info uid
+    @debug uid
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     errs = Dict()
     ss = Symbol( subsys )
     try
         T = typeof( runrec.params[ss])
         sys = json( req, T)
-        @info "set ; got sys as " sys
+        @debug "set ; got sys as " sys
         errs = tvalidate( sys )
-        @info "set ; errs " errs
+        @debug "set ; errs " errs
         if length(errs) == 0
-            @info "set params to " sys
+            @debug "set params to " sys
             runrec.params[ss] = sys            
         end
     catch e
@@ -147,18 +147,18 @@ return uid, a dict of errs - 0 length if zero errors
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     ss = Symbol( subsys )
     T = typeof( runrec.params[ss])
-    @info "validate " T
-    @info string(req.body)
+    @debug "validate " T
+    @debug string(req.body)
     errs = try
         sys = json( req, T)
-        @info "validate " sys
+        @debug "validate " sys
         x = tvalidate( sys )
-        @info x
+        @debug x
         x
     catch e
         Dict( "parse-exception"=>e)
     end
-    @info "validate errors = " errs
+    @debug "validate errors = " errs
     return (;uid=user.user_id, errors = errs )
 end
 
@@ -191,7 +191,7 @@ if output_is_cached ....
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     errs = Dict()
     no_errors = has_no_errors( runrec )[1]
-    @info no_errors
+    @debug no_errors
     if no_errors # return bool and list of errors
         state = "queued"
         if runrec.output_is_cached
@@ -260,17 +260,17 @@ Retrieve a single item. Note phunpack treated seperately.
     format::String,
     item::String )
     uid = getq(Int, req,"uid")
-    @info uid format item
+    @debug uid format item
     user, runrec = handle_middle( uid, model_name, edition, nothing )
     # special handling for phunpack
     if item == "phunpack" && format == "zip"
         return get_phunpack( runrec )
     end
     outkey = OutputKey( item, format )
-    # @info keys(runrec.output)
+    # @debug keys(runrec.output)
     if ! haskey( runrec.output, outkey )
         message = "Unable to find $item in format $format for $model_name/$edition runid=$(runrec.run_id)"
-        @info message
+        @debug message
         return HTTP.Response( 404; body=message )
     end
     item = runrec.output[outkey]
