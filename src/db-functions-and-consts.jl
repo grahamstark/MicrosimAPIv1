@@ -374,7 +374,7 @@ function cache_output( run :: Run, param_hash :: BigInt, allout :: AllOutput )
         execonn( output_upsert, [ run.model_name, run.model_edition, param_hash, "svg", k, mv.fig_to_svg_string(allout.images[k].data) ] )
     end
     # json version of up/down headlines
-    execonn( output_upsert, [ run.model_name, run.model_edition, param_hash,  "json", "headlines", allout.headlines ] )
+    execonn( output_upsert, [ run.model_name, run.model_edition, param_hash,  "json", "headlines", JSON.json(allout.headlines) ] )
     # just the filename of the phunpack, not the zip data
     execonn( output_upsert, [ run.model_name, run.model_edition, param_hash, "zip", "phunpack", allout.phunpack ])
     run.output_is_cached = true
