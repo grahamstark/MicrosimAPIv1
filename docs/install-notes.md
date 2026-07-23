@@ -85,5 +85,14 @@ msa.initialise_database()
 
 ```
 
+## Postgres
 
-    
+```bash
+alias psqm="psql -h /var/run/postgresql/ -U postgres microapi"
+```
+
+
+In `pg_hba.conf`:
+```
+local   all             all                                     trust
+``` 
