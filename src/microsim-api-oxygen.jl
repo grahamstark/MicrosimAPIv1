@@ -179,36 +179,44 @@ Reset app parameters for the given subsys back to the defaults.
     return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss], errors = runrec.errors[ss], output_is_cached=runrec.output_is_cached )
 end
 
+function submit_run( uid::Int, model_name::String, edition::String )
+    user, runrec = handle_middle( uid, model_name, edition, nothing )
+    errs = Dict()
+    no_errors, anyerrs = has_no_errors( runrec )
+    @info no_errors anyerrs
+    if no_errors # return bool and list of errors
+        @info "setting state to 'queued'/Q"
+        state = "queued"
+        if runrec.output_is_cached
+            @info "output_is_cached; set states to 'C'/completed"
+            state = "completed"
+            change_run_qstate!( runrec; qstatus='C', output_is_cached=true )
+        else
+            @info "! output_is_cached; set states to 'Q'/queued"
+            change_run_qstate!( runrec; qstatus='Q', output_is_cached=false )
+        end
+        update_progress( runrec.user_id, runrec.model_name, runrec.model_edition,
+                        runrec.run_id,
+                        Progress( BASE_UUID, "queued", -99, -99, -99, -99 ))
+        # despite the name, this creates a new run
+        runrec = get_run( user.user_id, runrec.model_name, runrec.model_edition, runrec.run_id )
+    else
+        errs = runrec.errors # FIXME poss > 1 record here
+    end
+    return (;uid=user.user_id, runid=runrec.run_id, errors=errs, output_is_cached=runrec.output_is_cached )
+end
+
 @swagger"""
 Submit the active run.
 if output_is_cached ....
+return a named tuple with ( uid::Int, runid::Int, errors::Dict, output_is_cached::Bool )
 """
 @get "/run/submit/{model_name}/{edition}/" function(
     req::HTTP.Request,
     model_name::String,
     edition::String)
     uid = getq(Int, req, "uid")
-    user, runrec = handle_middle( uid, model_name, edition, nothing )
-    errs = Dict()
-    no_errors = has_no_errors( runrec )[1]
-    @debug no_errors
-    if no_errors # return bool and list of errors
-        state = "queued"
-        if runrec.output_is_cached
-            state = "completed"
-            change_run_state!( runrec; qstatus='C', output_is_cached=true )
-        else
-            change_run_state!( runrec; qstatus='Q', output_is_cached=false )
-        end
-        update_progress( runrec.user_id, runrec.model_name, runrec.model_edition,
-                        runrec.run_id,
-                        Progress( BASE_UUID, state, -99, -99, -99, -99 ))
-        # despite the name, this creates a new run 
-        runrec = get_run( user.user_id, runrec.model_name, runrec.model_edition, runrec.run_id )
-    else
-        errs = runrec.errors # FIXME poss > 1 record here
-    end
-    return (;uid=user.user_id, runid=runrec.run_id, errors=errs, output_is_cached=runrec.output_is_cached )
+    return submit_run( uid, model_name, edition )
 end
 
 @swagger"""

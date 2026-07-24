@@ -1,3 +1,10 @@
+#=
+
+Create a queue of num_handlers tasks which listen for any jobs in 'Q' state and runs them.
+See `bin/runner-listener.jl` and `etc/runner-listener.service` for invoking this.
+
+=#
+
 function grab_runs_from_queue(i::Integer)
     while true
         run = next_runnable_run()
@@ -5,7 +12,7 @@ function grab_runs_from_queue(i::Integer)
             @info "run $(run.run_id) for user $(run.user_id) started in handler $(i)"
             h = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
             if ! output_is_cached( run, h )
-                change_run_state!( run; qstatus='E', output_is_cached=false )
+                change_run_qstate!( run; qstatus='X', output_is_cached=false )
                 allout = do_run(
                     run.user_id,
                     run.model_name,
@@ -16,7 +23,8 @@ function grab_runs_from_queue(i::Integer)
                 cache_output( run, h, allout )
             end
             load_output!( run )
-            change_run_state!( run; qstatus='C', output_is_cached=true )
+            change_run_qstate!( run; qstatus='C', output_is_cached=true )
+            clearup_run_states( run, 0 )
         else
             @debug "no runnable runs for handler $(i)"
             sleep(1)
@@ -37,14 +45,3 @@ function create_scotben_queues(num_handlers=3)
     end
     return tasks
 end
-
-#=
-function start_scotben_queues(num_handlers=3)
-    tasks = []
-    for i in 1:num_handlers # start n tasks to process requests in parallel
-        @info "starting handler $i"
-        push!(tasks, @task grab_runs_from_queue())
-    end
-    return tasks
-end
-=#

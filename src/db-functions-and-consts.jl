@@ -157,7 +157,7 @@ const switch_run_state =
         update runs set qstatus = \$1 where qstatus = \$2 and user_id=\$3 and model_name=\$4 and model_edition=\$5
     """
 
-const change_run_state =
+const change_run_qstate =
     """
         update runs set qstatus = \$5, output_is_cached=\$6 where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
     """
@@ -499,10 +499,10 @@ function rs_to_run( rs )::Run
         Dict{Symbol,Subsys}())
 end
 
-function change_run_state!( run :: Run; qstatus :: Char, output_is_cached :: Bool )
+function change_run_qstate!( run :: Run; qstatus :: Char, output_is_cached :: Bool )
     run.qstatus = qstatus
     run.output_is_cached = output_is_cached
-    execonn( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, qstatus, output_is_cached ])
+    execonn( change_run_qstate, [run.user_id, run.model_name, run.model_edition, run.run_id, qstatus, output_is_cached ])
 end
 
 """
@@ -538,10 +538,10 @@ function get_run(
         end
         load_params!( run;  copy_user_id=copyrun.user_id, copy_run_id=copyrun.run_id )
         load_output!( run;  copy_user_id=copyrun.user_id, copy_run_id=copyrun.run_id )
-        execonn( change_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id, 'E', true ])
+        execonn( change_run_qstate, [run.user_id, run.model_name, run.model_edition, run.run_id, 'E', true ])
         # demote the copied run if not the default
         if(copyrun.user_id == run.user_id) && (copyrun.qstatus in ['E'])
-            execonn( change_run_state, [copyrun.user_id, copyrun.model_name, copyrun.model_edition, copyrun.run_id,'C', copyrun.output_is_cached])
+            execonn( change_run_qstate, [copyrun.user_id, copyrun.model_name, copyrun.model_edition, copyrun.run_id,'C', copyrun.output_is_cached])
         end
         return run
     end # create run
