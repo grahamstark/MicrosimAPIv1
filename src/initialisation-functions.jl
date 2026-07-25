@@ -34,6 +34,8 @@ function initialise_scotben_default()
                         do_dumps=true  )
         h = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
         cache_output( run, h, allout )
+        change_run_qstate!( run; qstatus='C', output_is_cached=true )
+        clearup_run_states( run, 0 )
     end
 end
 
