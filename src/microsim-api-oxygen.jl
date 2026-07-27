@@ -234,7 +234,7 @@ return progress as an array (poss 0 length) of named tuples
     if ! isnothing(runrec)
         return json( get_run_progress( runrec ))
     else
-        return json( msg="no_run")
+        return json( (;msg="no_run"))
     end
 end
 
@@ -278,7 +278,7 @@ Retrieve a single item. Note phunpack treated seperately.
     @debug uid format item
     user, runrec = handle_middle( uid, model_name, edition, 'D', nothing )
     if isnothing( runrec )
-        return json( msg="no_run")
+        return json( (;msg="no_run"))
     end
     # special handling for phunpack
     if item == "phunpack" && format == "zip"
