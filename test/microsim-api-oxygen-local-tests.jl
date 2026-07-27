@@ -367,7 +367,6 @@ end
             ss = get_available_subsystems( e.model_name, e.model_edition )[1]
             for s in eachrow(ss)
                 for p in ALL_PARAMS[1:2] # just the good ones..
-                    req = HTTP.Request("POST", "/params/set/$(s.model_name)/$(s.model_edition)/$(s.subsys)/?uid=$(uid)", headers,  p.data[s.subsys])
                     req = HTTP.Request("GET", "/run/submit/$(s.model_name)/$(s.model_edition)/?uid=$(uid)", headers )
                     resp = internalrequest(req)
                     @show resp

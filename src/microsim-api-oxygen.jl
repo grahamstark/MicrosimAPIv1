@@ -90,7 +90,7 @@ TODO pass preferred format html/json
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     @debug uid
     ss = Symbol( subsys )
-    user, runrec = handle_middle( uid, model_name, edition, nothing )
+    user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
     return json((; uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss]))
 end
 
@@ -106,7 +106,7 @@ Set parameters for the given model/edition/subsys. Send a json representation of
     @info qp
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     @debug uid
-    user, runrec = handle_middle( uid, model_name, edition, nothing )
+    user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
     errs = Dict()
     ss = Symbol( subsys )
     try
@@ -144,7 +144,7 @@ return uid, a dict of errs - 0 length if zero errors
     edition::String,
     subsys::String)
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
-    user, runrec = handle_middle( uid, model_name, edition, nothing )
+    user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
     ss = Symbol( subsys )
     T = typeof( runrec.params[ss])
     @debug "validate " T
@@ -172,15 +172,18 @@ Reset app parameters for the given subsys back to the defaults.
     model_name::String,
     edition::String,
     subsys::Union{String,Nothing}=nothing)
-    user, runrec = handle_middle( uid, model_name, edition, nothing )
+    user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
     ss = Symbol( subsys )
     load_params!( runrec; copy_user_id=DEFAULT_USER_ID, copy_run_id=DEFAULT_RUN_ID)
     save_run( runrec )
     return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss], errors = runrec.errors[ss], output_is_cached=runrec.output_is_cached )
 end
 
+"""
+
+"""
 function submit_run( uid::Int, model_name::String, edition::String )
-    user, runrec = handle_middle( uid, model_name, edition, nothing )
+    user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
     errs = Dict()
     no_errors, anyerrs = has_no_errors( runrec )
     @info no_errors anyerrs
@@ -188,9 +191,9 @@ function submit_run( uid::Int, model_name::String, edition::String )
         @info "setting state to 'queued'/Q"
         state = "queued"
         if runrec.output_is_cached
-            @info "output_is_cached; set states to 'C'/completed"
+            @info "output_is_cached; set states to 'D'/displayed"
             state = "completed"
-            change_run_qstate!( runrec; qstatus='C', output_is_cached=true )
+            change_run_qstate!( runrec; qstatus='D', output_is_cached=true )
         else
             @info "! output_is_cached; set states to 'Q'/queued"
             change_run_qstate!( runrec; qstatus='Q', output_is_cached=false )
@@ -199,7 +202,7 @@ function submit_run( uid::Int, model_name::String, edition::String )
                         runrec.run_id,
                         Progress( BASE_UUID, "queued", -99, -99, -99, -99 ))
         # despite the name, this creates a new run
-        runrec = get_run( user.user_id, runrec.model_name, runrec.model_edition, runrec.run_id )
+        runrec = get_run( user.user_id, runrec.model_name, runrec.model_edition, 'E', runrec.run_id )
     else
         errs = runrec.errors # FIXME poss > 1 record here
     end
@@ -227,7 +230,7 @@ return progress as an array (poss 0 length) of named tuples
     model_name::String,
     edition::String )
     uid = getq(Int, req, "uid")
-    user, runrec = handle_middle( uid, model_name, edition, nothing )
+    user, runrec = handle_middle( uid, model_name, edition, 'X', nothing )
     return json( get_run_progress( runrec ))
 end
 
@@ -239,7 +242,7 @@ THIS CURRENTLY DOES NOTHING
     model_name::String,
     edition::String)
     uid = getq(Int, req, "uid")
-    user, runrec = handle_middle( uid, model_name, edition, nothing )
+    user, runrec = handle_middle( uid, model_name, edition, 'X', nothing )
 end
 
 function get_phunpack(
@@ -269,7 +272,7 @@ Retrieve a single item. Note phunpack treated seperately.
     item::String )
     uid = getq(Int, req,"uid")
     @debug uid format item
-    user, runrec = handle_middle( uid, model_name, edition, nothing )
+    user, runrec = handle_middle( uid, model_name, edition, 'D', nothing )
     # special handling for phunpack
     if item == "phunpack" && format == "zip"
         return get_phunpack( runrec )

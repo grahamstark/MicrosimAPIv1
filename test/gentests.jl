@@ -26,15 +26,15 @@ end
     clear_expired_temp_users()
     edition = "simple-2026a"
     subsys = :SimpleParams
-    user, run = handle_middle( uid, "scotben", edition, nothing )
-    change_run_state!( run; qstatus='Q', output_is_cached=false )
+    user, run = handle_middle( uid, "scotben", edition, 'E', nothing )
+    change_run_qstate!( run; qstatus='Q', output_is_cached=false )
     minip = deepcopy( DEFAULT_MINI_PARAMS[subsys] )
     minip.taxrates[2]=25
     errs = tvalidate( minip )
     save_params( run, subsys, minip, errs)
     h = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
     if ! output_is_cached( run, h )
-        change_run_state!( run; qstatus='E', output_is_cached=false )
+        change_run_qstate!( run; qstatus='E', output_is_cached=false )
         allout = do_run(
             run.user_id,
             run.model_name,
@@ -47,5 +47,5 @@ end
     uid = user.user_id
     load_output!( run )
     @test run.output_is_cached
-    change_run_state!( run; qstatus='C', output_is_cached=true )
+    change_run_qstate!( run; qstatus='C', output_is_cached=true )
 end

@@ -41,6 +41,7 @@ insert into q_statuses values
 ('Q', 'Queued/Submitted'),
 ('X', 'Executing'),
 ('C', 'Completed'),
+('D', 'Displayed'),
 ('Z', 'Errored');
 
 create table runs(

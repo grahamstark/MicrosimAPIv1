@@ -18,12 +18,12 @@
         end
     end
     # middleware thing test
-    user, run = handle_middle( uid, "scotben", "simple-2026a", nothing )
+    user, run = handle_middle( uid, "scotben", "simple-2026a", 'E', nothing )
     # @test user.user_id != uid # should have a new uid, but keep it from now on.
     @test run.user_id == user.user_id
     uid = user.user_id # save global user id
     # try again - should persist this time
-    user2, run2 = handle_middle( user.user_id, run.model_name, run.model_edition, nothing )
+    user2, run2 = handle_middle( user.user_id, run.model_name, run.model_edition, 'E', nothing )
     # check we've brought back the same user and run this time
     @test user2.user_id == user.user_id
     @test run2.run_id == run.run_id
@@ -32,11 +32,11 @@ end
 @testset "output cache tests" begin
     subsys = :SimpleParams
     minip=deepcopy(DEFAULT_MINI_PARAMS[subsys])
-    user, run = handle_middle( uid, "scotben", "simple-2026a", nothing )
+    user, run = handle_middle( uid, "scotben", "simple-2026a", 'E', nothing )
     @test run.output_is_cached # default
     minip.taxrates .+= rand()
     run.params[subsys] = minip
     save_params( run, subsys, run.params[subsys], Dict() )
-    user, run = handle_middle( uid, "scotben", "simple-2026a", nothing )
+    user, run = handle_middle( uid, "scotben", "simple-2026a", 'E', nothing )
     @test ! run.output_is_cached
 end

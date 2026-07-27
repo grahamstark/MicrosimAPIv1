@@ -143,32 +143,43 @@ const run_upsert =
     """
 const run_update =
     """
-       update runs set run_name=\$1, last_change=now(), qstatus=\$2, output_is_cached=\$3, working_dir=\$4
-           where user_id=\$5 and model_name=\$6 and model_edition=\$7 and run_id=\$8 returning *
+    update runs set run_name=\$1, last_change=now(), qstatus=\$2, output_is_cached=\$3, working_dir=\$4
+        where user_id=\$5 and model_name=\$6 and model_edition=\$7 and run_id=\$8 returning *
     """
 
 const next_free_run_id =
     """
-        select coalesce(max( run_id ),0) + 1 as next_free_run_id from runs where user_id=\$1 and model_name=\$2 and model_edition=\$3
+    select coalesce(max( run_id ),0) + 1 as next_free_run_id from runs where user_id=\$1 and model_name=\$2 and model_edition=\$3
     """
 
-const switch_run_state =
+const switch_qstatus =
     """
-        update runs set qstatus = \$1 where qstatus = \$2 and user_id=\$3 and model_name=\$4 and model_edition=\$5
+    update runs set qstatus = \$2 where qstatus = \$1 and user_id=\$3 and model_name=\$4 and model_edition=\$5;
+    """
+const set_qstatus =
+    """
+    update runs set qstatus = \$1, output_is_cached=true where run_id = \$2 and user_id=\$3 and model_name=\$4 and model_edition=\$5;
+    """
+
+const clear_and_then_switch_qstatus =
+    """
+    update runs set qstatus = \$2 where qstatus = \$1 and user_id=\$4 and model_name=\$5 and model_edition=\$6;
+    update runs set qstatus = \$1 where run_id = \$2 and qstatus = \$3 and user_id=\$4 and model_name=\$5 and model_edition=\$6;
     """
 
 const change_run_qstate =
     """
-        update runs set qstatus = \$5, output_is_cached=\$6 where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
+    update runs set qstatus = \$5, output_is_cached=\$6 where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
     """
+
 const params_upsert =
     """
-       insert into run_params( user_id, model_name, model_edition, run_id, subsys,  data, errors ) values
-           ( \$1, \$2 ,\$3 ,\$4, \$5, \$6, \$7 )
-       on conflict( user_id, model_name, model_edition, run_id, subsys )
-       do update
-           set data=\$6
-        returning *
+    insert into run_params( user_id, model_name, model_edition, run_id, subsys,  data, errors ) values
+        ( \$1, \$2 ,\$3 ,\$4, \$5, \$6, \$7 )
+    on conflict( user_id, model_name, model_edition, run_id, subsys )
+    do update
+        set data=\$6
+    returning *
     """
 
 const retrieve_params =
@@ -178,7 +189,7 @@ const retrieve_params =
 
 const get_run_state = """
     select * from run_state where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
-"""
+    """
 
 
 const run_state_upsert =
@@ -514,7 +525,8 @@ function get_run(
                  user_id::Int,
                  model_name :: String,
                  edition :: String,
-                 copy_from::Union{Int,Nothing}=nothing)::Run
+                 qstatus :: Char,
+                 copy_from::Union{Int,Nothing}=nothing)::Union{Run,Nothing}
 
     function get_next_free_run_id()::Int
         r = execonn( next_free_run_id, [user_id, model_name, edition])
@@ -546,7 +558,7 @@ function get_run(
         return run
     end # create run
 
-    rs = rowtable(execonn( retrieve_latest_run, [user_id, model_name, edition, 'E']))
+    rs = rowtable(execonn( retrieve_latest_run, [user_id, model_name, edition, qstatus ]))
     l = length(rs)
     @assert l in 0:1
     return if l == 1 # there's a latest run in 'Edit' state
@@ -554,8 +566,10 @@ function get_run(
         load_params!( run )
         load_output!( run )
         run
-    else # no run
+    elseif qstatus == 'E' # no run, but request an edited run, so create one
         create_run()
+    else # some other kind of run
+        nothing
     end
 end
 
@@ -591,9 +605,10 @@ Othewise, retrieve the user and its active run (might not actually have been run
 function handle_middle( user_id ::Union{Int,Nothing},
                         model_name::String,
                         edition :: String,
+                        qstatus :: Char,
                         copy_from::Union{Int,Nothing}=nothing )::Tuple
     user = get_user( user_id )
-    runrec = get_run( user.user_id, model_name, edition, copy_from )
+    runrec = get_run( user.user_id, model_name, edition, qstatus, copy_from )
     return user, runrec
 end
 
@@ -619,4 +634,12 @@ return progress as an array (poss 0 length) of named tuples
 """
 function get_run_progress( run :: Run )
     return rowtable(execonn( get_run_state, [run.user_id, run.model_name, run.model_edition, run.run_id]))
+end
+
+function set_run_to_displayed!( run :: Run )
+    run.qstatus = 'D';
+    run_params_1 = ['D', 'C', run.user_id, run.model_name, run.model_edition ]
+    execonn( switch_qstatus, run_params_1 )
+    run_params_2 = ['D', run.run_id, run.user_id, run.model_name, run.model_edition ]
+    execonn( set_qstatus , run_params_2 )
 end
