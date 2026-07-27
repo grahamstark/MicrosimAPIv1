@@ -231,7 +231,11 @@ return progress as an array (poss 0 length) of named tuples
     edition::String )
     uid = getq(Int, req, "uid")
     user, runrec = handle_middle( uid, model_name, edition, 'X', nothing )
-    return json( get_run_progress( runrec ))
+    if ! isnothing(runrec)
+        return json( get_run_progress( runrec ))
+    else
+        return json( msg="no_run")
+    end
 end
 
 @swagger"""
@@ -273,6 +277,9 @@ Retrieve a single item. Note phunpack treated seperately.
     uid = getq(Int, req,"uid")
     @debug uid format item
     user, runrec = handle_middle( uid, model_name, edition, 'D', nothing )
+    if isnothing( runrec )
+        return json( msg="no_run")
+    end
     # special handling for phunpack
     if item == "phunpack" && format == "zip"
         return get_phunpack( runrec )

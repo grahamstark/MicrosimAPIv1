@@ -6,7 +6,7 @@ here.
 
 import MicrosimAPIv1 as msa
 
-const TEST_URL = "http://microapi-local/" 
+const TEST_URL = "http://microapi-dev/"
 # or http:/localhost:LIVE_PORT|TEST_PORT
 
 @testset "valid model name returns 200" begin
