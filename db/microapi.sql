@@ -37,6 +37,7 @@ create table q_statuses(
 
 insert into q_statuses values
 ('E', 'Editing'),
+('L', 'Locked'),
 ('Q', 'Queued/Submitted'),
 ('X', 'Executing'),
 ('C', 'Completed'),

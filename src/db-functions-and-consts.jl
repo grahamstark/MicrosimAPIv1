@@ -604,10 +604,13 @@ return the earliest queued run rec or nothing.
 """
 function next_runnable_run()::Union{Run,Nothing}
     r = rowtable(execonn( "select * from runs where qstatus='Q' order by last_change limit 1"))
-    return if length( r ) == 0
+    run = if length( r ) == 0
         nothing
     else
-        rs_to_run( r[1] )
+        run = rs_to_run( r[1] )
+        load_params!( run )
+        load_output!( run )
+        run
     end
 end
 

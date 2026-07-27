@@ -1,25 +1,30 @@
-#=
+"""
 
 Create a queue of num_handlers tasks which listen for any jobs in 'Q' state and runs them.
 See `bin/runner-listener.jl` and `etc/runner-listener.service` for invoking this.
 
-=#
+FIXME This is a very basic version that assumes a single param set, either UBI or SimpleParams. We need a bigger version with
+all parameters.,
 
-function grab_runs_from_queue(i::Integer)
+"""
+function grab_runs_from_queue(handler_number::Integer)
     while true
         run = next_runnable_run()
         if ! isnothing( run )
-            @info "run $(run.run_id) for user $(run.user_id) started in handler $(i)"
+            change_run_qstate!( run; qstatus='L', output_is_cached=run.output_is_cached )
+            @info "run $(run.run_id) for user $(run.user_id) started in handler $(handler_number)"
             h = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
             if ! output_is_cached( run, h )
                 change_run_qstate!( run; qstatus='X', output_is_cached=false )
+                para1 = collect(values(run.params))[1] # FIXME 1st set pf parameters only
                 allout = do_run(
                     run.user_id,
                     run.model_name,
                     run.model_edition,
                     run.run_id,
-                    minip,
-                    update_progress=update_progress, do_dumps=true  )
+                    para1,
+                    update_progress=update_progress,
+                    do_dumps=true  )
                 cache_output( run, h, allout )
             end
             load_output!( run )
@@ -38,10 +43,9 @@ end
 """
 function create_scotben_queues(num_handlers=3)
     tasks = Task[]
-    for i in 1:num_handlers # start n tasks to process requests in parallel
-        @info "starting handler $i"
-        # took errormonitor off on Claude's advice.
-        push!( tasks, @async grab_runs_from_queue(i))
+    for handler_number in 1:num_handlers # start n tasks to process requests in parallel
+        @info "starting handler $handler_number"
+        push!( tasks, @async grab_runs_from_queue(handler_number))
     end
     return tasks
 end
