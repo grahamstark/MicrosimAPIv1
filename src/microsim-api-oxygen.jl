@@ -276,28 +276,34 @@ Retrieve a single item. Note phunpack treated seperately.
     item::String )
     uid = getq(Int, req,"uid")
     @debug uid format item
+    # look for displayed run
     user, runrec = handle_middle( uid, model_name, edition, 'D', nothing )
     if isnothing( runrec )
-        return json( (;msg="no_run"))
+        # ... but fall back on finding edited run
+        user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
     end
-    # special handling for phunpack
-    if item == "phunpack" && format == "zip"
-        return get_phunpack( runrec )
-    end
-    outkey = OutputKey( item, format )
-    # @debug keys(runrec.output)
-    if ! haskey( runrec.output, outkey )
-        message = "Unable to find $item in format $format for $model_name/$edition runid=$(runrec.run_id)"
-        @debug message
-        return HTTP.Response( 404; body=message )
-    end
-    item = runrec.output[outkey]
-    # fixme more idiomatic
-    return if format == "svg"
-        Oxygen.xml( item.data )
-    elseif format == "html"
-        Oxygen.html( item.data )
+    if runrec.output_is_cached
+        # special handling for phunpack
+        if item == "phunpack" && format == "zip"
+            return get_phunpack( runrec )
+        end
+        outkey = OutputKey( item, format )
+        # @debug keys(runrec.output)
+        if ! haskey( runrec.output, outkey )
+            message = "Unable to find $item in format $format for $model_name/$edition runid=$(runrec.run_id)"
+            @debug message
+            return HTTP.Response( 404; body=message )
+        end
+        item = runrec.output[outkey]
+        # fixme more idiomatic
+        return if format == "svg"
+            Oxygen.xml( item.data )
+        elseif format == "html"
+            Oxygen.html( item.data )
+        else
+            Oxygen.json( item.data )
+        end
     else
-        Oxygen.json( item.data )
+        return json( (;msg="no_run"))
     end
 end
