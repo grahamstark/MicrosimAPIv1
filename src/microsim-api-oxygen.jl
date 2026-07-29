@@ -105,26 +105,24 @@ Set parameters for the given model/edition/subsys. Send a json representation of
     qp =  queryparams(req)
     @info qp
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
-    @info uid
+    @debug uid
     user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
     errs = Dict()
     ss = Symbol( subsys )
-    @info "/params/set/ request body is " req.body
     try
         T = typeof( runrec.params[ss])
         sys = json( req, T)
-        @info "/params/set/ ; got sys as " sys " with type " typeof( sys )
+        @debug "set ; got sys as " sys
         errs = tvalidate( sys )
-        @info "/params/set/ ; errs " errs
+        @debug "set ; errs " errs
         if length(errs) == 0
-            @debug "no errors; set params to " sys
-            runrec.params[ss] = sys
+            @debug "set params to " sys
+            runrec.params[ss] = sys            
         end
     catch e
-        @info "/params/set raised error " e
         errs = Dict( "parse-exception"=>e)
     end
-    save_run!( runrec )
+    save_run( runrec )
     return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss], errors = errs, output_is_cached=runrec.output_is_cached )
 end
 
@@ -174,16 +172,10 @@ Reset app parameters for the given subsys back to the defaults.
     model_name::String,
     edition::String,
     subsys::Union{String,Nothing}=nothing)
-    uid = getq(Int, req, "uid") # ?? shouldn't be needed
-    @info "/params/initialise/ reseting " subsys
     user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
-    @info "handle middle OK user_id " user.user_id
     ss = Symbol( subsys )
-    @info "ss = " ss
     load_params!( runrec; copy_user_id=DEFAULT_USER_ID, copy_run_id=DEFAULT_RUN_ID)
-    @info "load params completed"
-    save_run!( runrec )
-    @info "save_run completed"
+    save_run( runrec )
     return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss], errors = runrec.errors[ss], output_is_cached=runrec.output_is_cached )
 end
 
@@ -247,7 +239,7 @@ return progress as an array (poss 0 length) of named tuples
 end
 
 @swagger"""
-THIS CURRENTLY DOES NOTHING
+FIXME THIS CURRENTLY DOES NOTHING
 """
 @get "/run/abort/{model_name}/{edition}/" function(
     req::HTTP.Request,
