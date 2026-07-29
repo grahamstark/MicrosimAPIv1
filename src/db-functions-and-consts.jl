@@ -576,12 +576,14 @@ end
 """
 Save the run and parameters, but not output and the run_states. Not an upsert so only works if run exists in DB.
 """
-function save_run( run :: Run )
+function save_run!( run :: Run )
     for (k,v) in run.params
         err = Base.get( run.errors, k, Dict())
         # errs = JSON.json( err )
         save_params( run, k, v, err )
     end
+    hash = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
+    run.output_is_cached = output_is_cached( run, hash )
     run_params = [run.run_name, run.qstatus, run.output_is_cached, run.working_dir, run.user_id, run.model_name, run.model_edition, run.run_id ]
     execonn( run_update, run_params )
 end
