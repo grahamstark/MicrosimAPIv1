@@ -1,1 +1,1 @@
-julia --project=. --startup-file=no -t auto -e "import MicrosimAPIv1 as msa; msa.testserve()"
+julia --project=. --startup-file=no -t auto -e "using Revise; import MicrosimAPIv1 as msa;  msa.testserve()"

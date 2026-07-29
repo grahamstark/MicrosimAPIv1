@@ -282,7 +282,7 @@ end
     @test n > 0
 end
 
-@testset "Load Params" begin
+@testset "Set Params" begin
     ms = get_available_models()[1]
     n = 0
     headers = []

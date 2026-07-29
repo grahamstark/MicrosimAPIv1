@@ -105,21 +105,23 @@ Set parameters for the given model/edition/subsys. Send a json representation of
     qp =  queryparams(req)
     @info qp
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
-    @debug uid
+    @info uid
     user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
     errs = Dict()
     ss = Symbol( subsys )
+    @info "/params/set/ request body is " req.body
     try
         T = typeof( runrec.params[ss])
         sys = json( req, T)
-        @debug "set ; got sys as " sys
+        @info "/params/set/ ; got sys as " sys " with type " typeof( sys )
         errs = tvalidate( sys )
-        @debug "set ; errs " errs
+        @info "/params/set/ ; errs " errs
         if length(errs) == 0
-            @debug "set params to " sys
+            @debug "no errors; set params to " sys
             runrec.params[ss] = sys            
         end
     catch e
+        @info "/params/set raised error " e
         errs = Dict( "parse-exception"=>e)
     end
     save_run( runrec )
