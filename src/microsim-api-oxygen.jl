@@ -94,6 +94,24 @@ TODO pass preferred format html/json
     return json((; uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss]))
 end
 
+function set_params!( runrec :: Run, req: HTTP.Request, ss :: Symbol )::Dict
+    errs = Dict()
+    try
+        T = typeof( runrec.params[ss])
+        sys = json( req, T)
+        @debug "set ; got sys as " sys
+        errs = tvalidate( sys )
+        @debug "set ; errs " errs
+        if length(errs) == 0
+            @debug "set params to " sys
+            runrec.params[ss] = sys
+        end
+        catch e
+        errs = Dict( "parse-exception"=>e)
+    end
+    return errs
+end
+
 @swagger"""
 Set parameters for the given model/edition/subsys. Send a json representation of the subsys as payload.
 """
@@ -107,22 +125,11 @@ Set parameters for the given model/edition/subsys. Send a json representation of
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     @debug uid
     user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
-    errs = Dict()
     ss = Symbol( subsys )
-    try
-        T = typeof( runrec.params[ss])
-        sys = json( req, T)
-        @debug "set ; got sys as " sys
-        errs = tvalidate( sys )
-        @debug "set ; errs " errs
-        if length(errs) == 0
-            @debug "set params to " sys
-            runrec.params[ss] = sys            
-        end
-    catch e
-        errs = Dict( "parse-exception"=>e)
+    errs = set_params!( runrec, req, ss )
+    if length( errs ) == 0
+        save_run( runrec )
     end
-    save_run( runrec )
     return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss], errors = errs, output_is_cached=runrec.output_is_cached )
 end
 
