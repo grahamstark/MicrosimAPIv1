@@ -94,22 +94,17 @@ TODO pass preferred format html/json
     return json((; uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss]))
 end
 
-function set_params!( runrec :: Run, req: HTTP.Request, ss :: Symbol )::Dict
+function parse_and_check_params( runrec :: Run, req :: HTTP.Request, ss :: Symbol )::Tuple
     errs = Dict()
-    try
-        T = typeof( runrec.params[ss])
+    T = typeof( runrec.params[ss])
+    errors, system = try
         sys = json( req, T)
-        @debug "set ; got sys as " sys
         errs = tvalidate( sys )
-        @debug "set ; errs " errs
-        if length(errs) == 0
-            @debug "set params to " sys
-            runrec.params[ss] = sys
-        end
-        catch e
-        errs = Dict( "parse-exception"=>e)
+        errs, sys
+    catch e
+        Dict( "parse-exception"=>e), nothing
     end
-    return errs
+    return errors, system
 end
 
 @swagger"""
@@ -121,18 +116,22 @@ Set parameters for the given model/edition/subsys. Send a json representation of
     edition::String,
     subsys::String)
     qp =  queryparams(req)
-    @info qp
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
-    @debug uid
     user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
     ss = Symbol( subsys )
-    errs = set_params!( runrec, req, ss )
-    if length( errs ) == 0
-        save_run( runrec )
+    errs, params = parse_and_check_params( runrec, req, ss )
+    if(length( errs ) == 0) && (! isnothing(params))
+        runrec.params[ss] = params
+        save_run!( runrec )
     end
     return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss], errors = errs, output_is_cached=runrec.output_is_cached )
 end
 
+@swagger"""
+
+TODO - not implemented yet.
+
+"""
 @get "/params/helppage/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
     model_name::String,
@@ -153,19 +152,8 @@ return uid, a dict of errs - 0 length if zero errors
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
     ss = Symbol( subsys )
-    T = typeof( runrec.params[ss])
-    @debug "validate " T
-    @debug string(req.body)
-    errs = try
-        sys = json( req, T)
-        @debug "validate " sys
-        x = tvalidate( sys )
-        @debug x
-        x
-    catch e
-        Dict( "parse-exception"=>e)
-    end
-    @debug "validate errors = " errs
+    errs, _ = parse_and_check_params( runrec, req, ss )
+    # .. but don't save them
     return (;uid=user.user_id, errors = errs )
 end
 
@@ -179,41 +167,12 @@ Reset app parameters for the given subsys back to the defaults.
     model_name::String,
     edition::String,
     subsys::Union{String,Nothing}=nothing)
+    uid = getq(Int, req, "uid") # ?? shouldn't be needed
     user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
     ss = Symbol( subsys )
     load_params!( runrec; copy_user_id=DEFAULT_USER_ID, copy_run_id=DEFAULT_RUN_ID)
-    save_run( runrec )
-    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss], errors = runrec.errors[ss], output_is_cached=runrec.output_is_cached )
-end
-
-"""
-
-"""
-function submit_run( uid::Int, model_name::String, edition::String )
-    user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
-    errs = Dict()
-    no_errors, anyerrs = has_no_errors( runrec )
-    @info no_errors anyerrs
-    if no_errors # return bool and list of errors
-        @info "setting state to 'queued'/Q"
-        state = "queued"
-        if runrec.output_is_cached
-            @info "output_is_cached; set states to 'D'/displayed"
-            state = "completed"
-            change_run_qstate!( runrec; qstatus='D', output_is_cached=true )
-        else
-            @info "! output_is_cached; set states to 'Q'/queued"
-            change_run_qstate!( runrec; qstatus='Q', output_is_cached=false )
-        end
-        update_progress( runrec.user_id, runrec.model_name, runrec.model_edition,
-                        runrec.run_id,
-                        Progress( BASE_UUID, "queued", -99, -99, -99, -99 ))
-        # despite the name, this creates a new run
-        runrec = get_run( user.user_id, runrec.model_name, runrec.model_edition, 'E', runrec.run_id )
-    else
-        errs = runrec.errors # FIXME poss > 1 record here
-    end
-    return (;uid=user.user_id, runid=runrec.run_id, errors=errs, output_is_cached=runrec.output_is_cached )
+    save_run!( runrec )
+    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss], errors = Dict(), output_is_cached=runrec.output_is_cached )
 end
 
 @swagger"""
@@ -221,12 +180,49 @@ Submit the active run.
 if output_is_cached ....
 return a named tuple with ( uid::Int, runid::Int, errors::Dict, output_is_cached::Bool )
 """
-@get "/run/submit/{model_name}/{edition}/" function(
+@post "/run/submit/{model_name}/{edition}/{subsys}" function(
     req::HTTP.Request,
     model_name::String,
-    edition::String)
+    edition::String,
+    subsys::Union{Nothing,String} )
     uid = getq(Int, req, "uid")
-    return submit_run( uid, model_name, edition )
+    user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
+    errs = Dict()
+    # handle if we're submitting params as well as requesting a run
+    if ! isnothing( subsys )
+        ss = Symbol( subsys )
+        errs, params = parse_and_check_params( runrec, req, ss )
+        if length( errs ) == 0 # return bool and list of errors
+            runrec.params[ss] = params
+        end
+    end
+    if length( errs ) == 0
+        save_run!( runrec )
+        @info "setting state to 'queued'/Q"
+        state = "queued"
+        if ! runrec.output_is_cached
+            @info "! output_is_cached; set states to 'Q'/queued"
+            change_run_qstate!( runrec; qstatus='Q', output_is_cached=false )
+            # despite the name, this creates a new run as a copy of the run that's just been queued
+            runrec = get_run( user.user_id, runrec.model_name, runrec.model_edition, 'E', runrec.run_id )
+        else
+            @info "output_is_cached; set states to 'D'/displayed"
+            state = "completed"
+            # toggle so there's only one displayed run ever
+            set_run_to_displayed!( runrec )
+        end
+        update_progress(
+            runrec.user_id,
+            runrec.model_name,
+            runrec.model_edition,
+            runrec.run_id,                                                                                                                                                                                                                                                          Progress( BASE_UUID, state, -99, -99, -99, -99 ))
+    end
+    return (;
+            uid=user.user_id,
+            runid=runrec.run_id,
+            errors=errs,
+            output_is_cached=runrec.output_is_cached,
+            params=runrec.params[ss] )
 end
 
 @swagger"""

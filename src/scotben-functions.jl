@@ -323,7 +323,7 @@ function do_run(
     insert!( results.bu, 1, base_results.bu[1] )
     insert!( results.indiv, 1, base_results.indiv[1] )
     insert!( results.income, 1, base_results.income[1] )
-    insert!( results.behavioural_results, 1, base_results.behavioural_results[2] )
+    insert!( results.behavioural_results, 1, base_results.behavioural_results[1] )
     summaries = summarise_frames!( results, settings )
     headlines = mv.format_headline_numbers( summaries.headline_figures[2] )
     exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys, settings )
