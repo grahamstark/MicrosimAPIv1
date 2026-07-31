@@ -516,9 +516,9 @@ function change_run_qstate!( run :: Run; qstatus :: Char, output_is_cached :: Bo
     execonn( change_run_qstate, [run.user_id, run.model_name, run.model_edition, run.run_id, qstatus, output_is_cached ])
 end
 
-/**
-  * Retrieve a run by its primary key, optionally loading any output and parameters.
-*/
+"""
+Retrieve a run by its primary key, optionally loading any output and parameters.
+"""
 function retrieve_specific_run(
     user_id :: Int,
     model_name :: String,

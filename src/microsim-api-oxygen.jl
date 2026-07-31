@@ -154,7 +154,7 @@ return uid, a dict of errs - 0 length if zero errors
     ss = Symbol( subsys )
     errs, _ = parse_and_check_params( runrec, req, ss )
     # .. but don't save them
-    return (;uid=user.user_id, errors = errs )
+    return (;uid=user.user_id, runid=runrec.run_id, errors = errs )
 end
 
 @swagger"""
