@@ -529,11 +529,12 @@ function retrieve_specific_run(
     l = length(rs)
     @assert l in 0:1
     return if l == 1
-        rs_to_run( rs[1] )
+        run = rs_to_run( rs[1] )
         if get_everything
             load_params!( run )
             load_output!( run )
         end
+        run
     else
         nothing
     end
