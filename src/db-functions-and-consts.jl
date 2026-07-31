@@ -516,16 +516,24 @@ function change_run_qstate!( run :: Run; qstatus :: Char, output_is_cached :: Bo
     execonn( change_run_qstate, [run.user_id, run.model_name, run.model_edition, run.run_id, qstatus, output_is_cached ])
 end
 
+/**
+  * Retrieve a run by its primary key, optionally loading any output and parameters.
+*/
 function retrieve_specific_run(
-    user_id::Int,
+    user_id :: Int,
+    model_name :: String,
     edition :: String,
-    qstatus :: Char,
-    run-id :: Int )::Union{Run,Nothing}
+    run_id :: Int;
+    get_everything = false )::Union{Run,Nothing}
     rs = rowtable(execonn( retrieve_numbered_run, [user_id, model_name, edition, run_id ]))
     l = length(rs)
     @assert l in 0:1
-    return if  == 1
+    return if l == 1
         rs_to_run( rs[1] )
+        if get_everything
+            load_params!( run )
+            load_output!( run )
+        end
     else
         nothing
     end
@@ -535,6 +543,8 @@ end
 retrieve or create a run
 
 * @param copy_from: if no currently edited run, make a copy of the run with this id for the user, otherwise make a copy of the default for this model&edition
+
+FIXME code here is a dup of `retrieve_specific_run` above.
 """
 function get_run(
                  user_id::Int,

@@ -235,8 +235,9 @@ return progress as an array (poss 0 length) of named tuples
     uid = getq(Int, req, "uid")
     rid = getq(Int, req, "rid")
     # any run in executing state?
-    user, runrec = handle_middle( uid, model_name, edition, 'X', nothing )
+    runrec = retrieve_specific_run( uid, model_name, edition, rid )
     if ! isnothing(runrec) # then extract
+
         return json( get_run_progress( runrec ))
     else
         return json( (;msg="no_run"))
