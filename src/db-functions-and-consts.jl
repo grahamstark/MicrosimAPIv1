@@ -516,6 +516,21 @@ function change_run_qstate!( run :: Run; qstatus :: Char, output_is_cached :: Bo
     execonn( change_run_qstate, [run.user_id, run.model_name, run.model_edition, run.run_id, qstatus, output_is_cached ])
 end
 
+function retrieve_specific_run(
+    user_id::Int,
+    edition :: String,
+    qstatus :: Char,
+    run-id :: Int )::Union{Run,Nothing}
+    rs = rowtable(execonn( retrieve_numbered_run, [user_id, model_name, edition, run_id ]))
+    l = length(rs)
+    @assert l in 0:1
+    return if  == 1
+        rs_to_run( rs[1] )
+    else
+        nothing
+    end
+end
+
 """
 retrieve or create a run
 
