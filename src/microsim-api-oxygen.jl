@@ -115,7 +115,7 @@ Set parameters for the given model/edition/subsys. Send a json representation of
     model_name::String,
     edition::String,
     subsys::String)
-    qp =  queryparams(req)
+    qp = queryparams(req)
     uid = getq(Int, req, "uid") # ?? shouldn't be needed
     user, runrec = handle_middle( uid, model_name, edition, 'E', nothing )
     ss = Symbol( subsys )
@@ -226,7 +226,8 @@ return a named tuple with ( uid::Int, runid::Int, errors::Dict, output_is_cached
 end
 
 @swagger"""
-return progress as an array (poss 0 length) of named tuples
+return uid=uid, runid, output_is_cached, qstatus, progress
+   progress as an array (poss 0 length) of named tuples
 """
 @get "/run/monitor/{model_name}/{edition}/" function(
     req::HTTP.Request,
@@ -237,8 +238,7 @@ return progress as an array (poss 0 length) of named tuples
     # any run in executing state?
     runrec = retrieve_specific_run( uid, model_name, edition, rid )
     if ! isnothing(runrec) # then extract
-
-        return json( get_run_progress( runrec ))
+        return json( (; uid=uid, runid=rid, output_is_cached=runrec.output_is_cached, qstatus=runrec.qstatus, progress=get_run_progress( runrec )))
     else
         return json( (;msg="no_run"))
     end
@@ -310,6 +310,6 @@ Retrieve a single item. Note phunpack treated seperately.
             Oxygen.json( item.data )
         end
     else
-        return json( (;msg="no_run"))
+        return json( (;msg="no output"))
     end
 end

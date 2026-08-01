@@ -155,7 +155,7 @@ end
 
 function getq( T::DataType, req :: HTTP.Request, key :: String )
     qp =  queryparams(req)
-    @show qp
+    # @show qp
     vs = Base.get(qp,key,nothing)
     v = if ! isnothing( vs )
         parse( T, vs )
