@@ -188,7 +188,7 @@ const retrieve_params =
     """
 
 const get_run_state = """
-    select * from run_state where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4
+    select * from run_state where user_id=\$1 and model_name=\$2 and model_edition=\$3 and run_id=\$4 order by thread_no
     """
 
 

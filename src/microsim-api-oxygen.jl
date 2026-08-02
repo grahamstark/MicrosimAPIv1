@@ -235,7 +235,6 @@ return uid=uid, runid, output_is_cached, qstatus, progress
     edition::String )
     uid = getq(Int, req, "uid")
     rid = getq(Int, req, "rid")
-    # any run in executing state?
     runrec = retrieve_specific_run( uid, model_name, edition, rid )
     if ! isnothing(runrec) # then extract
         return json( (; uid=uid, runid=rid, output_is_cached=runrec.output_is_cached, qstatus=runrec.qstatus, progress=get_run_progress( runrec )))
