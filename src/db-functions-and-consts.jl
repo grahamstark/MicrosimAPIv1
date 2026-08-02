@@ -360,17 +360,21 @@ function get_model( model_name :: String, edition :: String )::Model
     return Model( r.model_name, r.description, String(r.model_edition ))
 end
 
+
+function clearup_run_states( run :: Run, delete_threads_above :: Int )
+    execonn( clear_run_states, [run.user_id, run.model_name, run.model_edition, run.run_id, delete_threads_above ])
+end
+
 function update_progress(
     user_id::Integer,
     model_name::String,
     edition::String,
     run_id::Integer,
     prog::Progress )
+    if prog.phase != "run" # get rid of threads other than the 1st if run phase completed, otherwise they hang around & mess up progress bars.
+        execonn( clear_run_states, [user_id, model_name, edition, run_id, -9999999 ])
+    end
     execonn( run_state_upsert, [user_id, model_name, edition, run_id, prog.thread, prog.phase, prog.count, prog.size])
-end
-
-function clearup_run_states( run :: Run, delete_threads_above :: Int )
-    execonn( clear_run_states, [run.user_id, run.model_name, run.model_edition, run.run_id, delete_threads_above ])
 end
 
 """
@@ -639,8 +643,6 @@ function handle_middle( user_id ::Union{Int,Nothing},
     runrec = get_run( user.user_id, model_name, edition, qstatus, copy_from )
     return user, runrec
 end
-
-
 
 """
 return the earliest queued run rec or nothing.
