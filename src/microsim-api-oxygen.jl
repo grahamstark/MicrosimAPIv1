@@ -124,7 +124,7 @@ Set parameters for the given model/edition/subsys. Send a json representation of
         runrec.params[ss] = params
         save_run!( runrec )
         if runrec.output_is_cached
-            set_run_to_displayed!( run )
+            set_run_to_displayed!( runrec )
         end
     end
     return (;
@@ -180,7 +180,7 @@ Reset app parameters for the given subsys back to the defaults.
     ss = Symbol( subsys )
     load_params!( runrec; copy_user_id=DEFAULT_USER_ID, copy_run_id=DEFAULT_RUN_ID)
     save_run!( runrec )
-    set_run_to_displayed!( run )
+    set_run_to_displayed!( runrec )
     return (;uid=user.user_id,
             runid=runrec.run_id,
             params=runrec.params[ss],
