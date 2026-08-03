@@ -123,8 +123,16 @@ Set parameters for the given model/edition/subsys. Send a json representation of
     if(length( errs ) == 0) && (! isnothing(params))
         runrec.params[ss] = params
         save_run!( runrec )
+        if runrec.output_is_cached
+            set_run_to_displayed!( run )
+        end
     end
-    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss], errors = errs, output_is_cached=runrec.output_is_cached )
+    return (;
+            uid=user.user_id,
+            runid=runrec.run_id,
+            params=runrec.params[ss],
+            errors = errs,
+            output_is_cached=runrec.output_is_cached )
 end
 
 @swagger"""
@@ -172,7 +180,12 @@ Reset app parameters for the given subsys back to the defaults.
     ss = Symbol( subsys )
     load_params!( runrec; copy_user_id=DEFAULT_USER_ID, copy_run_id=DEFAULT_RUN_ID)
     save_run!( runrec )
-    return (;uid=user.user_id, runid=runrec.run_id, params=runrec.params[ss], errors = Dict(), output_is_cached=runrec.output_is_cached )
+    set_run_to_displayed!( run )
+    return (;uid=user.user_id,
+            runid=runrec.run_id,
+            params=runrec.params[ss],
+            errors = Dict(),
+            output_is_cached=runrec.output_is_cached )
 end
 
 @swagger"""
