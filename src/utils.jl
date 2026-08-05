@@ -157,8 +157,9 @@ function getq( T::DataType, req :: HTTP.Request, key :: String )
     qp =  queryparams(req)
     # @show qp
     vs = Base.get(qp,key,nothing)
-    v = if ! isnothing( vs )
-        parse( T, vs )
+    VT = typeof(vs)
+    return if VT <: AbstractString
+        tryparse(T, vs )
     else
         nothing
     end
