@@ -655,6 +655,7 @@ function next_runnable_run()::Union{Run,Nothing}
         run = rs_to_run( r[1] )
         load_params!( run )
         load_output!( run )
+        change_run_qstate!( run; qstatus='L', output_is_cached=run.output_is_cached )
         run
     end
 end

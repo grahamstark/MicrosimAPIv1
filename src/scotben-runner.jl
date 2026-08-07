@@ -1,3 +1,4 @@
+qlock = SpinLock()
 """
 
 Create a queue of num_handlers tasks which listen for any jobs in 'Q' state and runs them.
@@ -8,10 +9,15 @@ all parameters.,
 
 """
 function grab_runs_from_queue(handler_number::Integer)
+    # global qlock
     while true
-        run = next_runnable_run()
+        # fixme use a transaction??
+        # @lock stops multiple workers grabbing the same job
+        run = nothing
+        lock(qlock) do
+            run = next_runnable_run()
+        end
         if ! isnothing( run )
-            change_run_qstate!( run; qstatus='L', output_is_cached=run.output_is_cached )
             @info "run $(run.run_id) for user $(run.user_id) started in handler $(handler_number)"
             h = make_param_hash( run.user_id, run.model_name, run.model_edition, run.run_id )
             if ! output_is_cached( run, h )
@@ -22,7 +28,7 @@ function grab_runs_from_queue(handler_number::Integer)
                     run.model_name,
                     run.model_edition,
                     run.run_id,
-                    para1,
+                    para1;
                     update_progress=update_progress,
                     do_dumps=true  )
                 cache_output( run, h, allout )

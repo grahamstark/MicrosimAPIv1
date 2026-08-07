@@ -329,10 +329,14 @@ function do_run(
     exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys, settings )
     html_tabs = mv.construct_tables( settings, results, summaries, mv.MV_HTML())
     typst_tabs = mv.construct_tables( settings, results, summaries, mv.MV_TYPST())
-    println( "tabs OK")
+    @info  "tabs OK"
     graphs = mv.construct_images( settings, results, summaries, [DEFAULT_WEEKLY_PARAMS, sys] )
-    println( "graphs OK")
+    @info "graphs OK"
     path, zippath = mv.phunpackify( settings, graphs, typst_tabs, html_tabs, summaries )
+    @info "dumping to" path
+    if do_dumps
+        dump_frames( path, result )
+    end
     update_progress( user_id, model_name, edition, run_id,
         Progress( settings.uuid, "completed", -99, -99, -99, -99 ))
     return AllOutput( summaries, headlines, graphs, html_tabs, typst_tabs, zippath, exres )
