@@ -335,7 +335,7 @@ function do_run(
     path, zippath = mv.phunpackify( settings, graphs, typst_tabs, html_tabs, summaries )
     @info "dumping to" path
     if do_dumps
-        dump_frames( path, result )
+        dump_frames( path, results )
     end
     update_progress( user_id, model_name, edition, run_id,
         Progress( settings.uuid, "completed", -99, -99, -99, -99 ))

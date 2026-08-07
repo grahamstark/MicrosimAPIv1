@@ -1,4 +1,7 @@
-qlock = SpinLock()
+# dear old Claude put me right about ReentrantLock vs SpinLock
+qlock = ReentrantLock()
+# .. or SpinLock()
+
 """
 
 Create a queue of num_handlers tasks which listen for any jobs in 'Q' state and runs them.
@@ -16,6 +19,7 @@ function grab_runs_from_queue(handler_number::Integer)
         run = nothing
         lock(qlock) do
             run = next_runnable_run()
+            @info "run = " run
         end
         if ! isnothing( run )
             @info "run $(run.run_id) for user $(run.user_id) started in handler $(handler_number)"
@@ -37,7 +41,7 @@ function grab_runs_from_queue(handler_number::Integer)
             set_run_to_displayed!( run )
             clearup_run_states( run, 0 )
         else
-            @debug "no runnable runs for handler $(i)"
+            @debug "no runnable runs for handler $(handler_number)"
             sleep(1)
         end
     end
@@ -51,7 +55,7 @@ function create_scotben_queues(num_handlers=3)
     tasks = Task[]
     for handler_number in 1:num_handlers # start n tasks to process requests in parallel
         @info "starting handler $handler_number"
-        push!( tasks, @async grab_runs_from_queue(handler_number))
+        push!( tasks, Threads.@spawn grab_runs_from_queue(handler_number))
     end
     return tasks
 end
