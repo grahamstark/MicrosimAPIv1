@@ -55,6 +55,9 @@ function create_scotben_queues(num_handlers=3)
     tasks = Task[]
     for handler_number in 1:num_handlers # start n tasks to process requests in parallel
         @info "starting handler $handler_number"
+        # push!( tasks, @async grab_runs_from_queue(handler_number))
+        # spawn (seperate tasks) causes Makie error:  nested task error: ConcurrencyViolationError("Vector can not be resized concurrently")
+
         push!( tasks, Threads.@spawn grab_runs_from_queue(handler_number))
     end
     return tasks

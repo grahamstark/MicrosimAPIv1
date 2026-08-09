@@ -296,6 +296,8 @@ function do_default_run()::NamedTuple
     return do_one_run( settings, [DEFAULT_WEEKLY_PARAMS], obs )
 end
 
+graphlock = ReentrantLock()
+
 function do_run(
     user_id :: Integer,
     model_name :: String,
@@ -330,7 +332,11 @@ function do_run(
     html_tabs = mv.construct_tables( settings, results, summaries, mv.MV_HTML())
     typst_tabs = mv.construct_tables( settings, results, summaries, mv.MV_TYPST())
     @info  "tabs OK"
-    graphs = mv.construct_images( settings, results, summaries, [DEFAULT_WEEKLY_PARAMS, sys] )
+    # makie not threadsafe, so ...
+    graphs = lock(graphlock) do
+        @info "generating graphs"
+        mv.construct_images( settings, results, summaries, [DEFAULT_WEEKLY_PARAMS, sys] )
+    end
     @info "graphs OK"
     path, zippath = mv.phunpackify( settings, graphs, typst_tabs, html_tabs, summaries )
     @info "dumping to" path
