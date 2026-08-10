@@ -19,7 +19,7 @@ function grab_runs_from_queue(handler_number::Integer)
         run = nothing
         lock(qlock) do
             run = next_runnable_run()
-            @info "run = " run
+            @debug "run = " run
         end
         if ! isnothing( run )
             @info "run $(run.run_id) for user $(run.user_id) started in handler $(handler_number)"
@@ -27,7 +27,7 @@ function grab_runs_from_queue(handler_number::Integer)
             if ! output_is_cached( run, h )
                 change_run_qstate!( run; qstatus='X', output_is_cached=false )
                 para1 = collect(values(run.params))[1] # FIXME 1st set pf parameters only
-                allout = do_run(
+                @time allout = do_run(
                     run.user_id,
                     run.model_name,
                     run.model_edition,

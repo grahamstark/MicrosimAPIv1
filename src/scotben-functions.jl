@@ -333,7 +333,7 @@ function do_run(
     typst_tabs = mv.construct_tables( settings, results, summaries, mv.MV_TYPST())
     @info  "tabs OK"
     # makie not threadsafe, so ...
-    graphs = lock(graphlock) do
+    @time graphs = lock(graphlock) do
         @info "generating graphs"
         mv.construct_images( settings, results, summaries, [DEFAULT_WEEKLY_PARAMS, sys] )
     end
