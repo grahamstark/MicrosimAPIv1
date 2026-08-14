@@ -281,8 +281,7 @@ function do_run(
     model_name :: String,
     edition :: String,
     run_id :: Integer,
-    sys :: TaxBenefitSystem,
-    annual_sys :: TaxBenefitSystem;
+    sys :: TaxBenefitSystem;
     update_progress::Function,
     do_dumps :: Bool )::AllOutput
     @info "do_run entered"
@@ -307,11 +306,11 @@ function do_run(
     bh = SFCBehavioural.calc_behavioural_response(
         results.income[1],
         results.income[2],
-        DEFAULT_PARAMS,
-        annual_sys )
-    insert!( results.behavioural_results, 1, base_results.behavioural_results[1] )
-    @info results.behavioural_results
+        DEFAULT_WEEKLY_PARAMS,
+        sys )
+    #insert!( results.behavioural_results, 1, base_results.behavioural_results[1] )
     push!( results.behavioural_results, bh )
+    @info results.behavioural_results
 
     summaries = summarise_frames!( results, settings )
     headlines = mv.format_headline_numbers( summaries.headline_figures[2] )
@@ -348,7 +347,6 @@ function do_run(
     do_dumps :: Bool )::AllOutput
     sys = deepcopy( DEFAULT_PARAMS)
     map_simple_to_full!( sys, simple )
-    annual_sys = deepcopy(sys) # needed for sfc corrections
     weeklyise!( sys )
     return do_run(
         user_id,
@@ -356,7 +354,6 @@ function do_run(
         model_edition,
         run_id,
         sys,
-        annual_sys;
         update_progress=update_progress,
         do_dumps=do_dumps )
 end
@@ -371,7 +368,6 @@ function do_run(
     do_dumps :: Bool )::AllOutput
     sys = deepcopy( DEFAULT_PARAMS)
     map_simple_to_full!( sys, ubi )
-    annual_sys = deepcopy(sys) # needed for sfc corrections
     weeklyise!( sys )
     return do_run(
         user_id,
@@ -379,7 +375,6 @@ function do_run(
         model_edition,
         run_id,
         sys,
-        annual_sys;
         update_progress=update_progress,
         do_dumps=do_dumps )
 end
