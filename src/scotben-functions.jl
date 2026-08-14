@@ -1,25 +1,3 @@
-#=
-using ScottishTaxBenefitModel
-using .BCCalcs
-using .Definitions
-using .ExampleHelpers
-using .FRSHouseholdGetter
-using .GeneralTaxComponents
-using .LocalLevelCalculations
-using .ModelHousehold
-using .Monitor
-using .Runner
-using .RunSettings
-using .SimplePovertyCounts: GroupPoverty
-using .SingleHouseholdCalculations
-using .STBIncomes
-using .STBOutput
-using .STBParameters
-using .Utils
-
-import MicroVisualisations as mv
-using UUIDs
-=#
 
 const BIG_A = 9999999999
 
@@ -325,7 +303,13 @@ function do_run(
     insert!( results.bu, 1, base_results.bu[1] )
     insert!( results.indiv, 1, base_results.indiv[1] )
     insert!( results.income, 1, base_results.income[1] )
+    bh = SFCBehavioural.calc_behavioural_response(
+        results.income[1],
+        results.income[2],
+        DEFAULT_PARAMS,
+        sys )
     insert!( results.behavioural_results, 1, base_results.behavioural_results[1] )
+    push!( results.behavioural_results, bh )
     summaries = summarise_frames!( results, settings )
     headlines = mv.format_headline_numbers( summaries.headline_figures[2] )
     exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys, settings )

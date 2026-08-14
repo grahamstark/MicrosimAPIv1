@@ -38,6 +38,7 @@ using .ModelHousehold
 using .Monitor
 using .Runner
 using .RunSettings
+using .SFCBehavioural
 using .SimplePovertyCounts: GroupPoverty
 using .SingleHouseholdCalculations
 using .STBIncomes
