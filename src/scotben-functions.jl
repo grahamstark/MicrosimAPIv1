@@ -281,7 +281,8 @@ function do_run(
     model_name :: String,
     edition :: String,
     run_id :: Integer,
-    sys :: TaxBenefitSystem;
+    sys :: TaxBenefitSystem,
+    annual_sys :: TaxBenefitSystem;
     update_progress::Function,
     do_dumps :: Bool )::AllOutput
     @info "do_run entered"
@@ -307,9 +308,11 @@ function do_run(
         results.income[1],
         results.income[2],
         DEFAULT_PARAMS,
-        sys )
+        annual_sys )
     insert!( results.behavioural_results, 1, base_results.behavioural_results[1] )
+    @info results.behavioural_results
     push!( results.behavioural_results, bh )
+
     summaries = summarise_frames!( results, settings )
     headlines = mv.format_headline_numbers( summaries.headline_figures[2] )
     exres = calc_examples( DEFAULT_WEEKLY_PARAMS, sys, settings )
@@ -345,13 +348,15 @@ function do_run(
     do_dumps :: Bool )::AllOutput
     sys = deepcopy( DEFAULT_PARAMS)
     map_simple_to_full!( sys, simple )
+    annual_sys = deepcopy(sys) # needed for sfc corrections
     weeklyise!( sys )
     return do_run(
         user_id,
         model_name,
         model_edition,
         run_id,
-        sys;
+        sys,
+        annual_sys;
         update_progress=update_progress,
         do_dumps=do_dumps )
 end
@@ -366,13 +371,15 @@ function do_run(
     do_dumps :: Bool )::AllOutput
     sys = deepcopy( DEFAULT_PARAMS)
     map_simple_to_full!( sys, ubi )
+    annual_sys = deepcopy(sys) # needed for sfc corrections
     weeklyise!( sys )
     return do_run(
         user_id,
         model_name,
         model_edition,
         run_id,
-        sys;
+        sys,
+        annual_sys;
         update_progress=update_progress,
         do_dumps=do_dumps )
 end
