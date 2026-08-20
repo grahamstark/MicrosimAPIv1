@@ -1,2 +1,2 @@
-JULIA=/opt/api/julia/
+JULIA=/home/apiuser/.juliaup/bin/julia
 STB_HOME=/home/graham_s/julia/vw/ScottishTaxBenefitModel/
