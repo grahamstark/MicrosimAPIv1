@@ -96,3 +96,44 @@ In `pg_hba.conf`:
 ```
 local   all             all                                     trust
 ``` 
+
+## VM
+
+Networking: Bridged Adapter
+
+### On ROUTER
+
+DMZ - add VM's address
+
+Ethernet Gateway: add ports 22 and 80, IP of VM
+
+### DNS 
+
+    models.virtual-worlds.scot
+    microapi.virtual-worlds.scot
+
+both point to new VM on 137.220.123.248
+
+### APACHE
+
+* create `models.virtual-worlds.scot`  and `microapi.virtual-worlds.scot` 
+* sudo en2mod proxy proxy_http rewrite 
+
+### Julia
+
+useradd apiuser 
+su - apiuser
+
+
+## NEW VM STUFF
+
+```
+sudo apt install snapd
+
+sudo snap install --classic certbot
+
+suddo /snap/bin/certbot
+
+sudo a2enmod proxy proxy_http rewrite ssl headers
+
+``
