@@ -221,13 +221,7 @@ function map_simple_to_full!( sys ::  TaxBenefitSystem, ubi :: UBIParams )
     sys.ni.primary_class_1_rates = copy(ubi.nirates)
     sys.ni.primary_class_1_bands = copy(ubi.nibands)
     sys.it.personal_allowance = ubi.taxallowance
-    sys.ubi.mt_bens_treatment = if(ubi.abolish_housing && ubi.abolish_uc)
-        ub_abolish
-    elseif ubi.abolish_uc
-        ub_keep_housing
-    else
-        ub_as_is
-    end
+    sys.ubi.mt_bens_treatment = ubi.mt_bens_treatment
     sys.ubi.abolish_sickness_bens = ubi.abolish_sickness_bens
     sys.ubi.abolish_jsa_esa = ubi.abolish_jsa_esa
     sys.ubi.abolish_pensions = ubi.abolish_pensions
