@@ -136,4 +136,15 @@ suddo /snap/bin/certbot
 
 sudo a2enmod proxy proxy_http rewrite ssl headers
 
-``
+sudo apt install certbot
+
+```
+
+As apiuser
+
+```
+ 
+mkdir ~/api-logging
+mkdir ~/model-runs
+
+```

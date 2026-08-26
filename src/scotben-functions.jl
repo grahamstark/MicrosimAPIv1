@@ -23,21 +23,23 @@ end
     nibands :: Vector{Float64} & (edit=(; label="Bands", min=0.0, agroup="Employee National Insurance", unit="£s pw", prec=2))
     taxallowance :: Float64  & (edit=(; label="Income Tax Allowance", min=0.0, unit="£s pa", prec=0))
 
-    abolish_uc :: Bool & (edit=(; label="Abolish Universal Credit"))
-    abolish_sickness_bens :: Bool & (edit=(; label="Abolish Sickness and Disablement Benefits?"))
-    abolish_jsa_esa:: Bool & (edit=(; label="Abolish Contributory ESA/JSA?"))
-    abolish_pensions :: Bool & (edit=(; label="Abolish The State Pension"))
-    abolish_housing :: Bool & (edit=(; label="Don't Meet Housing Costs of Low Income Families (Housing Benefit, Housing Component of Universal Credit)?"))
-    abolish_others :: Bool & (edit=(; label="Abolish All Other Benefits?"))
-
-    ubi_as_mt_income :: Bool & (edit=(; label="Treat The UBI As Income for Means-Tested Benefits?"))
-    ubi_taxable :: Bool & (edit=(; label="Make the UBI Taxable?"))
-
     adult_amount :: Float64 & (edit=(; label="UBI: Amount Per Adult", min=0.0, unit="£s pw", prec=2))
     child_amount :: Float64 & (edit=(; label="UBI: Amount Per Child", min=0.0, unit="£s pw", prec=2))
     universal_pension :: Float64 & (edit=(; label="UBI: Amount Per Pension Age Person", min=0.0, unit="£s pw", prec=2))
     adult_age :: Int & (edit=(; label="UBI: Age of Adulthood", min=0, max=21, unit="Years"))
     retirement_age :: Int & (edit=(; label="UBI: Age of Retirement", min=50, unit="Years"))
+
+    mt_bens_treatment :: UBIMTBenTreatment = ub_abolish & (edit=(; label="How to treat means-tested benefits" )
+
+    # abolish_uc :: Bool & (edit=(; label="Abolish Universal Credit"))
+    abolish_sickness_bens :: Bool & (edit=(; label="Abolish Sickness and Disablement Benefits?"))
+    abolish_jsa_esa:: Bool & (edit=(; label="Abolish Contributory ESA/JSA?"))
+    abolish_pensions :: Bool & (edit=(; label="Abolish The State Pension"))
+    abolish_others :: Bool & (edit=(; label="Abolish All Other Benefits?"))
+
+    ubi_as_mt_income :: Bool & (edit=(; label="Treat The UBI As Income for Means-Tested Benefits?"))
+    ubi_taxable :: Bool & (edit=(; label="Make the UBI Taxable?"))
+
     # mt_bens_treatment :: UBEntitlement & (edit=(; label="UBI: How to treat Means-Tested Benefits", options=["1"])
 end
 
@@ -117,13 +119,8 @@ function map_full_to_ubi( sys :: TaxBenefitSystem )::UBIParams
     nr, nb = copyArrays(
         sys.ni.primary_class_1_rates,
         sys.ni.primary_class_1_bands )
-    abolish_housing, abolish_uc = if sys.ubi.mt_bens_treatment == ub_as_is
-        false, false
-    elseif sys.ubi.mt_bens_treatment == ub_abolish
-        true, true
-    elseif sys.ubi.mt_bens_treatment == ub_keep_housing
-        false, true
-    end
+
+
     return UBIParams(
         false, # don't abolish by default if we get here at all
         itr,
@@ -131,19 +128,19 @@ function map_full_to_ubi( sys :: TaxBenefitSystem )::UBIParams
         nr,
         nb,
         sys.it.personal_allowance,
-        abolish_uc,
-        sys.ubi.abolish_sickness_bens,
-        sys.ubi.abolish_jsa_esa,
-        sys.ubi.abolish_pensions,
-        abolish_housing,
-        sys.ubi.abolish_others,
-        sys.ubi.ub_as_mt_income,
-        sys.ubi.ub_taxable,
+
         sys.ubi.adult_amount,
         sys.ubi.child_amount,
         sys.ubi.universal_pension,
         sys.ubi.adult_age,
-        sys.ubi.retirement_age )
+        sys.ubi.retirement_age,
+        sys.ubi.mt_bens_treatment,
+        sys.ubi.abolish_sickness_bens,
+        sys.ubi.abolish_jsa_esa,
+        sys.ubi.abolish_pensions,
+        sys.ubi.abolish_others,
+        sys.ubi.ub_as_mt_income,
+        sys.ubi.ub_taxable )
 end
 
 
