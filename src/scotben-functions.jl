@@ -233,6 +233,9 @@ function map_simple_to_full!( sys ::  TaxBenefitSystem, ubi :: UBIParams )
     sys.ubi.universal_pension = ubi.universal_pension
     sys.ubi.adult_age = ubi.adult_age
     sys.ubi.retirement_age = ubi.retirement_age
+    if ! sys.ubi.abolished
+        make_ubi_pre_adjustments!( sys )
+    end
 end
 
 const DEFAULT_MINI_PARAMS = Dict{Symbol,Subsys}([
