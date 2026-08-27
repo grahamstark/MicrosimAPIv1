@@ -63,7 +63,9 @@ function tvalidate(x)::Dict
             label = "$(agroup): $label"
             datatype = eltype( v )
         end
-        if datatype <: Number
+        if datatype <: Bool
+            ;
+        elseif datatype <: Number
             minv = Base.get( tag, :min, typemin(datatype))
             maxv = Base.get( tag, :max, typemax(datatype))
             sname = string(vname)

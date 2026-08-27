@@ -29,7 +29,7 @@ end
     adult_age :: Int & (edit=(; label="UBI: Age of Adulthood", min=0, max=21, unit="Years"))
     retirement_age :: Int & (edit=(; label="UBI: Age of Retirement", min=50, unit="Years"))
 
-    mt_bens_treatment :: UBIMTBenTreatment = ub_abolish & (edit=(; label="How to treat means-tested benefits" )
+    mt_bens_treatment :: UBIMTBenTreatment & (edit=(; label="How to treat means-tested benefits" ))
 
     # abolish_uc :: Bool & (edit=(; label="Abolish Universal Credit"))
     abolish_sickness_bens :: Bool & (edit=(; label="Abolish Sickness and Disablement Benefits?"))

@@ -88,7 +88,7 @@ create table param_page_description(
 -- replaced with Julia initialisation 'initialise_database()'
 -- insert into param_page_description values
 -- ('scotben', 'simple-2026a', 'SimpleParams', 'Basic Set of SB Parameters', '' ),
--- ('scotben', 'basic-income-2026a', 'BIParams','Basic Income Simulation Parameters', ''),
+-- ('scotben', 'basic-income-2026a', 'UBIParams','Basic Income Simulation Parameters', ''),
 -- ('scotben', 'simple-2026a', 'RunSettings','Basic Income Run Settings Subset', ''),
 -- ('scotben', 'basic-income-2026a', 'RunSettings', 'Default Run Settings Subset','');
 
