@@ -39,8 +39,6 @@ end
 
     ubi_as_mt_income :: Bool & (edit=(; label="Treat The UBI As Income for Means-Tested Benefits?"))
     ubi_taxable :: Bool & (edit=(; label="Make the UBI Taxable?"))
-
-    # mt_bens_treatment :: UBEntitlement & (edit=(; label="UBI: How to treat Means-Tested Benefits", options=["1"])
 end
 
 StructTypes.StructType(::Type{SimpleParams}) = StructTypes.Struct()
