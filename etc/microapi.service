@@ -1,6 +1,7 @@
 [Unit]
 Description=MicrosimAPI Server in Julia, Oxygen version.
 After=network.target remote-fs.target nss-lookup.target
+Wants=network-online.target
 [Service]
 # Type=forking
 User=apiuser
@@ -17,5 +18,3 @@ TimeoutStartSec=360
 Restart=on-failure
 [Install]
 WantedBy=multi-user.target
-After=network-online.target remote-fs.target nss-lookup.target
-Wants=network-online.target
